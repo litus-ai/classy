@@ -1,48 +1,34 @@
 import argparse
-from typing import List, Iterable, Tuple, Optional, Generator
+from typing import List, Iterable, Tuple, Generator, Dict, Union
 
-import omegaconf
-import pytorch_lightning as pl
+import hydra.utils
 import torch
-from omegaconf import OmegaConf
 from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from classy.data.dataset.hf import HFSequenceDataset
-from classy.data.readers import Reader, get_reader, TSV
-from classy.utils.lightning import load_classy_module_from_checkpoint
-
+from classy.data.data_drivers import DataDriver, get_data_driver, TSV, SentencePairSample, SequenceSample, TokensSample
 from classy.pl_modules.base import ClassyPLModule
+from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 
 
 def predict(
     model: ClassyPLModule,
     sources: Iterable[str],
-    reader: Reader,
-    dataset_conf: omegaconf.OmegaConf,
+    data_driver: DataDriver,
+    dataset_conf: Dict,
     token_batch_size: int = 1024,
     progress_bar: bool = False,
-) -> Generator[Tuple[str, str, Optional[str]], None, None]:
+) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:
 
     # todo only works on single gpu
     device = next(model.parameters()).device
 
     # instantiate dataset
-    # todo remove coupling
-    dataset = HFSequenceDataset.from_lines(
-        sources,
-        reader=reader,
-        vocabulary=model.vocabulary,
-        transformer_model='bert-large-cased',
-        min_length=5,
-        max_length=500,
-        tokens_per_batch=800,
-        max_batch_size=10,
-        section_size=10000,
-        prebatch=True,
-        shuffle=True,
-    )
+    dataset_conf["tokens_per_batch"] = token_batch_size
+    dataset = hydra.utils.instantiate(dataset_conf, lines=sources, data_driver=data_driver, vocabulary=model.vocabulary)
+
+    # instantiate dataloader
     dataloader = DataLoader(dataset, batch_size=None, num_workers=0)
 
     iterator = dataloader
@@ -54,13 +40,12 @@ def predict(
         # predict
         with autocast(enabled=True):
             with torch.no_grad():
-                batch_predictions = model.predict(
+                batch_out = model.predict(
                     **{k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
                 )
 
-                # todo here we should yield (<input>, predicted label, gold label)
-                for p in batch_predictions:
-                    yield '', p, None
+                for sample, prediction in batch_out:
+                    yield sample, prediction
 
 
 def interactive_main(
@@ -73,14 +58,17 @@ def interactive_main(
     model.eval()
     model.freeze()
 
+    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
+    data_driver = get_data_driver(model.task, TSV)
+
     while True:
         source = input("Enter source text: ").strip()
-        _, prediction, _ = next(
+        _, prediction = next(
             predict(
                 model,
                 [source],
-                reader=get_reader(model.task, TSV),
-                dataset_conf=None
+                data_driver=data_driver,
+                dataset_conf=dataset_conf,
             )
         )
         print(f"\t# prediction: \t{prediction}")
@@ -99,17 +87,25 @@ def file_main(
     model.eval()
     model.freeze()
 
-    with open(input_path) as fi, open(output_path, "w") as fo:
-        for source, prediction, _ in predict(
-            model,
-            map(lambda l: l.strip(), fi),
-            reader=get_reader(model.task, input_path.split(".")[-1]),
-            token_batch_size=token_batch_size,
-            dataset_conf=None,
-            progress_bar=True,
-        ):
-            # todo we are dumping tsv even if the output was a jsonl, convert readers into io-handlers?
-            fo.write(f"{source}\t{prediction.strip()}\n")
+    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
+    input_extension, output_extension = input_path.split('.')[-1], output_path.split('.')[-1]
+    assert input_extension == output_extension, f'Having different input and output extensions is not currently a supported use case: input {input_extension} != output {output_extension}'
+    data_driver = get_data_driver(model.task, input_extension)
+
+    def it():
+        with open(input_path) as fi:
+            for source, prediction in predict(
+                model,
+                map(lambda l: l.strip(), fi),
+                data_driver=data_driver,
+                token_batch_size=token_batch_size,
+                dataset_conf=dataset_conf,
+                progress_bar=True,
+            ):
+                source.update_classification(prediction)
+                yield source
+
+    data_driver.save(it(), output_path)
 
 
 def main():

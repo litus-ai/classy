@@ -6,7 +6,7 @@ import omegaconf
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from classy.data.readers import get_reader
+from classy.data.data_drivers import get_data_driver
 from classy.utils.data import split_dataset
 
 import logging
@@ -20,21 +20,21 @@ logger = get_project_logger(__name__)
 
 class ClassyDataModule(pl.LightningDataModule):
     def __init__(
-            self,
-            task: str,
-            dataset_path: str,
-            train_dataset: omegaconf.DictConfig,
-            validation_dataset: Optional[omegaconf.DictConfig] = None,
-            test_dataset: Optional[omegaconf.DictConfig] = None,
-            validation_split_size: Optional[float] = None,
-            test_split_size: Optional[float] = None,
-            max_nontrain_split_size: Optional[int] = None
+        self,
+        task: str,
+        dataset_path: str,
+        train_dataset: omegaconf.DictConfig,
+        validation_dataset: Optional[omegaconf.DictConfig] = None,
+        test_dataset: Optional[omegaconf.DictConfig] = None,
+        validation_split_size: Optional[float] = None,
+        test_split_size: Optional[float] = None,
+        max_nontrain_split_size: Optional[int] = None,
     ):
         super().__init__()
         self.task = task
         self.dataset_path = dataset_path
         self.file_extension = None
-        self.reader = None
+        self.data_driver = None
 
         self.train_path, self.validation_path, self.test_path = None, None, None
         self.train_dataset, self.validation_dataset, self.test_dataset = None, None, None
@@ -57,6 +57,7 @@ class ClassyDataModule(pl.LightningDataModule):
             assert len(dir_files) == 1, "Found more than one file with 'train' in their name"  # todo: expand
 
             self.file_extension = dir_files[0].split(".")[-1]
+            self.data_driver = get_data_driver(self.task, self.file_extension)
 
             self.train_path = os.path.join(self.dataset_path, f"train.{self.file_extension}")
             self.validation_path = os.path.join(self.dataset_path, f"validation.{self.file_extension}")
@@ -72,8 +73,9 @@ class ClassyDataModule(pl.LightningDataModule):
                     f"enforcing a maximum of {self.max_nontrain_split_size} instances on validation dataset"
                 )
                 self.train_path, self.validation_path, _ = split_dataset(
-                    'data/',  # hydra takes care of placing this folder within the appropriate folder
                     self.train_path,
+                    self.data_driver,
+                    "data/",  # hydra takes care of placing this folder within the appropriate folder
                     validation_split_size=self.validation_split_size,
                     data_max_split=self.max_nontrain_split_size,
                 )
@@ -89,10 +91,12 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
             self.file_extension = self.train_path.split(".")[-1]
+            self.data_driver = get_data_driver(self.task, self.file_extension)
 
             self.train_path, self.validation_path, self.test_path = split_dataset(
-                'data/',
                 self.train_path,
+                self.data_driver,
+                "data/",  # hydra takes care of placing this folder within the appropriate folder
                 validation_split_size=self.validation_split_size,
                 test_split_size=self.test_split_size,
                 data_max_split=self.max_nontrain_split_size,
@@ -104,13 +108,12 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
         # todo: can we improve it?
-        self.reader = get_reader(self.task, self.file_extension)
         self.vocabulary = hydra.utils.instantiate(
             self.train_dataset_conf,
             path=self.train_path,
-            reader=self.reader,
+            data_driver=self.data_driver,
         ).vocabulary
-        self.vocabulary.save('vocabulary/')
+        self.vocabulary.save("vocabulary/")
 
     def setup(self, stage: Optional[str] = None) -> None:
 
@@ -118,20 +121,20 @@ class ClassyDataModule(pl.LightningDataModule):
             self.train_dataset = hydra.utils.instantiate(
                 self.train_dataset_conf,
                 path=self.train_path,
-                reader=self.reader,
+                data_driver=self.data_driver,
                 vocabulary=self.vocabulary,
             )
             self.validation_dataset = hydra.utils.instantiate(
                 self.validation_dataset_conf,
                 path=self.validation_path,
-                reader=self.reader,
+                data_driver=self.data_driver,
                 vocabulary=self.vocabulary,
             )
         if stage == "test":
             self.test_dataset = hydra.utils.instantiate(
                 self.test_dataset_conf,
                 path=self.test_path,
-                reader=self.reader,
+                data_driver=self.data_driver,
                 vocabulary=self.vocabulary,
             )
 

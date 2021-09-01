@@ -18,11 +18,7 @@ def train(conf: omegaconf.DictConfig) -> None:
     pl_data_module.prepare_data()
 
     # main module declaration
-    pl_module = hydra.utils.instantiate(
-        conf.model,
-        vocabulary=pl_data_module.vocabulary,
-        _recursive_=False
-    )
+    pl_module = hydra.utils.instantiate(conf.model, vocabulary=pl_data_module.vocabulary, _recursive_=False)
 
     # callbacks declaration
     callbacks_store = []

@@ -1,11 +1,12 @@
-from typing import NamedTuple, Optional, Union, List
+from typing import NamedTuple, Optional, Union, List, Type, Iterator, Tuple
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
 import torch
 
-from classy.data.readers import SEQUENCE
+from classy.data.dataset.base import BaseDataset
+from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -17,7 +18,6 @@ class ClassificationOutput(NamedTuple):
 
 
 class ClassyPLModule(pl.LightningModule):
-
     def __init__(self, vocabulary: Vocabulary, optim_conf: omegaconf.DictConfig):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
@@ -27,7 +27,7 @@ class ClassyPLModule(pl.LightningModule):
     def task(self) -> str:
         raise NotImplementedError
 
-    def predict(self, *args, **kwargs) -> List[Union[str, List[str]]]:
+    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]]]]:
         raise NotImplementedError
 
     def configure_optimizers(self):
@@ -39,3 +39,8 @@ class SequencePLModule(ClassyPLModule):
     @property
     def task(self) -> str:
         return SEQUENCE
+
+    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[SequenceSample, str]]]:
+        raise NotImplementedError
+
+

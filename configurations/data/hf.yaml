@@ -3,7 +3,7 @@ datamodule:
 #  task: null  # set via kwargs
 #  dataset_path: null  # set via kwargs
   task: "sequence"
-  dataset_path: "data/sentiment140/delete"
+  dataset_path: "data/sentiment140"
   train_dataset:
     _target_: 'classy.data.dataset.hf.HFSequenceDataset.from_file'
     transformer_model: ${transformer_model}
@@ -15,4 +15,5 @@ datamodule:
     prebatch: True
     shuffle: True
   validation_split_size: 0.1
+  test_split_size: 0.1
   max_nontrain_split_size: 500

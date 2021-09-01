@@ -27,19 +27,19 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     conf = OmegaConf.load(f"{hydra_config_path}/.hydra/config.yaml")
 
     # extract and build vocabulary
-    vocabulary_path = Path(checkpoint_path).parent.parent / 'vocabulary'
-    assert vocabulary_path.exists(), f'No vocabulary found at path {vocabulary_path}'
+    vocabulary_path = Path(checkpoint_path).parent.parent / "vocabulary"
+    assert vocabulary_path.exists(), f"No vocabulary found at path {vocabulary_path}"
     vocabulary = Vocabulary.from_folder(vocabulary_path)
 
     # instantiate and return
     return hydra.utils.instantiate(
         {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'},
         checkpoint_path=checkpoint_path,
-        vocabulary=vocabulary
+        vocabulary=vocabulary,
     )
 
 
-def load_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
+def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
     """
     Load a dataset conf from a checkpoint path only, inferring it from the dumped hydra conf
 
@@ -58,4 +58,4 @@ def load_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
     conf = OmegaConf.load(f"{hydra_config_path}/.hydra/config.yaml")
 
     # instantiate and return
-    return {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'}
+    return dict(conf.prediction.dataset)

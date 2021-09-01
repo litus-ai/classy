@@ -27,11 +27,11 @@ class Vocabulary:
         backend_vocab = {}
         folder = Path(path)
         for f in folder.iterdir():
-            k = f.name.rstrip('.txt')
+            k = f.name.rstrip(".txt")
             elem2idx = {}
             with open(f) as _f:
                 for line in _f:
-                    _k, _v = line.strip().split('\t')
+                    _k, _v = line.strip().split("\t")
                     elem2idx[_k] = int(_v)
             backend_vocab[k] = elem2idx
         return cls(backend_vocab)
@@ -53,6 +53,6 @@ class Vocabulary:
         folder = Path(path)
         folder.mkdir()
         for k, v in self.backend_vocab.items():
-            with open(folder / f'{k}.txt', 'w') as f:
+            with open(folder / f"{k}.txt", "w") as f:
                 for _k, _v in v.items():
-                    f.write(f'{_k}\t{_v}\n')
+                    f.write(f"{_k}\t{_v}\n")

@@ -6,7 +6,7 @@ import torch
 from transformers import AutoTokenizer
 
 from classy.data.dataset.base import BaseDataset, batchify
-from classy.data.readers import SequenceReader, Reader, SequenceSample
+from classy.data.data_drivers import SequenceDataDriver, DataDriver, SequenceSample
 from classy.utils.log import get_project_logger
 
 from classy.utils.vocabulary import Vocabulary
@@ -16,46 +16,35 @@ logger = get_project_logger(__name__)
 
 
 class HFSequenceDataset(BaseDataset):
-
     @classmethod
     def from_file(
-            cls,
-            path: str,
-            reader: Reader,
-            vocabulary: Optional[Dict[str, Vocabulary]] = None,
-            **kwargs
+        cls, path: str, data_driver: DataDriver, vocabulary: Optional[Dict[str, Vocabulary]] = None, **kwargs
     ) -> "BaseDataset":
-
         def r() -> Iterator[SequenceSample]:
-            for sequence_sample in reader.read_from_path(path):
+            for sequence_sample in data_driver.read_from_path(path):
                 yield sequence_sample
 
         if vocabulary is None:
             # vocabulary fitting here
-            logger.info('Fitting vocabulary')
-            vocabulary = Vocabulary.from_samples([{'labels': _l.label} for _l in reader.read_from_path(path)])
-            logger.info('Vocabulary fitting completed')
+            logger.info("Fitting vocabulary")
+            vocabulary = Vocabulary.from_samples([{"labels": _l.label} for _l in data_driver.read_from_path(path)])
+            logger.info("Vocabulary fitting completed")
 
         return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
 
     @classmethod
     def from_lines(
-            cls,
-            lines: Iterable[str],
-            reader: Reader,
-            vocabulary: Optional[Dict[str, Vocabulary]] = None,
-            **kwargs
+        cls, lines: Iterable[str], data_driver: DataDriver, vocabulary: Optional[Dict[str, Vocabulary]] = None, **kwargs
     ) -> "BaseDataset":
-
         def r() -> Iterator[SequenceSample]:
-            for sequence_sample in reader.read(lines):
+            for sequence_sample in data_driver.read(lines):
                 yield sequence_sample
 
         if vocabulary is None:
             # vocabulary fitting here
-            logger.info('Fitting vocabulary')
-            vocabulary = Vocabulary.from_samples([{'labels': _l.label} for _l in reader.read_from_path(path)])
-            logger.info('Vocabulary fitting completed')
+            logger.info("Fitting vocabulary")
+            vocabulary = Vocabulary.from_samples([{"labels": _l.label} for _l in data_driver.read_from_path(path)])
+            logger.info("Vocabulary fitting completed")
 
         return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
 
@@ -74,7 +63,7 @@ class HFSequenceDataset(BaseDataset):
     ):
         super().__init__(
             dataset_iterator_func=None,
-            batching_fields=['input_ids'],
+            batching_fields=["input_ids"],
             tokens_per_batch=tokens_per_batch,
             max_batch_size=max_batch_size,
             fields_batchers=None,
@@ -94,16 +83,18 @@ class HFSequenceDataset(BaseDataset):
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "samples": None,
         }
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
         for sequence_sample in self.samples_iterator():
-            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors='pt')['input_ids'][0]
+            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")["input_ids"][0]
             elem_dict = {
                 "input_ids": input_ids,
                 "attention_mask": torch.ones_like(input_ids),
             }
             if sequence_sample.label is not None:
-                elem_dict["labels"] = [self.vocabulary.get_idx(k='labels', elem=sequence_sample.label)]
+                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
+            elem_dict["samples"] = sequence_sample
             yield elem_dict

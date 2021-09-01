@@ -2,3 +2,5 @@
 pytorch-lightning==1.4.4
 transformers==4.9.2
 hydra-core==1.1.1
+# black
+black==21.8b0

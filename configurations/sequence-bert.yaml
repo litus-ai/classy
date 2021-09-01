@@ -23,4 +23,5 @@ defaults:
   - data: hf
   - device: cuda
   - model: sequence-bert
+  - prediction: hf
   - training: default

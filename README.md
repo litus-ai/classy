@@ -14,7 +14,11 @@ PYTHONPATH=$(pwd) python classy/classy/scripts/model/train.py \
 ```
 
 ```bash
-PYTHONPATH=$(pwd) python classy/classy/scripts/model/predict.py \
+PYTHONPATH=$(pwd) python classy/classy/scripts/model/predict.py \0
   experiments/debug/2021-09-01/10-59-28/checkpoints/epoch=00-val_loss=0.32.ckpt \
   -t
+```
+
+```bash
+black -l 120 classy/
 ```
