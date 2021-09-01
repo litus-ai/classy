@@ -37,7 +37,7 @@ class SequenceSample(ClassyStruct):
 
 class TokensSample(ClassyStruct):
 
-    def __init__(self, tokens: List[str], labels: Optional[List[str]]):
+    def __init__(self, tokens: List[str], labels: Optional[List[str]] = None):
         self.tokens = tokens
         self.labels = labels
 
@@ -142,14 +142,18 @@ class TSVTokensDataDriver(TokensDataDriver):
                 1,
                 2,
             ], f"TSVTokensDataDriver expects 1 (tokens) or 3 (tokens, labels) fields, but {len(parts)} were found at line {line}"
-            tokens, labels = parts[0], None
+            tokens, labels = parts[0].split(' '), None
             if len(parts) == 2:
-                labels = parts[2]
+                labels = parts[1].split(' ')
                 assert len(tokens) == len(
                     labels
                 ), f"Token Classification requires as many token as labels: found {len(tokens)} tokens != {len(labels)} labels at line {line}"
-            tokens, labels = line.strip().split("\t")
-            yield TokensSample(tokens.split(" "), labels.split(" "))
+            yield TokensSample(tokens, labels)
+
+    def save(self, samples: Iterator[TokensSample], path: str):
+        with open(path, 'w') as f:
+            for sample in samples:
+                f.write('\t'.join([" ".join(sample.tokens), " ".join(sample.labels)]) + '\n')
 
 
 class JSONLTokensDataDriver(TokensDataDriver):
@@ -161,6 +165,11 @@ class JSONLTokensDataDriver(TokensDataDriver):
                     sample.labels
                 ), f"Token Classification requires as many token as labels: found {len(sample.tokens)} tokens != {len(sample.labels)} labels at line {line}"
             yield TokensSample(**json.loads(line))
+
+    def save(self, samples: Iterator[TokensSample], path: str):
+        with open(path, 'w') as f:
+            for sample in samples:
+                f.write(json.dumps({'tokens': sample.tokens, 'labels': sample.labels}) + '\n')
 
 
 # TASK TYPES

@@ -1,52 +1,17 @@
-import random
-from typing import Optional, Callable, Iterable, Dict, Any, Union, Tuple, Iterator
+from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List
 
-import logging
 import torch
 from transformers import AutoTokenizer
 
+from classy.data.data_drivers import SequenceSample, TokensSample
 from classy.data.dataset.base import BaseDataset, batchify
-from classy.data.data_drivers import SequenceDataDriver, DataDriver, SequenceSample
 from classy.utils.log import get_project_logger
-
 from classy.utils.vocabulary import Vocabulary
-
 
 logger = get_project_logger(__name__)
 
 
-class HFSequenceDataset(BaseDataset):
-    @classmethod
-    def from_file(
-        cls, path: str, data_driver: DataDriver, vocabulary: Optional[Dict[str, Vocabulary]] = None, **kwargs
-    ) -> "BaseDataset":
-        def r() -> Iterator[SequenceSample]:
-            for sequence_sample in data_driver.read_from_path(path):
-                yield sequence_sample
-
-        if vocabulary is None:
-            # vocabulary fitting here
-            logger.info("Fitting vocabulary")
-            vocabulary = Vocabulary.from_samples([{"labels": _l.label} for _l in data_driver.read_from_path(path)])
-            logger.info("Vocabulary fitting completed")
-
-        return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
-
-    @classmethod
-    def from_lines(
-        cls, lines: Iterable[str], data_driver: DataDriver, vocabulary: Optional[Dict[str, Vocabulary]] = None, **kwargs
-    ) -> "BaseDataset":
-        def r() -> Iterator[SequenceSample]:
-            for sequence_sample in data_driver.read(lines):
-                yield sequence_sample
-
-        if vocabulary is None:
-            # vocabulary fitting here
-            logger.info("Fitting vocabulary")
-            vocabulary = Vocabulary.from_samples([{"labels": _l.label} for _l in data_driver.read_from_path(path)])
-            logger.info("Vocabulary fitting completed")
-
-        return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
+class HFBaseDataset(BaseDataset):
 
     def __init__(
         self,
@@ -62,7 +27,8 @@ class HFSequenceDataset(BaseDataset):
         max_length: int,
     ):
         super().__init__(
-            dataset_iterator_func=None,
+            samples_iterator=samples_iterator,
+            vocabulary=vocabulary,
             batching_fields=["input_ids"],
             tokens_per_batch=tokens_per_batch,
             max_batch_size=max_batch_size,
@@ -73,12 +39,17 @@ class HFSequenceDataset(BaseDataset):
             min_length=min_length,
             max_length=max_length,
         )
-        self.vocabulary = vocabulary
-        self.samples_iterator = samples_iterator
         self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True)
-        self.__init_fields_batcher()
+        self._init_fields_batcher()
 
-    def __init_fields_batcher(self) -> None:
+
+class HFSequenceDataset(HFBaseDataset):
+
+    @staticmethod
+    def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
+        return Vocabulary.from_samples([{"labels": sample.label} for sample in samples])
+
+    def _init_fields_batcher(self) -> None:
         self.fields_batcher = {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
@@ -98,3 +69,41 @@ class HFSequenceDataset(BaseDataset):
                 elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
             elem_dict["samples"] = sequence_sample
             yield elem_dict
+
+
+class HFTokenDataset(HFBaseDataset):
+
+    @staticmethod
+    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
+        return Vocabulary.from_samples([{"labels": label} for sample in samples for label in sample.labels])
+
+    def _init_fields_batcher(self) -> None:
+        self.fields_batcher = {
+            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
+            "attention_mask": lambda lst: batchify(lst, padding_value=0),
+            "labels": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
+            "samples": None,
+            "token_offsets": None,
+        }
+
+    def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
+
+        for token_sample in self.samples_iterator():
+            input_ids, token_offsets = self.tokenize(token_sample.tokens)
+            elem_dict = {
+                "input_ids": input_ids,
+                "attention_mask": torch.ones_like(input_ids),
+                "token_offsets": token_offsets,
+            }
+            if token_sample.labels is not None:
+                elem_dict["labels"] = torch.tensor([self.vocabulary.get_idx(k="labels", elem=label) for label in token_sample.labels])
+            elem_dict["samples"] = token_sample
+            yield elem_dict
+
+    def tokenize(self, tokens: List[str]) -> Optional[Tuple[torch.Tensor, List[Tuple[int, int]]]]:
+        tok_encoding = self.tokenizer.encode_plus(tokens, return_tensors="pt", is_split_into_words=True)
+        try:
+            return tok_encoding.input_ids.squeeze(0), [tuple(tok_encoding.word_to_tokens(wi)) for wi in range(len(tokens))]
+        except TypeError:
+            logger.warning(f"Tokenization failed for tokens: {' | '.join(tokens)}")
+            return None

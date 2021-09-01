@@ -1,14 +1,12 @@
-import logging
 import random
-from typing import Callable, Iterable, List, Any, Dict, Union, Optional, Tuple, Iterator
+from typing import Callable, List, Any, Dict, Union, Optional, Iterator
 
-import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 from tqdm import tqdm
 
-from classy.data.data_drivers import DataDriver
+from classy.data.data_drivers import DataDriver, SentencePairSample, SequenceSample, TokensSample
 from classy.utils.commons import chunks, flatten, add_noise_to_value
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -31,29 +29,44 @@ def batchify_matrices(tensors: List[torch.Tensor], padding_value: int) -> torch.
 
 
 class BaseDataset(IterableDataset):
+    @staticmethod
+    def fit_vocabulary(samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]) -> Vocabulary:
+        raise NotImplementedError
+
     @classmethod
     def from_file(
-        cls,
-        path: str,
-        data_driver: DataDriver,
-        vocabulary: Optional[Dict[str, Vocabulary]] = None,
-        **kwargs,
+            cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs
     ) -> "BaseDataset":
-        raise NotImplementedError
+        def r() -> Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]:
+            for sequence_sample in data_driver.read_from_path(path):
+                yield sequence_sample
+
+        if vocabulary is None:
+            # vocabulary fitting here
+            logger.info("Fitting vocabulary")
+            vocabulary = cls.fit_vocabulary(data_driver.read_from_path(path))
+            logger.info("Vocabulary fitting completed")
+
+        return cls(
+            samples_iterator=r,
+            vocabulary=vocabulary,
+            **kwargs
+        )
 
     @classmethod
     def from_lines(
-        cls,
-        lines: Iterable[str],
-        data_driver: DataDriver,
-        vocabulary: Optional[Dict[str, Vocabulary]] = None,
-        **kwargs,
+            cls, lines: Iterator[str], data_driver: DataDriver, vocabulary: Vocabulary, **kwargs
     ) -> "BaseDataset":
-        raise NotImplementedError
+        def r() -> Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]:
+            for sequence_sample in data_driver.read(lines):
+                yield sequence_sample
+
+        return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
 
     def __init__(
         self,
-        dataset_iterator_func: Optional[Callable[[], Iterable[Dict[str, Any]]]],
+        samples_iterator: Callable[[], Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]],
+        vocabulary: Vocabulary,
         batching_fields: List[str],
         tokens_per_batch: int,
         max_batch_size: int,
@@ -66,9 +79,8 @@ class BaseDataset(IterableDataset):
     ):
         super().__init__()
 
-        # you can subclass BaseDataset in this way
-        if dataset_iterator_func is not None:
-            self.dataset_iterator_func = dataset_iterator_func
+        self.samples_iterator = samples_iterator
+        self.vocabulary = vocabulary
 
         self.batching_fields = batching_fields
         assert len(batching_fields) > 0, "At least 1 batching field is required"
@@ -78,6 +90,9 @@ class BaseDataset(IterableDataset):
         self.prebatch, self.section_size = prebatch, section_size
         self.shuffle = shuffle
         self.min_length, self.max_length = min_length, max_length
+
+    def dataset_iterator_func(self):
+        raise NotImplementedError
 
     def prebatch_elements(self, dataset_elements: List):
         dataset_elements = sorted(

@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 import torch
 
 from classy.data.dataset.base import BaseDataset
-from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample
+from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample, TOKEN
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -41,6 +41,16 @@ class SequencePLModule(ClassyPLModule):
         return SEQUENCE
 
     def predict(self, *args, **kwargs) -> List[Iterator[Tuple[SequenceSample, str]]]:
+        raise NotImplementedError
+
+
+class TokensPLModule(ClassyPLModule):
+
+    @property
+    def task(self) -> str:
+        return TOKEN
+
+    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[TokensSample, str]]]:
         raise NotImplementedError
 
 

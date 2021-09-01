@@ -1,11 +1,11 @@
 datamodule:
   _target_: 'classy.data.data_modules.ClassyDataModule'
-#  task: null  # set via kwargs
-#  dataset_path: null  # set via kwargs
-  task: "sequence"
-  dataset_path: "data/sentiment140"
+#  task: null  # todo should be set via kwargs
+#  dataset_path: null  # todo should be set via kwargs
+  task: "token"
+  dataset_path: "data/conll2003"
   train_dataset:
-    _target_: 'classy.data.dataset.hf.HFSequenceDataset.from_file'
+    _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
     min_length: 5
     max_length: 500
