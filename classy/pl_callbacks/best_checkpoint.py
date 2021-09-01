@@ -1,10 +1,7 @@
 import shutil
-from logging import getLogger
 from pathlib import Path
 
 from pytorch_lightning.callbacks import ModelCheckpoint
-
-logger = getLogger(__name__)
 
 
 class ModelCheckpointWithBest(ModelCheckpoint):

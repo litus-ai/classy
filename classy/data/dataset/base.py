@@ -1,16 +1,19 @@
 import logging
+import random
 from typing import Callable, Iterable, List, Any, Dict, Union, Optional, Tuple, Iterator
 
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
+from tqdm import tqdm
 
-from classy.data.readers import FileReader
-from classy.utils.commons import chunks, flatten
+from classy.data.readers import Reader
+from classy.utils.commons import chunks, flatten, add_noise_to_value
+from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
-logger = logging.getLogger(__name__)
+logger = get_project_logger(__name__)
 
 
 def batchify(tensors: List[torch.Tensor], padding_value: int) -> torch.Tensor:
@@ -32,77 +35,58 @@ class BaseDataset(IterableDataset):
     def from_file(
         cls,
         path: str,
-        file_reader: FileReader,
+        reader: Reader,
+        vocabulary: Optional[Dict[str, Vocabulary]] = None,
         **kwargs,
     ) -> "BaseDataset":
         raise NotImplementedError
 
-    @staticmethod
-    def fit_features_vocabulary(reader: FileReader, dataset_path: str) -> Optional[Vocabulary]:
-        raise NotImplementedError
-
-    @staticmethod
-    def fit_labels_vocabulary(reader: FileReader, dataset_path: str) -> Tuple[Optional[Vocabulary], Vocabulary]:
+    @classmethod
+    def from_lines(
+        cls,
+        lines: Iterable[str],
+        reader: Reader,
+        vocabulary: Optional[Dict[str, Vocabulary]] = None,
+        **kwargs,
+    ) -> "BaseDataset":
         raise NotImplementedError
 
     def __init__(
         self,
-        features_vocabulary: Vocabulary,
-        labels_vocabulary: Vocabulary,
         dataset_iterator_func: Optional[Callable[[], Iterable[Dict[str, Any]]]],
+        batching_fields: List[str],
         tokens_per_batch: int,
         max_batch_size: Optional[int],
-        main_field: str,
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         section_size: int,
         prebatch: bool,
         shuffle: bool,
+        min_length: int,
         max_length: int,
     ):
         super().__init__()
 
-        # vocabularies
-        self.features_vocabulary = (
-            features_vocabulary
-            if features_vocabulary is not None
-            else self.fit_features_vocabulary(self.sequence_reader, self.path)
-        )
-        self.labels_vocabulary = (
-            labels_vocabulary
-            if labels_vocabulary is not None
-            else self.fit_labels_vocabulary(self.sequence_reader, self.path)
-        )
-
-        # you can subclass TokenBasedDataset in this way
+        # you can subclass BaseDataset in this way
         if dataset_iterator_func is not None:
             self.dataset_iterator_func = dataset_iterator_func
 
-        self.tokens_per_batch = tokens_per_batch
-        self.max_batch_size = max_batch_size
-        self.main_field = main_field
+        self.batching_fields = batching_fields
+        assert len(batching_fields) > 0, "At least 1 batching field is required"
+
+        self.tokens_per_batch, self.max_batch_size = tokens_per_batch, max_batch_size
         self.fields_batcher = fields_batchers
-        self.section_size = section_size
-        self.prebatch = prebatch
+        self.prebatch, self.section_size = prebatch, section_size
         self.shuffle = shuffle
-        self.max_length = max_length
+        self.min_length, self.max_length = min_length, max_length
 
-        if self.shuffle and not self.prebatch:
-            logger.warning("If you set prebatch to False the shuffle parameters has no effect")
-
-    def prebatch_elements(self, dataset_elements: list) -> list:
-        # todo: too many magic numbers in this block of code.
-        if self.shuffle:
-            dataset_elements = sorted(
-                dataset_elements,
-                key=lambda de: len(de[self.main_field]) + torch.randint(0, 10, (1,)),
-            )
-            dataset_elements = list(chunks(dataset_elements, 2048))
-            np.random.shuffle(dataset_elements)
-            dataset_elements = flatten(dataset_elements)
-        else:
-            dataset_elements = sorted(dataset_elements, key=lambda de: len(de[self.main_field]))
-
-        return dataset_elements
+    def prebatch_elements(self, dataset_elements: List):
+        dataset_elements = sorted(
+            dataset_elements,
+            key=lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1)
+        )
+        ds = list(chunks(dataset_elements, 512))
+        random.shuffle(ds)
+        return flatten(ds)
 
     def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
@@ -140,31 +124,45 @@ class BaseDataset(IterableDataset):
 
             return batch_dict
 
+        max_len_discards, min_len_discards = 0, 0
+
         for de in dataset_elements:
 
             if self.max_batch_size is not None and len(current_batch) == self.max_batch_size:
                 batches.append(output_batch())
                 current_batch = []
 
-            de_main_len = len(de[self.main_field])
-
             # todo: maybe here we want to check fields or stuff like that
             # some callback to filter out samples for example
 
-            if de_main_len > self.max_length:
-                logger.warning(f"Discarding element: max length exceeded ({de_main_len} > {self.max_length})")
+            too_long_batching_fields = [k for k in self.batching_fields if self.max_length != -1 and len(de[k]) > self.max_length]
+            if len(too_long_batching_fields) > 0:
+                max_len_discards += 1
+                if max_len_discards % 10 == 0:
+                # if max_len_discards % 1_000 == 0:
+                    logger.warning(f"{max_len_discards} elements discarded since longer than max length {self.max_length}")
                 continue
 
-            if de_main_len > self.tokens_per_batch:
+            too_short_batching_fields = [k for k in self.batching_fields if self.min_length != -1 and len(de[k]) < self.min_length]
+            if len(too_short_batching_fields) > 0:
+                min_len_discards += 1
+                if min_len_discards % 10 == 0:
+                # if min_len_discards % 1_000 == 0:
+                    logger.warning(f"{max_len_discards} elements discarded since shorter than max length {self.min_length}")
+                continue
+
+            de_len = sum(len(de[k]) for k in de)
+
+            if de_len > self.tokens_per_batch:
                 logger.warning(
                     f'Discarding element: length greater than "tokens per batch"'
-                    f" ({de_main_len} > {self.tokens_per_batch})"
+                    f" ({de_len} > {self.tokens_per_batch})"
                 )
                 continue
 
             future_max_len = max(
-                de_main_len,
-                max([len(bde[self.main_field]) for bde in current_batch], default=0),
+                de_len,
+                max([sum(len(bde[k]) for k in self.batching_fields) for bde in current_batch], default=0),
             )
 
             future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
@@ -184,9 +182,18 @@ class BaseDataset(IterableDataset):
 
     def __iter__(self):
 
+        dataset_iterator = self.dataset_iterator_func()
+        if self.shuffle:
+            logger.warning('Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory to shuffle')
+            dataset_iterator = list(tqdm(dataset_iterator, desc='Materializing dataset'))
+            logger.info('Materliziation completed, now shuffling')
+            random.shuffle(dataset_iterator)
+            logger.info('Shuffling completed')
+
         current_dataset_elements = []
 
-        for i, dataset_elem in enumerate(self.dataset_iterator_func()):
+        i = None
+        for i, dataset_elem in enumerate(dataset_iterator):
 
             if len(current_dataset_elements) == self.section_size:
                 for batch in self.materialize_batches(current_dataset_elements):
@@ -202,4 +209,7 @@ class BaseDataset(IterableDataset):
             for batch in self.materialize_batches(current_dataset_elements):
                 yield batch
 
-        logger.info(f"Dataset finished: {i} number of elements processed")
+        if i is not None:
+            logger.info(f"Dataset finished: {i} number of elements processed")
+        else:
+            logger.warning('Dataset empty')

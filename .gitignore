@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ide stuff
+.idea
+.vscode
+
+# custom stuff
+data/*
+experiments/*
+!.placeholder

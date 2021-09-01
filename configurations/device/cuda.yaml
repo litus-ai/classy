@@ -1,0 +1,4 @@
+gpus:
+  - 0
+precision: 32
+amp_level: 'O0'

@@ -1,0 +1,33 @@
+# reproducibility
+seed: 12
+
+# pl_trainer
+pl_trainer:
+  _target_: pytorch_lightning.Trainer
+  accumulate_grad_batches: 4
+  gradient_clip_val: 10.0
+#  val_check_interval: 1.0
+  val_check_interval: 1000
+  max_steps: 1_000_000
+
+callbacks_monitor: 'val_loss'
+callbacks_mode: 'min'
+
+# early stopping callback
+# "early_stopping_callback: null" will disable early stopping
+early_stopping_callback:
+  _target_: pytorch_lightning.callbacks.EarlyStopping
+  monitor: ${training.callbacks_monitor}
+  mode: ${training.callbacks_mode}
+  patience: 5
+
+# model_checkpoint_callback
+# "model_checkpoint_callback: null" will disable model checkpointing
+model_checkpoint_callback:
+  _target_: classy.pl_callbacks.best_checkpoint.ModelCheckpointWithBest
+  monitor: ${training.callbacks_monitor}
+  mode: ${training.callbacks_mode}
+  verbose: True
+  save_top_k: 3
+  dirpath: checkpoints
+  save_last: true
