@@ -31,7 +31,9 @@ class ClassyPLModule(pl.LightningModule):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
-        self.custom_metric_on_validation_end = collections.defaultdict(lambda: torchmetrics.AverageMeter())
+        self.custom_metric_on_validation_end = collections.defaultdict(
+            lambda: torchmetrics.AverageMeter()
+        )
 
     @property
     def task(self) -> str:
@@ -56,7 +58,6 @@ class ClassyPLModule(pl.LightningModule):
         metric = self.custom_metric_on_validation_end[k]
         metric.reset()
         metric(v)
-
 
 
 class TaskMixin:
