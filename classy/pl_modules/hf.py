@@ -141,10 +141,24 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         self.p_metric = torchmetrics.Precision(mdmc_average="global")
         self.r_metric = torchmetrics.Recall(mdmc_average="global")
         self.f1_metric = torchmetrics.F1(mdmc_average="global")
-        self.accuracy_metric = torchmetrics.Accuracy(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
-        self.p_metric = torchmetrics.Precision(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
-        self.r_metric = torchmetrics.Recall(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
-        self.f1_metric = torchmetrics.F1(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
+
+        ignore_index = vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
+        self.accuracy_metric = torchmetrics.Accuracy(
+            mdmc_average="global",
+            ignore_index=ignore_index,
+        )
+        self.p_metric = torchmetrics.Precision(
+            mdmc_average="global",
+            ignore_index=ignore_index,
+        )
+        self.r_metric = torchmetrics.Recall(
+            mdmc_average="global",
+            ignore_index=ignore_index,
+        )
+        self.f1_metric = torchmetrics.F1(
+            mdmc_average="global",
+            ignore_index=ignore_index,
+        )
 
     def forward(
         self,
@@ -191,7 +205,8 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
             yield sample, [
-                self.vocabulary.get_elem(k="labels", idx=_p.item()) for _p in prediction[: len(sample.tokens)]]
+                self.vocabulary.get_elem(k="labels", idx=_p.item())
+                for _p in prediction[: len(sample.tokens)]
             ]
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
@@ -203,7 +218,9 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
-        labels[labels == -100] = self.vocabulary.get_idx(k='labels', elem=Vocabulary.PAD)
+        labels[labels == -100] = self.vocabulary.get_idx(
+            k="labels", elem=Vocabulary.PAD
+        )
 
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)
@@ -220,7 +237,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
-        labels[-100] = self.vocabulary.get_idx(k='labels', elem=Vocabulary.PAD)
+        labels[-100] = self.vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
 
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)
