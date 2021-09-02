@@ -19,10 +19,10 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: empty
-  - data: token-hf
+  - callbacks: default
+  - data: sent-pair-hf
   - device: cuda
-  - model: token-bert
-  - prediction: token-hf
+  - model: sequence-bert
+  - prediction: sent-pair-hf
   - training: default
   - _self_

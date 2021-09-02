@@ -25,3 +25,4 @@ defaults:
   - model: sequence-bert
   - prediction: sequence-hf
   - training: default
+  - _self_
