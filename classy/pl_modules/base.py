@@ -1,5 +1,6 @@
 import collections
-from typing import NamedTuple, Optional, Union, List, Type, Iterator, Tuple, Dict
+
+from typing import NamedTuple, Optional, Union, List, Iterator, Tuple, Dict
 
 import hydra
 import omegaconf
@@ -7,8 +8,14 @@ import pytorch_lightning as pl
 import torch
 import torchmetrics
 
-from classy.data.dataset.base import BaseDataset
-from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample, TOKEN
+from classy.data.data_drivers import (
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    SEQUENCE,
+    TOKEN,
+    SENTENCE_PAIR,
+)
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -24,13 +31,24 @@ class ClassyPLModule(pl.LightningModule):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
-        self.custom_metric_on_validation_end = collections.defaultdict(lambda: torchmetrics.AverageMeter())
+        self.custom_metric_on_validation_end = collections.defaultdict(
+            lambda: torchmetrics.AverageMeter()
+        )
 
     @property
     def task(self) -> str:
         raise NotImplementedError
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]]]]:
+    def predict(
+        self, *args, **kwargs
+    ) -> List[
+        Iterator[
+            Tuple[
+                Union[SentencePairSample, SequenceSample, TokensSample],
+                Union[str, List[str]],
+            ]
+        ]
+    ]:
         raise NotImplementedError
 
     def configure_optimizers(self):
@@ -42,24 +60,25 @@ class ClassyPLModule(pl.LightningModule):
         metric(v)
 
 
+class TaskMixin:
+    @property
+    def task(self) -> str:
+        raise NotImplementedError
 
-class SequencePLModule(ClassyPLModule):
 
+class SequenceTask(TaskMixin):
     @property
     def task(self) -> str:
         return SEQUENCE
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[SequenceSample, str]]]:
-        raise NotImplementedError
 
-
-class TokensPLModule(ClassyPLModule):
-
+class TokensTask(TaskMixin):
     @property
     def task(self) -> str:
         return TOKEN
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[TokensSample, str]]]:
-        raise NotImplementedError
 
-
+class SentencePairTask(TaskMixin):
+    @property
+    def task(self) -> str:
+        return SENTENCE_PAIR
