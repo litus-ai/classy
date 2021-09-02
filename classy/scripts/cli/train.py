@@ -1,11 +1,11 @@
 from argparse import ArgumentParser
 from pathlib import Path
+
 from hydra import compose, initialize
 from classy.scripts.model.train import train, fix
 
 
-def parse_args():
-    parser = ArgumentParser()
+def populate_parser(parser: ArgumentParser):
 
     # TODO: add help?
     parser.add_argument("task", choices=("sequence", "token", "sentence-pair"))
@@ -16,11 +16,23 @@ def parse_args():
     parser.add_argument("--root", type=Path, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
 
-    return parser.parse_args()
+
+def get_parser(subparser=None) -> ArgumentParser:
+    # subparser: Optional[argparse._SubParsersAction]
+
+    parser_kwargs = dict(name="train", description="train a model with classy", help="TODO")
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
+
+    populate_parser(parser)
+
+    return parser
 
 
-def main():
-    args = parse_args()
+def parse_args():
+    return get_parser().parse_args()
+
+
+def main(args):
 
     if args.root is not None:
         config_name = args.root
@@ -60,11 +72,11 @@ def test(cmd):
 
     sys.argv = cmd.split(" ")
     print(cmd, end=" -> \n\t")
-    main()
+    main(parse_args())
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args())
     # test("train.py sentence-pair data/glue/mrpc")
     # test("train.py token data/mrpc -m small -n mrpc-small")
     # test(
