@@ -25,3 +25,4 @@ defaults:
   - model: token-bert
   - prediction: token-hf
   - training: default
+  - _self_

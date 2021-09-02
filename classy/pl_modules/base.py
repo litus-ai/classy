@@ -1,12 +1,18 @@
-from typing import NamedTuple, Optional, Union, List, Type, Iterator, Tuple
+from typing import NamedTuple, Optional, Union, List, Iterator, Tuple
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
 import torch
 
-from classy.data.dataset.base import BaseDataset
-from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample, TOKEN
+from classy.data.data_drivers import (
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    SEQUENCE,
+    TOKEN,
+    SENTENCE_PAIR,
+)
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -27,30 +33,41 @@ class ClassyPLModule(pl.LightningModule):
     def task(self) -> str:
         raise NotImplementedError
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]]]]:
+    def predict(
+        self, *args, **kwargs
+    ) -> List[
+        Iterator[
+            Tuple[
+                Union[SentencePairSample, SequenceSample, TokensSample],
+                Union[str, List[str]],
+            ]
+        ]
+    ]:
         raise NotImplementedError
 
     def configure_optimizers(self):
         return hydra.utils.instantiate(self._optim_conf, _recursive_=False)(module=self)
 
 
-class SequencePLModule(ClassyPLModule):
+class TaskMixin:
+    @property
+    def task(self) -> str:
+        raise NotImplementedError
 
+
+class SequenceTask(TaskMixin):
     @property
     def task(self) -> str:
         return SEQUENCE
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[SequenceSample, str]]]:
-        raise NotImplementedError
 
-
-class TokensPLModule(ClassyPLModule):
-
+class TokensTask(TaskMixin):
     @property
     def task(self) -> str:
         return TOKEN
 
-    def predict(self, *args, **kwargs) -> List[Iterator[Tuple[TokensSample, str]]]:
-        raise NotImplementedError
 
-
+class SentencePairTask(TaskMixin):
+    @property
+    def task(self) -> str:
+        return SENTENCE_PAIR

@@ -1,7 +1,5 @@
-from typing import NamedTuple, Iterable, List, Union, Optional, Iterator, Generator
+from typing import List, Union, Optional, Iterator, Generator
 import json
-
-import logging
 
 from classy.utils.log import get_project_logger
 
@@ -9,13 +7,11 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
-
     def update_classification(self, classification_result: Union[str, List[str]]):
         raise NotImplementedError
 
 
 class SentencePairSample(ClassyStruct):
-
     def __init__(self, sentence1: str, sentence2: str, label: Optional[str] = None):
         self.sentence1 = sentence1
         self.sentence2 = sentence2
@@ -26,7 +22,6 @@ class SentencePairSample(ClassyStruct):
 
 
 class SequenceSample(ClassyStruct):
-
     def __init__(self, sequence: str, label: Optional[str] = None):
         self.sequence = sequence
         self.label = label
@@ -36,7 +31,6 @@ class SequenceSample(ClassyStruct):
 
 
 class TokensSample(ClassyStruct):
-
     def __init__(self, tokens: List[str], labels: Optional[List[str]] = None):
         self.tokens = tokens
         self.labels = labels
@@ -46,8 +40,9 @@ class TokensSample(ClassyStruct):
 
 
 class DataDriver:
-
-    def read_from_path(self, path: str) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
+    def read_from_path(
+        self, path: str
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
         def r():
             with open(path) as f:
                 for line in f:
@@ -55,10 +50,16 @@ class DataDriver:
 
         return self.read(r())
 
-    def read(self, lines: Iterator[str]) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
+    def read(
+        self, lines: Iterator[str]
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]], path: str):
+    def save(
+        self,
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+        path: str,
+    ):
         raise NotImplementedError
 
 
@@ -98,11 +99,30 @@ class TSVSentencePairDataDriver(SentencePairDataDriver):
             label = parts[2] if len(parts) == 3 else None
             yield SentencePairSample(sentence1, sentence2, label)
 
+    def save(self, samples: Iterator[SentencePairSample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                f.write(f"{sample.sentence1}\t{sample.sentence2}\t{sample.label}\n")
+
 
 class JSONLSentencePairDataDriver(SentencePairDataDriver):
     def read(self, lines: Iterator[str]) -> Generator[SentencePairSample, None, None]:
         for line in lines:
             yield SentencePairSample(**json.loads(line))
+
+    def save(self, samples: Iterator[SentencePairSample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                f.write(
+                    json.dumps(
+                        {
+                            "sentence1": sample.sentence1,
+                            "sentence2": sample.sentence2,
+                            "label": sample.label,
+                        }
+                    )
+                    + "\n"
+                )
 
 
 class TSVSequenceDataDriver(SequenceDataDriver):
@@ -118,9 +138,9 @@ class TSVSequenceDataDriver(SequenceDataDriver):
             yield SequenceSample(sentence, label)
 
     def save(self, samples: Iterator[SequenceSample], path: str):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for sample in samples:
-                f.write(f'{sample.sequence}\t{sample.label}\n')
+                f.write(f"{sample.sequence}\t{sample.label}\n")
 
 
 class JSONLSequenceDataDriver(SequenceDataDriver):
@@ -129,9 +149,12 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
             yield SequenceSample(**json.loads(line))
 
     def save(self, samples: Iterator[SequenceSample], path: str):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for sample in samples:
-                f.write(json.dumps({'sequence': sample.sequence, 'label': sample.label}) + '\n')
+                f.write(
+                    json.dumps({"sequence": sample.sequence, "label": sample.label})
+                    + "\n"
+                )
 
 
 class TSVTokensDataDriver(TokensDataDriver):
@@ -142,18 +165,20 @@ class TSVTokensDataDriver(TokensDataDriver):
                 1,
                 2,
             ], f"TSVTokensDataDriver expects 1 (tokens) or 3 (tokens, labels) fields, but {len(parts)} were found at line {line}"
-            tokens, labels = parts[0].split(' '), None
+            tokens, labels = parts[0].split(" "), None
             if len(parts) == 2:
-                labels = parts[1].split(' ')
+                labels = parts[1].split(" ")
                 assert len(tokens) == len(
                     labels
                 ), f"Token Classification requires as many token as labels: found {len(tokens)} tokens != {len(labels)} labels at line {line}"
             yield TokensSample(tokens, labels)
 
     def save(self, samples: Iterator[TokensSample], path: str):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for sample in samples:
-                f.write('\t'.join([" ".join(sample.tokens), " ".join(sample.labels)]) + '\n')
+                f.write(
+                    "\t".join([" ".join(sample.tokens), " ".join(sample.labels)]) + "\n"
+                )
 
 
 class JSONLTokensDataDriver(TokensDataDriver):
@@ -167,9 +192,12 @@ class JSONLTokensDataDriver(TokensDataDriver):
             yield TokensSample(**json.loads(line))
 
     def save(self, samples: Iterator[TokensSample], path: str):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for sample in samples:
-                f.write(json.dumps({'tokens': sample.tokens, 'labels': sample.labels}) + '\n')
+                f.write(
+                    json.dumps({"tokens": sample.tokens, "labels": sample.labels})
+                    + "\n"
+                )
 
 
 # TASK TYPES
@@ -194,6 +222,10 @@ READERS_DICT = {
 def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
     reader_identifier = (task_type, file_extension)
     if reader_identifier not in READERS_DICT:
-        logger.info(f"No reader available for task {task_type} and extension {file_extension}.")
-    assert reader_identifier in READERS_DICT, f'Extension \'{file_extension}\' does not appear to be supported for task {task_type}. Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}'
+        logger.info(
+            f"No reader available for task {task_type} and extension {file_extension}."
+        )
+    assert (
+        reader_identifier in READERS_DICT
+    ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
     return READERS_DICT[reader_identifier]()
