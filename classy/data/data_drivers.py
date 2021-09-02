@@ -10,6 +10,9 @@ class ClassyStruct:
     def update_classification(self, classification_result: Union[str, List[str]]):
         raise NotImplementedError
 
+    def pretty_print(self, classification_result: Optional[Union[str, List[str]]] = None) -> str:
+        raise NotImplementedError
+
 
 class SentencePairSample(ClassyStruct):
     def __init__(self, sentence1: str, sentence2: str, label: Optional[str] = None):
@@ -20,6 +23,14 @@ class SentencePairSample(ClassyStruct):
     def update_classification(self, classification_result: str):
         self.label = classification_result
 
+    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+        parts = [f'# sentence1: {self.sentence1}', f'# sentence2: {self.sentence2}']
+        if self.label is not None:
+            parts.append(f'\t# label: {self.label}')
+        if classification_result is not None:
+            parts.append(f'\t# classification_result: {classification_result}')
+        return '\n'.join(parts)
+
 
 class SequenceSample(ClassyStruct):
     def __init__(self, sequence: str, label: Optional[str] = None):
@@ -29,6 +40,14 @@ class SequenceSample(ClassyStruct):
     def update_classification(self, classification_result: str):
         self.label = classification_result
 
+    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+        parts = [f'# sequence: {self.sequence}']
+        if self.label is not None:
+            parts.append(f'\t# label: {self.label}')
+        if classification_result is not None:
+            parts.append(f'\t# classification_result: {classification_result}')
+        return '\n'.join(parts)
+
 
 class TokensSample(ClassyStruct):
     def __init__(self, tokens: List[str], labels: Optional[List[str]] = None):
@@ -37,6 +56,14 @@ class TokensSample(ClassyStruct):
 
     def update_classification(self, classification_result: List[str]):
         self.labels = classification_result
+
+    def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
+        parts = [f'# tokens: {" ".join(self.tokens)}']
+        if self.labels is not None:
+            parts.append(f'\t# labels: {" ".join(self.labels)}')
+        if classification_result is not None:
+            parts.append(f'\t# classification_result: {" ".join(classification_result)}')
+        return '\n'.join(parts)
 
 
 class DataDriver:
@@ -132,7 +159,7 @@ class TSVSequenceDataDriver(SequenceDataDriver):
             assert len(parts) in [
                 1,
                 2,
-            ], f"TSVSequenceDataDriver expects 1 (sentence) or 3 (sentence, label) fields, but {len(parts)} were found at line {line}"
+            ], f"TSVSequenceDataDriver expects 1 (sentence) or 2 (sentence, label) fields, but {len(parts)} were found at line {line}"
             sentence = parts[0]
             label = parts[1] if len(parts) == 2 else None
             yield SequenceSample(sentence, label)

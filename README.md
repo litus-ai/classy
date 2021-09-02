@@ -1,12 +1,12 @@
 # classy
 
-### Training
+### Classy Commands
 
 ```bash
-classy train (sequence | token | sentence-pair) <dataset-path> [--model-name] [--exp-name]
-classy predict interactive <model-path>
-classy predict file <model-path> <file-path> [-o|--output-path]
-classy serve <model-path> [-p|--port]
+classy train (sequence | token | sentence-pair) <dataset-path> [--model-name] [--exp-name] [--device] [--root] [[-c|--config] training.pl_trainer.val_check_interval=1.0 data.pl_module.batch_size=16]
+classy predict interactive <model-path> [--device]
+classy predict file <model-path> <file-path> [-o|--output-path] [--token-batch-size] [--device]
+classy serve <model-path> [-p|--port] [--token-batch-size] [--device]
 ```
 
 ### Current Commands

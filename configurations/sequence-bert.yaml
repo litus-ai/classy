@@ -19,7 +19,7 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: default
+  - callbacks: empty
   - data: sequence-hf
   - device: cuda
   - model: sequence-bert

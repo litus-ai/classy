@@ -88,9 +88,7 @@ class HFTokenDataset(HFBaseDataset):
                 lst, padding_value=self.tokenizer.pad_token_id
             ),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
-            "labels": lambda lst: batchify(
-                lst, padding_value=self.tokenizer.pad_token_id
-            ),
+            "labels": lambda lst: batchify(lst, padding_value=-100),  # -100 == cross entropy ignore index
             "samples": None,
             "token_offsets": None,
         }

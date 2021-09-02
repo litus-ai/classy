@@ -19,10 +19,9 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: empty
+  - callbacks: conll2003
   - data: token-hf
   - device: cuda
-  - model: token-bert
+  - model: conll2003-bert
   - prediction: token-hf
-  - training: default
-  - _self_
+  - training: conll2003-bert
