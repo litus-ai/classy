@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, List, Iterator, Tuple
+from typing import Optional, List, Iterator, Tuple, Union
 
 import omegaconf
 import torch
@@ -7,7 +7,7 @@ import torchmetrics
 from torch import nn
 from transformers import AutoModelForSequenceClassification, AutoModel, AutoConfig
 
-from classy.data.data_drivers import SequenceSample, TokensSample
+from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample
 from classy.pl_modules.base import (
     ClassificationOutput,
     ClassyPLModule,
@@ -57,7 +57,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
             loss=model_output.loss,
         )
 
-    def predict(self, *args, **kwargs) -> Iterator[Tuple[SequenceSample, str]]:
+    def predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
@@ -71,9 +71,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(
-            classification_output.predictions, batch["labels"].squeeze(-1)
-        )
+        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
@@ -87,9 +85,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(
-            classification_output.predictions, batch["labels"].squeeze(-1)
-        )
+        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
@@ -183,9 +179,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             device=encoded_bpes.device,
         )
         for i, sample_offsets in enumerate(token_offsets):
-            encoded_tokens[i, : len(sample_offsets)] = torch.stack(
-                [encoded_bpes[i, sj] for sj, ej in sample_offsets]
-            )
+            encoded_tokens[i, : len(sample_offsets)] = torch.stack([encoded_bpes[i, sj] for sj, ej in sample_offsets])
 
         # classify
         logits = self.classification_head(encoded_tokens)
@@ -195,9 +189,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             logits=logits,
             probabilities=logits.softmax(dim=-1),
             predictions=logits.argmax(dim=-1),
-            loss=self.criterion(logits.view(-1, logits.shape[-1]), labels.view(-1))
-            if labels is not None
-            else None,
+            loss=self.criterion(logits.view(-1, logits.shape[-1]), labels.view(-1)) if labels is not None else None,
         )
 
     def predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
@@ -205,8 +197,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
             yield sample, [
-                self.vocabulary.get_elem(k="labels", idx=_p.item())
-                for _p in prediction[: len(sample.tokens)]
+                self.vocabulary.get_elem(k="labels", idx=_p.item()) for _p in prediction[: len(sample.tokens)]
             ]
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
@@ -218,9 +209,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
-        labels[labels == -100] = self.vocabulary.get_idx(
-            k="labels", elem=Vocabulary.PAD
-        )
+        labels[labels == -100] = self.vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
 
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)
