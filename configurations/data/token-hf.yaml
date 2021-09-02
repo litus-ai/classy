@@ -9,7 +9,7 @@ datamodule:
     transformer_model: ${transformer_model}
     min_length: 5
     max_length: 500
-    tokens_per_batch: 800
+    tokens_per_batch: 1000
     max_batch_size: 10
     section_size: 10000
     prebatch: True

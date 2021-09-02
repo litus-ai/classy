@@ -1,0 +1,11 @@
+_target_: 'classy.pl_modules.hf.HFTokensPLModule'
+transformer_model: ${transformer_model}
+use_last_n_layers: 1
+fine_tune: True
+optim_conf:
+  _target_: classy.optim.factories.RAdamWithDecayFactory
+  lr: 1e-5
+  weight_decay: 0.01
+  no_decay_params:
+    - bias
+    - LayerNorm.weight

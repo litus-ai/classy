@@ -1,9 +1,11 @@
-from typing import NamedTuple, Optional, Union, List, Type, Iterator, Tuple
+import collections
+from typing import NamedTuple, Optional, Union, List, Type, Iterator, Tuple, Dict
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
 import torch
+import torchmetrics
 
 from classy.data.dataset.base import BaseDataset
 from classy.data.data_drivers import SEQUENCE, SentencePairSample, SequenceSample, TokensSample, TOKEN
@@ -22,6 +24,7 @@ class ClassyPLModule(pl.LightningModule):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
+        self.custom_metric_on_validation_end = collections.defaultdict(lambda: torchmetrics.AverageMeter())
 
     @property
     def task(self) -> str:
@@ -32,6 +35,12 @@ class ClassyPLModule(pl.LightningModule):
 
     def configure_optimizers(self):
         return hydra.utils.instantiate(self._optim_conf, _recursive_=False)(module=self)
+
+    def log_custom_metric_on_validation_end(self, k, v):
+        metric = self.custom_metric_on_validation_end[k]
+        metric.reset()
+        metric(v)
+
 
 
 class SequencePLModule(ClassyPLModule):

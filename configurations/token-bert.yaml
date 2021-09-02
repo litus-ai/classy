@@ -19,7 +19,7 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: default
+  - callbacks: empty
   - data: token-hf
   - device: cuda
   - model: token-bert

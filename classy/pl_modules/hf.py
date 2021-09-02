@@ -112,10 +112,10 @@ class HFTokensPLModule(TokensPLModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metrics
-        self.accuracy_metric = torchmetrics.Accuracy()
-        self.p_metric = torchmetrics.Precision(mdmc_average='global')
-        self.r_metric = torchmetrics.Recall(mdmc_average='global')
-        self.f1_metric = torchmetrics.F1(mdmc_average='global')
+        self.accuracy_metric = torchmetrics.Accuracy(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
+        self.p_metric = torchmetrics.Precision(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
+        self.r_metric = torchmetrics.Recall(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
+        self.f1_metric = torchmetrics.F1(mdmc_average='global', ignore_index=vocabulary.get_idx(k='labels', elem=Vocabulary.PAD))
 
     def forward(
             self,
@@ -156,7 +156,7 @@ class HFTokensPLModule(TokensPLModule):
         samples = kwargs.get('samples')
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
-            yield sample, [self.vocabulary.get_elem(k="labels", idx=_p.item()) for _p in prediction]
+            yield sample, [self.vocabulary.get_elem(k="labels", idx=_p.item()) for _p in prediction[: len(sample.tokens)]]
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         classification_output = self.forward(**batch)
@@ -166,10 +166,13 @@ class HFTokensPLModule(TokensPLModule):
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(classification_output.predictions, batch["labels"])
-        self.p_metric(classification_output.predictions, batch["labels"])
-        self.r_metric(classification_output.predictions, batch["labels"])
-        self.f1_metric(classification_output.predictions, batch["labels"])
+        labels = batch["labels"].clone()
+        labels[labels == -100] = self.vocabulary.get_idx(k='labels', elem=Vocabulary.PAD)
+
+        self.accuracy_metric(classification_output.predictions, labels)
+        self.p_metric(classification_output.predictions, labels)
+        self.r_metric(classification_output.predictions, labels)
+        self.f1_metric(classification_output.predictions, labels)
 
         self.log("val_loss", classification_output.loss)
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
@@ -180,10 +183,13 @@ class HFTokensPLModule(TokensPLModule):
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(classification_output.predictions, batch["labels"])
-        self.p_metric(classification_output.predictions, batch["labels"])
-        self.r_metric(classification_output.predictions, batch["labels"])
-        self.f1_metric(classification_output.predictions, batch["labels"])
+        labels = batch["labels"].clone()
+        labels[-100] = self.vocabulary.get_idx(k='labels', elem=Vocabulary.PAD)
+
+        self.accuracy_metric(classification_output.predictions, labels)
+        self.p_metric(classification_output.predictions, labels)
+        self.r_metric(classification_output.predictions, labels)
+        self.f1_metric(classification_output.predictions, labels)
 
         self.log("test_accuracy", self.accuracy_metric)
         self.log("test_precision", self.p_metric)

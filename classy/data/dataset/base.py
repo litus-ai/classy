@@ -210,7 +210,7 @@ class BaseDataset(IterableDataset):
             logger.warning(
                 "Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory"
             )
-            dataset_iterator = list(tqdm(dataset_iterator, desc="Materializing dataset"))
+            dataset_iterator = list(dataset_iterator)
             logger.info("Materliziation completed, now shuffling")
             random.shuffle(dataset_iterator)
             logger.info("Shuffling completed")
