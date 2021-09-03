@@ -91,19 +91,18 @@ def file_main(
     )
     data_driver = get_data_driver(model.task, input_extension)
 
-    predicted_sources = []
+    def it():
+        for source, prediction in predict(
+            model,
+            data_driver.read_from_path(input_path),
+            token_batch_size=token_batch_size,
+            dataset_conf=dataset_conf,
+            progress_bar=True,
+        ):
+            source.update_classification(prediction)
+            yield source
 
-    for source, prediction in predict(
-        model,
-        data_driver.read_from_path(input_path),
-        token_batch_size=token_batch_size,
-        dataset_conf=dataset_conf,
-        progress_bar=True,
-    ):
-        source.update_classification(prediction)
-        predicted_sources.append(source)
-
-    data_driver.save(predicted_sources, output_path)
+    data_driver.save(it(), output_path)
 
 
 def main():
