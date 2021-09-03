@@ -1,9 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from hydra import compose, initialize
-from classy.scripts.model.train import train, fix
-
 
 def populate_parser(parser: ArgumentParser):
 
@@ -33,6 +30,9 @@ def parse_args():
 
 
 def main(args):
+    # import here to avoid importing torch before it's actually needed
+    from hydra import compose, initialize
+    from classy.scripts.model.train import train, fix
 
     if args.root is not None:
         config_name = args.root
@@ -56,11 +56,8 @@ def main(args):
     # append all user-provided configuration overrides
     overrides += args.config
 
-    from omegaconf import OmegaConf
-
     initialize(config_path="../../../configurations/")
     conf = compose(config_name=config_name, overrides=overrides)
-    print(OmegaConf.to_yaml(conf, resolve=True))
 
     # cannot call main() here because it's wrapped by hydra (...right? TODO: check)
     fix(conf)
