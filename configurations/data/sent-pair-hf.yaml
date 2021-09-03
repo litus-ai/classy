@@ -1,9 +1,7 @@
 datamodule:
   _target_: 'classy.data.data_modules.ClassyDataModule'
-#  task: null  # todo should be set via kwargs
-#  dataset_path: null  # todo should be set via kwargs
-  task: "sentence-pair"
-  dataset_path: "data/glue/mrpc"
+  task: ${task}
+  dataset_path: null  # set via kwargs
   train_dataset:
     _target_: 'classy.data.dataset.hf.HFSentencePairDataset.from_file'
     transformer_model: ${transformer_model}

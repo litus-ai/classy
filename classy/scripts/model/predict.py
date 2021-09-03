@@ -3,6 +3,7 @@ from typing import List, Iterable, Tuple, Generator, Dict, Union, Optional, Iter
 
 import hydra.utils
 import torch
+from omegaconf import DictConfig
 from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -15,7 +16,7 @@ from classy.utils.lightning import load_classy_module_from_checkpoint, load_pred
 def predict(
     model: ClassyPLModule,
     samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
-    dataset_conf: Dict,
+    dataset_conf: Union[Dict, DictConfig],
     token_batch_size: int = 1024,
     progress_bar: bool = False,
 ) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:

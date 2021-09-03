@@ -1,3 +1,4 @@
+task: token
 project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}

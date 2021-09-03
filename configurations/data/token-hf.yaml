@@ -1,9 +1,7 @@
 datamodule:
   _target_: 'classy.data.data_modules.ClassyDataModule'
-#  task: null  # todo should be set via kwargs
-#  dataset_path: null  # todo should be set via kwargs
-  task: "token"
-  dataset_path: "data/conll2003"
+  task: ${task}
+  dataset_path: null  # set via kwargs
   train_dataset:
     _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
