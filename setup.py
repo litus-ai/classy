@@ -15,7 +15,7 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     keywords="classy nn ml sunglassesai sunglasses classification ",
-    url="https://github.com/Valahaar/psync",
+    url="https://github.com/sunglasses-ai/classy",
     author="Sunglasses AI",
     author_email="TODO",
     license="Apache",
