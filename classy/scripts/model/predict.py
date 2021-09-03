@@ -1,5 +1,5 @@
 import argparse
-from typing import List, Iterable, Tuple, Generator, Dict, Union
+from typing import List, Iterable, Tuple, Generator, Dict, Union, Optional
 
 import hydra.utils
 import torch
@@ -40,9 +40,7 @@ def predict(
         # predict
         with autocast(enabled=True):
             with torch.no_grad():
-                batch_out = model.predict(
-                    **{k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
-                )
+                batch_out = model.predict(**{k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()})
 
                 for sample, prediction in batch_out:
                     yield sample, prediction
@@ -88,8 +86,11 @@ def file_main(
     model.freeze()
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    input_extension, output_extension = input_path.split('.')[-1], output_path.split('.')[-1]
-    assert input_extension == output_extension, f'Having different input and output extensions is not currently a supported use case: input {input_extension} != output {output_extension}'
+    input_extension, output_extension = input_path.split(".")[-1], output_path.split(".")[-1]
+    assert input_extension == output_extension, (
+        f"Having different input and output extensions is not currently a supported use case: "
+        f"input {input_extension} != output {output_extension}"
+    )
     data_driver = get_data_driver(model.task, input_extension)
 
     def it():
