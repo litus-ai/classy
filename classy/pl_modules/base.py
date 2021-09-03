@@ -31,9 +31,7 @@ class ClassyPLModule(pl.LightningModule):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
-        self.custom_metric_on_validation_end = collections.defaultdict(
-            lambda: torchmetrics.AverageMeter()
-        )
+        self.custom_metric_on_validation_end = collections.defaultdict(lambda: torchmetrics.AverageMeter())
 
     @property
     def task(self) -> str:
@@ -41,14 +39,7 @@ class ClassyPLModule(pl.LightningModule):
 
     def predict(
         self, *args, **kwargs
-    ) -> List[
-        Iterator[
-            Tuple[
-                Union[SentencePairSample, SequenceSample, TokensSample],
-                Union[str, List[str]],
-            ]
-        ]
-    ]:
+    ) -> List[Iterator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]],]]]:
         raise NotImplementedError
 
     def configure_optimizers(self):

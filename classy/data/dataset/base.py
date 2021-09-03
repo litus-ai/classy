@@ -34,12 +34,7 @@ class BaseDataset(IterableDataset):
         raise NotImplementedError
 
     @classmethod
-    def from_file(
-            cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs
-    ) -> "BaseDataset":
-        def r() -> Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]:
-            for sequence_sample in data_driver.read_from_path(path):
-                yield sequence_sample
+    def from_file(cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs) -> "BaseDataset":
 
         if vocabulary is None:
             # vocabulary fitting here
@@ -47,21 +42,22 @@ class BaseDataset(IterableDataset):
             vocabulary = cls.fit_vocabulary(data_driver.read_from_path(path))
             logger.info("Vocabulary fitting completed")
 
-        return cls(
-            samples_iterator=r,
-            vocabulary=vocabulary,
-            **kwargs
-        )
+        return cls(samples_iterator=lambda: data_driver.read_from_path(path), vocabulary=vocabulary, **kwargs)
 
     @classmethod
     def from_lines(
-            cls, lines: Iterator[str], data_driver: DataDriver, vocabulary: Vocabulary, **kwargs
+        cls, lines: Iterator[str], data_driver: DataDriver, vocabulary: Vocabulary, **kwargs
     ) -> "BaseDataset":
-        def r() -> Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]:
-            for sequence_sample in data_driver.read(lines):
-                yield sequence_sample
+        return cls(samples_iterator=lambda: data_driver.read(lines), vocabulary=vocabulary, **kwargs)
 
-        return cls(samples_iterator=r, vocabulary=vocabulary, **kwargs)
+    @classmethod
+    def from_samples(
+        cls,
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+        vocabulary: Vocabulary,
+        **kwargs,
+    ):
+        return cls(samples_iterator=lambda: samples, vocabulary=vocabulary, **kwargs)
 
     def __init__(
         self,
@@ -207,9 +203,7 @@ class BaseDataset(IterableDataset):
 
         dataset_iterator = self.dataset_iterator_func()
         if self.shuffle:
-            logger.warning(
-                "Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory"
-            )
+            logger.warning("Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory")
             dataset_iterator = list(dataset_iterator)
             logger.info("Materliziation completed, now shuffling")
             random.shuffle(dataset_iterator)

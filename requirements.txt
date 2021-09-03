@@ -2,7 +2,11 @@
 pytorch-lightning==1.4.5
 transformers==4.9.2
 hydra-core==1.1.1
+# datasets and metrics
 datasets==1.11.0
 seqeval==1.2.2
+# serve
+fastapi==0.68.1
+uvicorn[standard]==0.15.0
 # black
 black==21.8b0

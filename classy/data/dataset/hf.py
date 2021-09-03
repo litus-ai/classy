@@ -49,9 +49,7 @@ class HFSequenceDataset(HFBaseDataset):
 
     def _init_fields_batcher(self) -> None:
         self.fields_batcher = {
-            "input_ids": lambda lst: batchify(
-                lst, padding_value=self.tokenizer.pad_token_id
-            ),
+            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: torch.tensor(lst, dtype=torch.long),
             "samples": None,
@@ -60,17 +58,13 @@ class HFSequenceDataset(HFBaseDataset):
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
         for sequence_sample in self.samples_iterator():
-            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")[
-                "input_ids"
-            ][0]
+            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")["input_ids"][0]
             elem_dict = {
                 "input_ids": input_ids,
                 "attention_mask": torch.ones_like(input_ids),
             }
             if sequence_sample.label is not None:
-                elem_dict["labels"] = [
-                    self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)
-                ]
+                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
             elem_dict["samples"] = sequence_sample
             yield elem_dict
 
@@ -78,19 +72,13 @@ class HFSequenceDataset(HFBaseDataset):
 class HFTokenDataset(HFBaseDataset):
     @staticmethod
     def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
-        return Vocabulary.from_samples(
-            [{"labels": label} for sample in samples for label in sample.labels]
-        )
+        return Vocabulary.from_samples([{"labels": label} for sample in samples for label in sample.labels])
 
     def _init_fields_batcher(self) -> None:
         self.fields_batcher = {
-            "input_ids": lambda lst: batchify(
-                lst, padding_value=self.tokenizer.pad_token_id
-            ),
+            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
-            "labels": lambda lst: batchify(
-                lst, padding_value=-100
-            ),  # -100 == cross entropy ignore index
+            "labels": lambda lst: batchify(lst, padding_value=-100),  # -100 == cross entropy ignore index
             "samples": None,
             "token_offsets": None,
         }
@@ -106,20 +94,13 @@ class HFTokenDataset(HFBaseDataset):
             }
             if token_sample.labels is not None:
                 elem_dict["labels"] = torch.tensor(
-                    [
-                        self.vocabulary.get_idx(k="labels", elem=label)
-                        for label in token_sample.labels
-                    ]
+                    [self.vocabulary.get_idx(k="labels", elem=label) for label in token_sample.labels]
                 )
             elem_dict["samples"] = token_sample
             yield elem_dict
 
-    def tokenize(
-        self, tokens: List[str]
-    ) -> Optional[Tuple[torch.Tensor, List[Tuple[int, int]]]]:
-        tok_encoding = self.tokenizer.encode_plus(
-            tokens, return_tensors="pt", is_split_into_words=True
-        )
+    def tokenize(self, tokens: List[str]) -> Optional[Tuple[torch.Tensor, List[Tuple[int, int]]]]:
+        tok_encoding = self.tokenizer.encode_plus(tokens, return_tensors="pt", is_split_into_words=True)
         try:
             return tok_encoding.input_ids.squeeze(0), [
                 tuple(tok_encoding.word_to_tokens(wi)) for wi in range(len(tokens))
@@ -134,11 +115,9 @@ class HFSentencePairDataset(HFSequenceDataset):
 
         for sequence_sample in self.samples_iterator():
             sequence_sample: SentencePairSample
-            input_ids = self.tokenizer(
-                sequence_sample.sentence1,
-                sequence_sample.sentence2,
-                return_tensors="pt",
-            )["input_ids"][0]
+            input_ids = self.tokenizer(sequence_sample.sentence1, sequence_sample.sentence2, return_tensors="pt",)[
+                "input_ids"
+            ][0]
 
             elem_dict = {
                 "input_ids": input_ids,
@@ -146,9 +125,7 @@ class HFSentencePairDataset(HFSequenceDataset):
             }
 
             if sequence_sample.label is not None:
-                elem_dict["labels"] = [
-                    self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)
-                ]
+                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
 
             elem_dict["samples"] = sequence_sample
             yield elem_dict

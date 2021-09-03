@@ -17,15 +17,17 @@ def split_dataset(
     data_max_split: Optional[int] = None,
 ) -> Tuple[str, Optional[str], Optional[str]]:
 
-    assert sum([validation_split_size or 0.0, test_split_size or 0.0]) > 0.0, 'At least one between validation_split_size and test_split_size must be provided with a value > 0'
-    output_extension = dataset_path.split('.')[-1]
+    assert (
+        sum([validation_split_size or 0.0, test_split_size or 0.0]) > 0.0
+    ), "At least one between validation_split_size and test_split_size must be provided with a value > 0"
+    output_extension = dataset_path.split(".")[-1]
 
     # create output folder
     output_folder = Path(output_folder)
     output_folder.mkdir()
 
     # read samples and shuffle
-    logger.info('Materializing and shuffling dataset before splitting it')
+    logger.info("Materializing and shuffling dataset before splitting it")
     samples = list(data_driver.read_from_path(dataset_path))
     random.shuffle(samples)
 
@@ -36,17 +38,20 @@ def split_dataset(
 
     if validation_split_size is not None:
         n_validation_samples = min(int(len(samples) * validation_split_size), data_max_split or len(samples))
-        validation_samples, training_samples = training_samples[: n_validation_samples], training_samples[n_validation_samples:]
-        validation_path = str(output_folder.joinpath(f'validation.{output_extension}'))
+        validation_samples, training_samples = (
+            training_samples[:n_validation_samples],
+            training_samples[n_validation_samples:],
+        )
+        validation_path = str(output_folder.joinpath(f"validation.{output_extension}"))
         data_driver.save(validation_samples, validation_path)
 
     if test_split_size is not None:
         n_test_samples = min(int(len(samples) * test_split_size), data_max_split or len(samples))
-        test_samples, training_samples = training_samples[: n_test_samples], training_samples[n_test_samples:]
-        test_path = str(output_folder.joinpath(f'test.{output_extension}'))
+        test_samples, training_samples = training_samples[:n_test_samples], training_samples[n_test_samples:]
+        test_path = str(output_folder.joinpath(f"test.{output_extension}"))
         data_driver.save(test_samples, test_path)
 
-    train_path = str(output_folder.joinpath(f'train.{output_extension}'))
+    train_path = str(output_folder.joinpath(f"train.{output_extension}"))
     data_driver.save(training_samples, train_path)
 
     return train_path, validation_path, test_path
