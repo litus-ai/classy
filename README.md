@@ -30,18 +30,20 @@ black -l 120 classy/
 
 ## TODOs
 
+### Short Term
+- Implementation: _classy serve_
+- Pretrained Models: look for and train "una mazzettata" of models
+
+### Mid Term
+- Docs: comment extensively at least all classes and some important function.
+- pre-commit black (github actions?)
+- training on colab notebooks
+
+### Long Term
 - logging
-
 - pip package
-
-- models
-  - look for and train "una mazzettata" of models
-
-- docs
-  - comments
-  - tutorials (no lines of code / few lines of code / I know what I am doing)
+- Docs: tutorials (no lines of code / few lines of code / I know what I am doing)
 - gradio / streamlit
 - test (haha!)
-- pre-commit black (github actions?)
 - Dockerfile
 - bash screenshots
