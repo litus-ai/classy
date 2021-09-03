@@ -155,8 +155,7 @@ class BaseDataset(IterableDataset):
             ]
             if len(too_long_batching_fields) > 0:
                 max_len_discards += 1
-                if max_len_discards % 10 == 0:
-                    # if max_len_discards % 1_000 == 0:
+                if max_len_discards % 1_000 == 0:
                     logger.warning(
                         f"{max_len_discards} elements discarded since longer than max length {self.max_length}"
                     )
@@ -167,10 +166,9 @@ class BaseDataset(IterableDataset):
             ]
             if len(too_short_batching_fields) > 0:
                 min_len_discards += 1
-                if min_len_discards % 10 == 0:
-                    # if min_len_discards % 1_000 == 0:
+                if min_len_discards % 1_000 == 0:
                     logger.warning(
-                        f"{max_len_discards} elements discarded since shorter than max length {self.min_length}"
+                        f"{min_len_discards} elements discarded since shorter than max length {self.min_length}"
                     )
                 continue
 
