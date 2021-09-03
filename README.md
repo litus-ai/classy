@@ -30,11 +30,9 @@ black -l 120 classy/
 
 ## TODOs
 
-- Sentence Pair Classification
 - logging
 
 - pip package
-  - command 
 
 - models
   - look for and train "una mazzettata" of models
