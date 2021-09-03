@@ -5,7 +5,6 @@ import pytorch_lightning as pl
 
 from classy.data.data_modules import ClassyDataModule
 from classy.utils.hydra import fix
-from classy.utils.vocabulary import FIELDS_VOCABULARY_PATH, LABELS_VOCABULARY_PATH
 
 
 def train(conf: omegaconf.DictConfig) -> None:

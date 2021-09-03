@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 def get_commands():
     from classy.scripts.cli.train import get_parser as train_parser, main as train_main
     from classy.scripts.cli.predict import get_parser as predict_parser, main as predict_main
+    from classy.scripts.cli.serve import get_parser as serve_parser, main as serve_main
 
     return dict(
         train=dict(
@@ -13,6 +14,10 @@ def get_commands():
         predict=dict(
             parser=predict_parser,
             main=predict_main,
+        ),
+        serve=dict(
+            parser=serve_parser,
+            main=serve_main,
         ),
     )
 
