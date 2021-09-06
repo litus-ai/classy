@@ -37,7 +37,7 @@ def main(args):
     if args.root is not None:
         config_name = args.root
     else:
-        task = "sent-pair" if args.task == "sentence-pair" else args.task
+        task = args.task
         config_name = f"{task}-{args.model_name}"
 
     overrides = []
