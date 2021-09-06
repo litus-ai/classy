@@ -1,5 +1,5 @@
 import random
-from typing import Callable, List, Any, Dict, Union, Optional, Iterator
+from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
@@ -99,12 +99,11 @@ class BaseDataset(IterableDataset):
         random.shuffle(ds)
         return flatten(ds)
 
-    def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None, None]:
 
         if self.prebatch:
             dataset_elements = self.prebatch_elements(dataset_elements)
 
-        batches = []
         current_batch = []
 
         # function that creates a batch from the 'current_batch' list
@@ -140,7 +139,7 @@ class BaseDataset(IterableDataset):
         for de in dataset_elements:
 
             if self.max_batch_size != -1 and len(current_batch) == self.max_batch_size:
-                batches.append(output_batch())
+                yield output_batch()
                 current_batch = []
 
             # todo: maybe here we want to check fields or stuff like that
@@ -187,23 +186,22 @@ class BaseDataset(IterableDataset):
             if (
                 future_tokens_per_batch >= self.tokens_per_batch
             ):  # todo: add min batch size so as to support batching by size
-                batches.append(output_batch())
+                yield output_batch()
                 current_batch = []
 
             current_batch.append(de)
 
         if len(current_batch) != 0:
-            batches.append(output_batch())
-
-        return batches
+            yield output_batch()
 
     def __iter__(self):
 
         dataset_iterator = self.dataset_iterator_func()
         if self.shuffle:
             logger.warning("Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory")
+            logger.info("Starting materialization")
             dataset_iterator = list(dataset_iterator)
-            logger.info("Materliziation completed, now shuffling")
+            logger.info("Materialization completed, now shuffling")
             random.shuffle(dataset_iterator)
             logger.info("Shuffling completed")
 
