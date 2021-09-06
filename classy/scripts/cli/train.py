@@ -41,8 +41,7 @@ def main(args):
     if args.root is not None:
         config_name = args.root
     else:
-        task = args.task
-        config_name = f"{task}-{args.model_name}"
+        config_name = f"{args.task}-{args.model_name}"
 
     overrides = []
 
