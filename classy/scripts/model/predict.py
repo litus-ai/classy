@@ -1,8 +1,9 @@
 import argparse
-from typing import List, Iterable, Tuple, Generator, Dict, Union, Optional
+from typing import List, Iterable, Tuple, Generator, Dict, Union, Optional, Iterator
 
 import hydra.utils
 import torch
+from omegaconf import DictConfig
 from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -14,9 +15,8 @@ from classy.utils.lightning import load_classy_module_from_checkpoint, load_pred
 
 def predict(
     model: ClassyPLModule,
-    sources: Iterable[str],
-    data_driver: DataDriver,
-    dataset_conf: Dict,
+    samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+    dataset_conf: Union[Dict, DictConfig],
     token_batch_size: int = 1024,
     progress_bar: bool = False,
 ) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:
@@ -26,7 +26,7 @@ def predict(
 
     # instantiate dataset
     dataset_conf["tokens_per_batch"] = token_batch_size
-    dataset = hydra.utils.instantiate(dataset_conf, lines=sources, data_driver=data_driver, vocabulary=model.vocabulary)
+    dataset = hydra.utils.instantiate(dataset_conf, samples=samples, vocabulary=model.vocabulary)
 
     # instantiate dataloader
     dataloader = DataLoader(dataset, batch_size=None, num_workers=0)
@@ -64,8 +64,7 @@ def interactive_main(
         _, prediction = next(
             predict(
                 model,
-                [source],
-                data_driver=data_driver,
+                data_driver.read([source]),
                 dataset_conf=dataset_conf,
             )
         )
@@ -94,17 +93,15 @@ def file_main(
     data_driver = get_data_driver(model.task, input_extension)
 
     def it():
-        with open(input_path) as fi:
-            for source, prediction in predict(
-                model,
-                map(lambda l: l.strip(), fi),
-                data_driver=data_driver,
-                token_batch_size=token_batch_size,
-                dataset_conf=dataset_conf,
-                progress_bar=True,
-            ):
-                source.update_classification(prediction)
-                yield source
+        for source, prediction in predict(
+            model,
+            data_driver.read_from_path(input_path),
+            token_batch_size=token_batch_size,
+            dataset_conf=dataset_conf,
+            progress_bar=True,
+        ):
+            source.update_classification(prediction)
+            yield source
 
     data_driver.save(it(), output_path)
 
@@ -132,7 +129,7 @@ def parse_args():
     parser.add_argument("--cuda-device", type=int, default=-1, help="Cuda device")
     # interactive params
     parser.add_argument("-t", action="store_true", help="Interactive mode")
-    # generation params
+    # file params
     parser.add_argument("-f", type=str, default=None, help="Input file")
     parser.add_argument("-o", type=str, default=None, help="Output file")
     parser.add_argument("--token-batch-size", type=int, default=128, help="Token batch size")

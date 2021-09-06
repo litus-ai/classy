@@ -1,4 +1,5 @@
 import numpy as np
+import socket
 
 from typing import Iterable
 
@@ -17,3 +18,11 @@ def add_noise_to_value(value: int, noise_param: float):
     noise_value = value * noise_param
     noise = np.random.uniform(-noise_value, noise_value)
     return max(1, value + noise)
+
+
+def get_local_ip_address() -> str:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    address = s.getsockname()[0]
+    s.close()
+    return address

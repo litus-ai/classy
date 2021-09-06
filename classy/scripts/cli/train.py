@@ -32,13 +32,16 @@ def parse_args():
 def main(args):
     # import here to avoid importing torch before it's actually needed
     from hydra import compose, initialize
+    from hydra.core.hydra_config import HydraConfig
+    from omegaconf import open_dict
     from classy.scripts.model.train import train, fix
+    import os
+    from pathlib import Path
 
     if args.root is not None:
         config_name = args.root
     else:
-        task = "sent-pair" if args.task == "sentence-pair" else args.task
-        config_name = f"{task}-{args.model_name}"
+        config_name = f"{args.task}-{args.model_name}"
 
     overrides = []
 
@@ -57,9 +60,18 @@ def main(args):
     overrides += args.config
 
     initialize(config_path="../../../configurations/")
-    conf = compose(config_name=config_name, overrides=overrides)
+    conf = compose(config_name=config_name, overrides=overrides, return_hydra_config=True)
+    # we mimic hydra: when invoking @hydra.main(), hydra.run.dir is created and made the working directory
+    exp_dir = Path(conf.hydra.run.dir).absolute()
+    exp_dir.mkdir(parents=True, exist_ok=True)
+    os.chdir(exp_dir)
 
-    # cannot call main() here because it's wrapped by hydra (...right? TODO: check)
+    # then we remove the "hydra config" from the configuration itself (as we set it already to HydraConfig)
+    # see: https://github.com/facebookresearch/hydra/issues/1576#issuecomment-827848331
+    HydraConfig.instance().set_config(conf)
+    with open_dict(conf):
+        del conf["hydra"]
+
     fix(conf)
     train(conf)
 

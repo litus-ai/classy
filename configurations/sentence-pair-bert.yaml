@@ -1,3 +1,4 @@
+task: sentence-pair
 project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}
@@ -20,9 +21,9 @@ hydra:
 # defaults
 defaults:
   - callbacks: empty
-  - data: sent-pair-hf
+  - data: sentence-pair-hf
   - device: cuda
-  - model: sequence-bert
-  - prediction: sent-pair-hf
+  - model: sentence-pair-bert
+  - prediction: sentence-pair-hf
   - training: default
   - _self_

@@ -24,12 +24,12 @@ class SentencePairSample(ClassyStruct):
         self.label = classification_result
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
-        parts = [f'# sentence1: {self.sentence1}', f'# sentence2: {self.sentence2}']
+        parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
         if self.label is not None:
-            parts.append(f'\t# label: {self.label}')
+            parts.append(f"\t# label: {self.label}")
         if classification_result is not None:
-            parts.append(f'\t# classification_result: {classification_result}')
-        return '\n'.join(parts)
+            parts.append(f"\t# classification_result: {classification_result}")
+        return "\n".join(parts)
 
 
 class SequenceSample(ClassyStruct):
@@ -41,12 +41,12 @@ class SequenceSample(ClassyStruct):
         self.label = classification_result
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
-        parts = [f'# sequence: {self.sequence}']
+        parts = [f"# sequence: {self.sequence}"]
         if self.label is not None:
-            parts.append(f'\t# label: {self.label}')
+            parts.append(f"\t# label: {self.label}")
         if classification_result is not None:
-            parts.append(f'\t# classification_result: {classification_result}')
-        return '\n'.join(parts)
+            parts.append(f"\t# classification_result: {classification_result}")
+        return "\n".join(parts)
 
 
 class TokensSample(ClassyStruct):
@@ -63,7 +63,7 @@ class TokensSample(ClassyStruct):
             parts.append(f'\t# labels: {" ".join(self.labels)}')
         if classification_result is not None:
             parts.append(f'\t# classification_result: {" ".join(classification_result)}')
-        return '\n'.join(parts)
+        return "\n".join(parts)
 
 
 class DataDriver:
@@ -178,10 +178,7 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
     def save(self, samples: Iterator[SequenceSample], path: str):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(
-                    json.dumps({"sequence": sample.sequence, "label": sample.label})
-                    + "\n"
-                )
+                f.write(json.dumps({"sequence": sample.sequence, "label": sample.label}) + "\n")
 
 
 class TSVTokensDataDriver(TokensDataDriver):
@@ -203,9 +200,7 @@ class TSVTokensDataDriver(TokensDataDriver):
     def save(self, samples: Iterator[TokensSample], path: str):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(
-                    "\t".join([" ".join(sample.tokens), " ".join(sample.labels)]) + "\n"
-                )
+                f.write("\t".join([" ".join(sample.tokens), " ".join(sample.labels)]) + "\n")
 
 
 class JSONLTokensDataDriver(TokensDataDriver):
@@ -221,10 +216,7 @@ class JSONLTokensDataDriver(TokensDataDriver):
     def save(self, samples: Iterator[TokensSample], path: str):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(
-                    json.dumps({"tokens": sample.tokens, "labels": sample.labels})
-                    + "\n"
-                )
+                f.write(json.dumps({"tokens": sample.tokens, "labels": sample.labels}) + "\n")
 
 
 # TASK TYPES
@@ -249,9 +241,7 @@ READERS_DICT = {
 def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
     reader_identifier = (task_type, file_extension)
     if reader_identifier not in READERS_DICT:
-        logger.info(
-            f"No reader available for task {task_type} and extension {file_extension}."
-        )
+        logger.info(f"No reader available for task {task_type} and extension {file_extension}.")
     assert (
         reader_identifier in READERS_DICT
     ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
