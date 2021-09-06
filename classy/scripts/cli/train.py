@@ -29,51 +29,43 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def main(args):
+def _main_mock(cfg):
     # import here to avoid importing torch before it's actually needed
-    from hydra import compose, initialize
-    from hydra.core.hydra_config import HydraConfig
-    from omegaconf import open_dict
-    from classy.scripts.model.train import train, fix
-    import os
-    from pathlib import Path
+    from classy.scripts.model.train import fix, train
+
+    fix(cfg)
+    train(cfg)
+
+
+def main(args):
+    import hydra
+    import sys
 
     if args.root is not None:
         config_name = args.root
     else:
         config_name = f"{args.task}-{args.model_name}"
 
-    overrides = []
+    cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
 
     # choose device
     device = "cuda" if args.device == "gpu" else args.device
-    overrides.append(f"device={device}")
+    cmd.append(f"device={device}")
 
     # create default experiment name if not provided
     exp_name = args.exp_name or f"{args.task}-{args.model_name}"
-    overrides.append(f"exp_name={exp_name}")
+    cmd.append(f"exp_name={exp_name}")
 
-    overrides.append(f"data.datamodule.dataset_path={args.dataset}")
+    cmd.append(f"data.datamodule.dataset_path={args.dataset}")
     # overrides.append(f"datamodule.task={args.task}")
 
     # append all user-provided configuration overrides
-    overrides += args.config
+    cmd += args.config
 
-    initialize(config_path="../../../configurations/")
-    conf = compose(config_name=config_name, overrides=overrides, return_hydra_config=True)
-    # we mimic hydra: when invoking @hydra.main(), hydra.run.dir is created and made the working directory
-    exp_dir = Path(conf.hydra.run.dir).absolute()
-    exp_dir.mkdir(parents=True, exist_ok=True)
-    os.chdir(exp_dir)
-
-    # then we remove the "hydra config" from the configuration itself (as we set it already to HydraConfig)
-    # see: https://github.com/facebookresearch/hydra/issues/1576#issuecomment-827848331
-    HydraConfig.instance().set_config(conf)
-    with open_dict(conf):
-        del conf["hydra"]
-
-    fix(conf)
-    train(conf)
+    # we are basically mocking the normal python script invocation by setting the argv to those we want
+    # unfortunately there is no better way to do this at this moment in time :(
+    sys.argv = cmd
+    hydra.main(config_path=None)(_main_mock)()
 
 
 def test(cmd):
