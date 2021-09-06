@@ -129,8 +129,7 @@ class PredictionPLCallback(pl.Callback):
                 predicted_samples = list(
                     predict(
                         model,
-                        lines_it,
-                        data_driver=data_driver,
+                        data_driver.read(lines_it),
                         dataset_conf=self.prediction_dataset_conf,
                         token_batch_size=token_batch_size,
                     )
