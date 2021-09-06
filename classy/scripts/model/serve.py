@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 
 from classy.scripts.model.predict import predict as backend_predict
 from classy.data.data_drivers import SEQUENCE, TOKEN, SENTENCE_PAIR, TokensSample, SentencePairSample, SequenceSample
+from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
+from classy.utils.log import get_project_logger
+
+logger = get_project_logger(__name__)
 
 
 class MarshalInputSequenceSample(BaseModel):
@@ -112,6 +116,9 @@ def serve(
 
         return output_samples
 
+    local_ip_address = get_local_ip_address()
+    print(f"Model exposed at http://{local_ip_address}:{port}")
+    print(f"Remember you can checkout the API at http://{local_ip_address}:{port}/docs")
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 
