@@ -90,11 +90,11 @@ class ClassyDataModule(pl.LightningDataModule):
                 f"enforcing a maximum of {self.max_nontrain_split_size} instances on non-train splits"
             )
 
-            self.file_extension = self.train_path.split(".")[-1]
+            self.file_extension = self.dataset_path.split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
             self.train_path, self.validation_path, self.test_path = split_dataset(
-                self.train_path,
+                self.dataset_path,
                 self.data_driver,
                 "data/",  # hydra takes care of placing this folder within the appropriate folder
                 validation_split_size=self.validation_split_size,
