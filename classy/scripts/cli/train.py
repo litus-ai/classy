@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
+from classy.scripts.cli.utils import get_device
+
 
 def populate_parser(parser: ArgumentParser):
 
@@ -10,7 +12,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-m", "--model-name", default="bert")
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
-    parser.add_argument("--root", type=Path, default=None)
+    parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
 
 
@@ -50,7 +52,12 @@ def main(args):
 
     # choose device
     device = "cuda" if args.device == "gpu" else args.device
-    cmd.append(f"device={device}")
+    device = get_device(args.device)
+    if device >= 0:
+        cmd.append(f"device=cuda")
+        cmd.append(f"device.gpus=[{device}]")
+    else:
+        cmd.append(f"device=cpu")
 
     # create default experiment name if not provided
     exp_name = args.exp_name or f"{args.task}-{args.model_name}"
