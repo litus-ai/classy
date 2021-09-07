@@ -1,26 +1,13 @@
 from argparse import ArgumentParser
 
+from classy.scripts.cli.utils import get_device
+
 
 def populate_parser(parser: ArgumentParser):
     parser.add_argument("model_path")
     parser.add_argument("-p", "--port", type=int, default=8000)
     parser.add_argument("-d", "--device", default="gpu")
     parser.add_argument("--token-batch-size", type=int, default=128)
-
-
-def get_device(device):  # noqa
-    if device == "gpu" or device == "cuda":
-        return 0
-
-    if device == "cpu":
-        return -1
-
-    try:
-        return int(device)
-    except ValueError:
-        pass
-
-    return device  # TODO: raise NotImplemented?
 
 
 def get_parser(subparser=None) -> ArgumentParser:
