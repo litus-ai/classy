@@ -5,7 +5,7 @@ def populate_parser(parser: ArgumentParser):
     # TODO: would be cool to have it work with exp_name and add an optional --checkpoint-name flag (default=best.ckpt)
     # the user should not need to know what a checkpoint is :)
 
-    subcmd = parser.add_subparsers(dest="subcmd")
+    subcmd = parser.add_subparsers(dest="subcmd", required=True)
     interactive_parser = subcmd.add_parser("interactive")
     interactive_parser.add_argument("model_path")
     interactive_parser.add_argument("-d", "--device", default="gpu")
