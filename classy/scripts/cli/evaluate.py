@@ -17,7 +17,7 @@ def populate_parser(parser: ArgumentParser):
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(name="evaluate", description="Evaluate a model trained using classy", help="TODO")
+    parser_kwargs = dict(name="evaluate", description="evaluate a model trained using classy", help="TODO")
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
     populate_parser(parser)
@@ -63,9 +63,9 @@ def main(args):
         # try to infer path
         try:
             input_path = automatically_infer_input_path(args.model_path)
-            print(f'Test path automatically inferred to {input_path}')
+            print(f"Test path automatically inferred to {input_path}")
         except ValueError:
-            print('Failed to automatically infer test path')
+            print("Failed to automatically infer test path")
             input_path = input("Please, explicitly enter test path: ").strip()
 
     device = get_device(args.device)

@@ -62,11 +62,7 @@ def evaluate(
 
     # load dataset conf and driver
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    input_extension, output_extension = input_path.split(".")[-1], output_path.split(".")[-1]
-    assert input_extension == output_extension, (
-        f"Having different input and output extensions is not currently a supported use case: "
-        f"input {input_extension} != output {output_extension}"
-    )
+    input_extension = input_path.split(".")[-1]
     data_driver = get_data_driver(model.task, input_extension)
 
     # set metrics if none
