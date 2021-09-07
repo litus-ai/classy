@@ -7,6 +7,9 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
+    def get_current_classification(self) -> Union[str, List[str]]:
+        raise NotImplementedError
+
     def update_classification(self, classification_result: Union[str, List[str]]):
         raise NotImplementedError
 
@@ -19,6 +22,9 @@ class SentencePairSample(ClassyStruct):
         self.sentence1 = sentence1
         self.sentence2 = sentence2
         self.label = label
+
+    def get_current_classification(self) -> Union[str, List[str]]:
+        return self.label
 
     def update_classification(self, classification_result: str):
         self.label = classification_result
@@ -37,6 +43,9 @@ class SequenceSample(ClassyStruct):
         self.sequence = sequence
         self.label = label
 
+    def get_current_classification(self) -> Union[str, List[str]]:
+        return self.label
+
     def update_classification(self, classification_result: str):
         self.label = classification_result
 
@@ -53,6 +62,9 @@ class TokensSample(ClassyStruct):
     def __init__(self, tokens: List[str], labels: Optional[List[str]] = None):
         self.tokens = tokens
         self.labels = labels
+
+    def get_current_classification(self) -> Union[str, List[str]]:
+        return self.labels
 
     def update_classification(self, classification_result: List[str]):
         self.labels = classification_result
