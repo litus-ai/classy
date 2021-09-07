@@ -8,3 +8,4 @@ dataset:
   section_size: 10000
   prebatch: True
   shuffle: False
+  for_inference: True

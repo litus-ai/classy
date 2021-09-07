@@ -24,7 +24,9 @@ class HFBaseDataset(BaseDataset):
         shuffle: bool,
         min_length: int,
         max_length: int,
+        for_inference: bool,
     ):
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True)
         super().__init__(
             samples_iterator=samples_iterator,
             vocabulary=vocabulary,
@@ -36,9 +38,9 @@ class HFBaseDataset(BaseDataset):
             prebatch=prebatch,
             shuffle=shuffle,
             min_length=min_length,
-            max_length=max_length,
+            max_length=max_length if max_length != -1 else self.tokenizer.model_max_length,
+            for_inference=for_inference,
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True)
         self._init_fields_batcher()
 
 
