@@ -58,7 +58,6 @@ def evaluate(
     # load model
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
-    model.eval()
     model.freeze()
 
     # load dataset conf and driver

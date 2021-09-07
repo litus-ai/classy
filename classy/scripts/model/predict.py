@@ -53,7 +53,6 @@ def interactive_main(
 
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
-    model.eval()
     model.freeze()
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
