@@ -89,6 +89,9 @@ class BaseDataset(IterableDataset):
         self.min_length, self.max_length = min_length, max_length
         self.for_inference = for_inference
 
+        if self.tokens_per_batch < self.max_length:
+            logger.warning(f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size")
+
     def dataset_iterator_func(self):
         raise NotImplementedError
 
