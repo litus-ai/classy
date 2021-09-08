@@ -29,7 +29,7 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def automatically_infer_input_path(model_path: str) -> str:
+def automatically_infer_test_path(model_path: str) -> str:
 
     checkpoint_path = Path(model_path)
     exp_split_data_folder = checkpoint_path.parent.parent.joinpath("data")
@@ -62,7 +62,7 @@ def main(args):
     else:
         # try to infer path
         try:
-            input_path = automatically_infer_input_path(args.model_path)
+            input_path = automatically_infer_test_path(args.model_path)
             print(f"Test path automatically inferred to {input_path}")
         except ValueError:
             print("Failed to automatically infer test path")
