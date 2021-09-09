@@ -30,15 +30,19 @@ def main(args):
     import sys
     from streamlit.cli import main as st_main
 
-    print(sys.argv)
     device = get_device(args.device)
+
+    # script params
+    script_params = [args.model_path]
+    if device != -1:
+        # todo ugly workaround for straemlit which interprets -1 as a streamlit param)
+        script_params.append(str(device))
 
     sys.argv = [
         "streamlit",
         "run",
         "classy/scripts/model/demo.py",
-        args.model_path,
-        str(device),
+        *script_params,
         "--server.port",
         str(args.port),
     ]
