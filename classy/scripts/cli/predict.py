@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 
+from classy.scripts.cli.utils import get_device
+
 
 def populate_parser(parser: ArgumentParser):
     # TODO: would be cool to have it work with exp_name and add an optional --checkpoint-name flag (default=best.ckpt)
@@ -16,21 +18,6 @@ def populate_parser(parser: ArgumentParser):
     file_parser.add_argument("-d", "--device", default="gpu")
     file_parser.add_argument("-o", "--output-path", required=True)
     file_parser.add_argument("--token-batch-size", type=int, default=128)
-
-
-def get_device(device):
-    if device == "gpu" or device == "cuda":
-        return 0
-
-    if device == "cpu":
-        return -1
-
-    try:
-        return int(device)
-    except ValueError:
-        pass
-
-    return device  # TODO: raise NotImplemented?
 
 
 def get_parser(subparser=None) -> ArgumentParser:

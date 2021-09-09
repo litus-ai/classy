@@ -1,5 +1,5 @@
 import argparse
-from typing import List, Iterable, Tuple, Generator, Dict, Union, Optional, Iterator
+from typing import List, Tuple, Generator, Dict, Union, Iterator
 
 import hydra.utils
 import torch
@@ -8,7 +8,7 @@ from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from classy.data.data_drivers import DataDriver, get_data_driver, TSV, SentencePairSample, SequenceSample, TokensSample
+from classy.data.data_drivers import get_data_driver, TSV, SentencePairSample, SequenceSample, TokensSample
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 
@@ -53,7 +53,6 @@ def interactive_main(
 
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
-    model.eval()
     model.freeze()
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)

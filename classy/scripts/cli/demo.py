@@ -1,19 +1,19 @@
 from argparse import ArgumentParser
 
 from classy.scripts.cli.utils import get_device
+from classy.utils.commons import execute_bash_command
 
 
 def populate_parser(parser: ArgumentParser):
     parser.add_argument("model_path")
     parser.add_argument("-p", "--port", type=int, default=8000)
     parser.add_argument("-d", "--device", default="gpu")
-    parser.add_argument("--token-batch-size", type=int, default=128)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(name="serve", description="serve a model trained with classy on a REST API", help="TODO")
+    parser_kwargs = dict(name="demo", description="expose a demo of a classy model with Streamlit", help="TODO")
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
     populate_parser(parser)
@@ -26,11 +26,28 @@ def parse_args():
 
 
 def main(args):
-    # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.serve import serve
+    # import here to avoid importing before needed
+    import sys
+    from streamlit.cli import main as st_main
 
     device = get_device(args.device)
-    serve(args.model_path, args.port, device, args.token_batch_size)
+
+    # script params
+    script_params = [args.model_path]
+    if device != -1:
+        # todo ugly workaround for straemlit which interprets -1 as a streamlit param)
+        script_params.append(str(device))
+
+    sys.argv = [
+        "streamlit",
+        "run",
+        "classy/scripts/model/demo.py",
+        *script_params,
+        "--server.port",
+        str(args.port),
+    ]
+
+    sys.exit(st_main())
 
 
 if __name__ == "__main__":
