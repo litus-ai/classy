@@ -51,7 +51,6 @@ def main(args):
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
 
     # choose device
-    device = "cuda" if args.device == "gpu" else args.device
     device = get_device(args.device)
     if device >= 0:
         cmd.append(f"device=cuda")
@@ -63,8 +62,8 @@ def main(args):
     exp_name = args.exp_name or f"{args.task}-{args.model_name}"
     cmd.append(f"exp_name={exp_name}")
 
+    # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
-    # overrides.append(f"datamodule.task={args.task}")
 
     # append all user-provided configuration overrides
     cmd += args.config
