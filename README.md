@@ -31,8 +31,8 @@ black -l 120 classy/
 ## TODOs
 
 ### Short Term
-- Implementation: _classy serve_
-- bug-fix: fix the bug in the data_module when you train on one file instead of a directory
+- Resume logic
+- demo: add inference time
 - Pretrained Models: look for and train "una mazzettata" of models
 
 ### Mid Term
