@@ -1,3 +1,4 @@
+import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -14,6 +15,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
+    parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -64,6 +66,20 @@ def main(args):
 
     # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
+
+    # wandb logging
+    if args.wandb is not None:
+        cmd.append(f"logging.wandb.use_wandb=True")
+        if args.wandb == "anonymous":
+            cmd.append(f"logging.wandb.anonymous=allow")
+        else:
+            assert "@" in args.wandb, "If you specify a value for '--wandb' it must contain both the name of the " \
+                                      "project and the name of the specific experiment in the following format: " \
+                                      "'<project-name>@<experiment-name>'"
+
+            project, experiment = args.wandb.split("@")
+            cmd.append(f"logging.wandb.project_name={project}")
+            cmd.append(f"logging.wandb.experiment_name={experiment}")
 
     # append all user-provided configuration overrides
     cmd += args.config
