@@ -37,6 +37,7 @@ black -l 120 classy/
 - Pretrained Models: look for and train "una mazzettata" of models
 
 ### Mid Term
+- num_workers can't be >1 right now
 - Docs: comment extensively at least all classes and some important function.
 - pre-commit black (github actions?)
 - training on colab notebooks
