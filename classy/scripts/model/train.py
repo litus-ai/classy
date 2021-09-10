@@ -2,7 +2,6 @@ import omegaconf
 import hydra
 
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
 
 from classy.data.data_modules import ClassyDataModule
 from classy.utils.hydra import fix
@@ -44,6 +43,8 @@ def train(conf: omegaconf.DictConfig) -> None:
 
     # wandb
     if conf.logging.wandb.use_wandb:
+        from pytorch_lightning.loggers import WandbLogger
+
         wandb_params = dict(
             project=conf.logging.wandb.project_name,
             name=conf.logging.wandb.experiment_name,
