@@ -31,6 +31,7 @@ black -l 120 classy/
 ## TODOs
 
 ### Short Term
+- random -> np.random everywhere
 - Resume logic
 - demo: add inference time
 - Pretrained Models: look for and train "una mazzettata" of models
