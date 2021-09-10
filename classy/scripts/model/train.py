@@ -38,10 +38,27 @@ def train(conf: omegaconf.DictConfig) -> None:
     for callback in conf.callbacks.callbacks:
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
+    # logging
+    logger = None
+
+    # wandb
+    if conf.logging.wandb.use_wandb:
+        from pytorch_lightning.loggers import WandbLogger
+
+        wandb_params = dict(
+            project=conf.logging.wandb.project_name,
+            name=conf.logging.wandb.experiment_name,
+        )
+        if conf.logging.wandb.anonymous is not None:
+            wandb_params["anonymous"] = "allow"
+
+        logger = WandbLogger(**wandb_params)
+
     # trainer
-    trainer = hydra.utils.instantiate(
+    trainer: pl.trainer.Trainer = hydra.utils.instantiate(
         conf.training.pl_trainer,
         callbacks=callbacks_store,
+        logger=logger,
         **conf.device,
     )
 

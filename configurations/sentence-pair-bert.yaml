@@ -26,4 +26,5 @@ defaults:
   - model: sentence-pair-bert
   - prediction: sentence-pair-hf
   - training: default
+  - logging: default
   - _self_

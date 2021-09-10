@@ -26,4 +26,5 @@ defaults:
   - model: sequence-bert
   - prediction: sequence-hf
   - training: default
+  - logging: default
   - _self_

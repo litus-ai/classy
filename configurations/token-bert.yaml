@@ -26,4 +26,5 @@ defaults:
   - model: token-bert
   - prediction: token-hf
   - training: default
+  - logging: default
   - _self_

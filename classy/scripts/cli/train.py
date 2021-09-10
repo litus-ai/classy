@@ -14,10 +14,10 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
+    parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
-    # subparser: Optional[argparse._SubParsersAction]
 
     parser_kwargs = dict(name="train", description="train a model with classy", help="TODO")
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
@@ -51,7 +51,6 @@ def main(args):
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
 
     # choose device
-    device = "cuda" if args.device == "gpu" else args.device
     device = get_device(args.device)
     if device >= 0:
         cmd.append(f"device=cuda")
@@ -63,8 +62,24 @@ def main(args):
     exp_name = args.exp_name or f"{args.task}-{args.model_name}"
     cmd.append(f"exp_name={exp_name}")
 
+    # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
-    # overrides.append(f"datamodule.task={args.task}")
+
+    # wandb logging
+    if args.wandb is not None:
+        cmd.append(f"logging.wandb.use_wandb=True")
+        if args.wandb == "anonymous":
+            cmd.append(f"logging.wandb.anonymous=allow")
+        else:
+            assert "@" in args.wandb, (
+                "If you specify a value for '--wandb' it must contain both the name of the "
+                "project and the name of the specific experiment in the following format: "
+                "'<project-name>@<experiment-name>'"
+            )
+
+            project, experiment = args.wandb.split("@")
+            cmd.append(f"logging.wandb.project_name={project}")
+            cmd.append(f"logging.wandb.experiment_name={experiment}")
 
     # append all user-provided configuration overrides
     cmd += args.config
