@@ -1,4 +1,3 @@
-import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -19,7 +18,6 @@ def populate_parser(parser: ArgumentParser):
 
 
 def get_parser(subparser=None) -> ArgumentParser:
-    # subparser: Optional[argparse._SubParsersAction]
 
     parser_kwargs = dict(name="train", description="train a model with classy", help="TODO")
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
@@ -73,9 +71,11 @@ def main(args):
         if args.wandb == "anonymous":
             cmd.append(f"logging.wandb.anonymous=allow")
         else:
-            assert "@" in args.wandb, "If you specify a value for '--wandb' it must contain both the name of the " \
-                                      "project and the name of the specific experiment in the following format: " \
-                                      "'<project-name>@<experiment-name>'"
+            assert "@" in args.wandb, (
+                "If you specify a value for '--wandb' it must contain both the name of the "
+                "project and the name of the specific experiment in the following format: "
+                "'<project-name>@<experiment-name>'"
+            )
 
             project, experiment = args.wandb.split("@")
             cmd.append(f"logging.wandb.project_name={project}")
