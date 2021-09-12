@@ -33,6 +33,7 @@ black -l 120 classy/
 ### Short Term
 - random -> np.random everywhere
 - demo: add inference time
+- Profiles: Create different profiles to train the various tasks. Try to build them based on the gpu memory size and report the training time on different gpus.
 - Pretrained Models: look for and train "una mazzettata" of models
 
 ### Mid Term
