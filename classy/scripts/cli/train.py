@@ -78,6 +78,7 @@ def main(args):
 
     if args.resume_from is not None:
         _main_resume(args.resume_from)
+        return
 
     if args.root is not None:
         config_name = args.root
