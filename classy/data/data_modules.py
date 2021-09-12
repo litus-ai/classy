@@ -9,8 +9,6 @@ from torch.utils.data import DataLoader
 from classy.data.data_drivers import get_data_driver
 from classy.utils.data import split_dataset
 
-import logging
-
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
@@ -32,7 +30,6 @@ class ClassyDataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.task = task
-        self.dataset_path = dataset_path
         self.file_extension = None
         self.data_driver = None
 
@@ -48,6 +45,12 @@ class ClassyDataModule(pl.LightningDataModule):
 
         self.features_vocabulary: Optional[Vocabulary] = None
         self.labels_vocabulary: Optional[Vocabulary] = None
+
+        if os.path.exists("data/"):
+            logger.info("Using data split from previous run")
+            self.dataset_path = "data/"
+        else:
+            self.dataset_path = dataset_path
 
     def prepare_data(self) -> None:
 
@@ -108,12 +111,16 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
         # todo: can we improve it?
-        self.vocabulary = hydra.utils.instantiate(
-            self.train_dataset_conf,
-            path=self.train_path,
-            data_driver=self.data_driver,
-        ).vocabulary
-        self.vocabulary.save("vocabulary/")
+        if os.path.exists("vocabulary/"):
+            logger.info("Loading vocabulary from previous run")
+            self.vocabulary = Vocabulary.from_folder("vocabulary/")
+        else:
+            self.vocabulary = hydra.utils.instantiate(
+                self.train_dataset_conf,
+                path=self.train_path,
+                data_driver=self.data_driver,
+            ).vocabulary
+            self.vocabulary.save("vocabulary/")
 
     def setup(self, stage: Optional[str] = None) -> None:
 

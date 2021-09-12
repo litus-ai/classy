@@ -30,3 +30,5 @@ model_checkpoint_callback:
   save_top_k: 3
   dirpath: checkpoints
   save_last: true
+
+resume_from: null
