@@ -8,11 +8,12 @@ from classy.pl_modules.base import ClassyPLModule
 from classy.utils.vocabulary import Vocabulary
 
 
-def load_training_conf_from_checkpoint(checkpoint_path: str) -> DictConfig:
+def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
     hydra_config_path = "/".join(checkpoint_path.split("/")[:-2])
     # load hydra config
-    conf = OmegaConf.load(f"{hydra_config_path}/.hydra/config.yaml")
+    conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
+    conf = OmegaConf.load(f"{hydra_config_path}/.hydra/{conf_file}".lstrip("/"))
     # return
     return conf
 

@@ -1,7 +1,14 @@
+import os
+
 from argparse import ArgumentParser
 from pathlib import Path
 
 from classy.scripts.cli.utils import get_device
+from classy.utils.lightning import load_training_conf_from_checkpoint, load_classy_module_from_checkpoint
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def populate_parser(parser: ArgumentParser):
@@ -14,6 +21,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
+    parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
 
 
@@ -39,9 +47,37 @@ def _main_mock(cfg):
     train(cfg)
 
 
+def _main_resume(model_dir: str):
+
+    if not os.path.isdir(model_dir):
+        logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
+        exit(1)
+
+    if not os.path.isfile(f"{model_dir}/checkpoints/last.ckpt"):
+        logger.error(
+            "The directory must contain the last checkpoint stored in the previous run (checkpoints/last.ckpt)."
+        )
+        exit(1)
+
+    # import here to avoid importing torch before it's actually needed
+    from classy.scripts.model.train import fix, train
+
+    os.chdir(model_dir)
+
+    last_ckpt_path = "checkpoints/last.ckpt"
+    cfg = load_training_conf_from_checkpoint(last_ckpt_path, post_trainer_init=True)
+    cfg.training.resume_from = last_ckpt_path
+
+    fix(cfg)
+    train(cfg)
+
+
 def main(args):
     import hydra
     import sys
+
+    if args.resume_from is not None:
+        _main_resume(args.resume_from)
 
     if args.root is not None:
         config_name = args.root

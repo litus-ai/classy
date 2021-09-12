@@ -2,6 +2,7 @@ import omegaconf
 import hydra
 
 import pytorch_lightning as pl
+from omegaconf import OmegaConf
 
 from classy.data.data_modules import ClassyDataModule
 from classy.utils.hydra import fix
@@ -48,19 +49,36 @@ def train(conf: omegaconf.DictConfig) -> None:
         wandb_params = dict(
             project=conf.logging.wandb.project_name,
             name=conf.logging.wandb.experiment_name,
+            resume="allow",
+            id=conf.logging.wandb.run_id,
         )
         if conf.logging.wandb.anonymous is not None:
             wandb_params["anonymous"] = "allow"
 
         logger = WandbLogger(**wandb_params)
 
+        if conf.logging.wandb.run_id is None:
+            conf.logging.wandb.run_id = logger.experiment.id
+
     # trainer
-    trainer: pl.trainer.Trainer = hydra.utils.instantiate(
-        conf.training.pl_trainer,
-        callbacks=callbacks_store,
-        logger=logger,
-        **conf.device,
-    )
+    if conf.training.resume_from is not None:
+        trainer = pl.trainer.Trainer(
+            resume_from_checkpoint=conf.training.resume_from,
+            callbacks=callbacks_store,
+            logger=logger,
+            **conf.device,
+        )
+    else:
+        trainer: pl.trainer.Trainer = hydra.utils.instantiate(
+            conf.training.pl_trainer,
+            callbacks=callbacks_store,
+            logger=logger,
+            **conf.device,
+        )
+
+    # saving post trainer-init conf
+    with open(".hydra/config_post_trainer_init.yaml", "w") as f:
+        f.write(OmegaConf.to_yaml(conf))
 
     # module fit
     trainer.fit(pl_module, datamodule=pl_data_module)

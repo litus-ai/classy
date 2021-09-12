@@ -4,3 +4,4 @@ wandb:
   project_name: null
   experiment_name: null
   anonymous: null
+  run_id: null
