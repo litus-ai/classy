@@ -1,10 +1,11 @@
 import random
 from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
 
+import numpy as np
+
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
-from tqdm import tqdm
 
 from classy.data.data_drivers import DataDriver, SentencePairSample, SequenceSample, TokensSample
 from classy.utils.commons import chunks, flatten, add_noise_to_value
@@ -94,6 +95,18 @@ class BaseDataset(IterableDataset):
                 f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size"
             )
 
+        # used to store the materialized dataset
+        self._dataset_store = None
+        if shuffle:
+            # todo: we should decide if shuffling the dataset automatically means materializing it or not.
+            #  As an alternative we could create a shuffled version of the dataset and store it in the experiment
+            #  directory.
+            logger.warning(
+                "Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory"
+            )
+            self.materialize_dataset()
+            np.random.shuffle(self._dataset_store)
+
     def dataset_iterator_func(self):
         raise NotImplementedError
 
@@ -105,6 +118,14 @@ class BaseDataset(IterableDataset):
         ds = list(chunks(dataset_elements, 512))
         random.shuffle(ds)
         return flatten(ds)
+
+    def materialize_dataset(self) -> None:
+        if self._dataset_store is not None:
+            logger.info("The dataset is already materialized skipping materialization")
+            return
+        logger.info("Starting dataset materialization")
+        self._dataset_store = list(self.dataset_iterator_func())
+        logger.info("Materialization completed")
 
     def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None, None]:
 
@@ -206,29 +227,24 @@ class BaseDataset(IterableDataset):
 
         if max_len_discards > 0:
             logger.warning(
-                f"During iteration, {max_len_discards} elements were discarded since longer than max length {self.max_length}"
+                f"During iteration, {max_len_discards} elements were "
+                f"discarded since longer than max length {self.max_length}"
             )
 
         if min_len_discards > 0:
             logger.warning(
-                f"During iteration, {min_len_discards} elements were discarded since shorter than max length {self.min_length}"
+                f"During iteration, {min_len_discards} elements were "
+                f"discarded since shorter than min length {self.min_length}"
             )
 
     def __iter__(self):
 
-        dataset_iterator = self.dataset_iterator_func()
-        if self.shuffle:
-            logger.warning("Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory")
-            logger.info("Starting materialization")
-            dataset_iterator = list(dataset_iterator)
-            logger.info("Materialization completed, now shuffling")
-            random.shuffle(dataset_iterator)
-            logger.info("Shuffling completed")
+        dataset_iterator = self.dataset_iterator_func() if self._dataset_store is None else self._dataset_store
 
         current_dataset_elements = []
 
         i = None
-        for i, dataset_elem in enumerate(dataset_iterator):
+        for i, dataset_elem in enumerate(dataset_iterator, start=1):
 
             if len(current_dataset_elements) == self.section_size:
                 for batch in self.materialize_batches(current_dataset_elements):
@@ -237,7 +253,7 @@ class BaseDataset(IterableDataset):
 
             current_dataset_elements.append(dataset_elem)
 
-            if i % 100_000 == 0:
+            if i % 50_000 == 0:
                 logger.info(f"Processed: {i} number of elements")
 
         if len(current_dataset_elements) != 0:

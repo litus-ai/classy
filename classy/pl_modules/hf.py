@@ -80,7 +80,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
         self.log("val_precision", self.p_metric)
         self.log("val_recall", self.r_metric)
-        self.log("val_f1-score", self.f1_metric)
+        self.log("val_f1-score", self.f1_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
