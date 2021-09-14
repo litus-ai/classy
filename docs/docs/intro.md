@@ -102,7 +102,7 @@ organizing data, that classy expects you to do.
 
 <ReactTermynal>
   <span data-ty="input">classy demo experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
-  <span data-ty startDelay="2000">Demo up and running at http://0.0.0.0:8000</span>
+  <span data-ty data-ty-start-delay="2000">Demo up and running at http://0.0.0.0:8000</span>
 </ReactTermynal>
 
 <p />
@@ -115,10 +115,10 @@ Now you can check out out the demo!
 
 <ReactTermynal>
   <span data-ty="input">classy serve experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
-  <span data-ty startDelay="2000">REST API up and running at http://0.0.0.0:8000</span>
+  <span data-ty data-ty-start-delay="2000">REST API up and running at http://0.0.0.0:8000</span>
   <span data-ty>Checkout the OpenAPI docs at http://0.0.0.0:8000/docs</span>
   <span data-ty="input">curl -X 'POST' 'http://localhost:8000/' -H 'accept: application/json' -H 'Content-Type: application/json' -d '[{'{'}"sequence": "I wish I had never bought these terrible headphones!"{'}'}]'</span>
-  <span data-ty startDelay="2000">[{'{'}"sequence":"I wish I had never bought these terrible headphones!","label":"0"{'}'}]</span>
+  <span data-ty data-ty-start-delay="2000">[{'{'}"sequence":"I wish I had never bought these terrible headphones!","label":"0"{'}'}]</span>
 </ReactTermynal>
 
 <p />
@@ -132,7 +132,7 @@ We also automatically generate the OpenAPI documentation page!
 <ReactTermynal>
   <span data-ty="input">classy predict interactive experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
   <span data-ty="input" data-ty-prompt="Enter source text: ">I wish I had never bought these terrible headphones!</span>
-  <span data-ty startDelay="2000">  # prediction: negative</span>
+  <span data-ty data-ty-start-delay="2000">  # prediction: negative</span>
   <span data-ty data-ty-prompt="Enter source text: "></span>
 </ReactTermynal>
 
@@ -148,6 +148,20 @@ We also automatically generate the OpenAPI documentation page!
   <span data-ty>Prediction complete</span>
   <span data-ty="input">cat target.out.tsv | head -1</span>
   <span data-ty>I wish I had never bought these terrible headphones!    negative</span>
+</ReactTermynal>
+
+<p />
+
+**Step 3.e**: Evaluate your model
+
+<ReactTermynal>
+  <span data-ty="input">classy evaluate experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
+  <span data-ty="progress"></span>
+  <span data-ty># accuracy: 0.9</span>
+  <span data-ty># classification metrics:</span>
+  <span data-ty>...</span>
+  <span data-ty>    # f1: 0.9</span>
+  <span data-ty>...</span>
 </ReactTermynal>
 
 <p />
