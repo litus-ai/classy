@@ -170,33 +170,15 @@ class BaseDataset(IterableDataset):
                 k for k in self.batching_fields if self.max_length != -1 and len(de[k]) > self.max_length
             ]
             if len(too_long_batching_fields) > 0:
-                if self.for_inference:
-                    logger.warning(
-                        f"WARNING: Inference mode is True but a sample longer than max length was found. Sample will be DISCARDED. If you are doing some kind of evaluation, this can INVALIDATE results. This might happen if the max length was not set to -1 or if the the sample length exceeds the maximum length supported by the current model."
-                    )
-                else:
-                    max_len_discards += 1
-                    if max_len_discards % 1_000 == 0:
-                        logger.warning(
-                            f"{max_len_discards} elements discarded since longer than max length {self.max_length}"
-                        )
+                max_len_discards += 1
                 continue
 
             too_short_batching_fields = [
                 k for k in self.batching_fields if self.min_length != -1 and len(de[k]) < self.min_length
             ]
             if len(too_short_batching_fields) > 0:
-                if self.for_inference:
-                    logger.warning(
-                        f"WARNING: Inference mode is True but a sample shorter than min length was found. Sample will be DISCARDED. If you are doing some kind of evaluation, this can INVALIDATE results. This might happen if the min length was not set to -1 or if the the sample length is shorter than the minimum length supported by the current model."
-                    )
-                else:
-                    min_len_discards += 1
-                    if min_len_discards % 1_000 == 0:
-                        logger.warning(
-                            f"{min_len_discards} elements discarded since shorter than max length {self.min_length}"
-                        )
-                    continue
+                min_len_discards += 1
+                continue
 
             de_len = sum(len(de[k]) for k in self.batching_fields)
 
@@ -219,16 +201,32 @@ class BaseDataset(IterableDataset):
             yield output_batch()
 
         if max_len_discards > 0:
-            logger.warning(
-                f"During iteration, {max_len_discards} elements were "
-                f"discarded since longer than max length {self.max_length}"
-            )
+            if self.for_inference:
+                logger.warning(
+                    f"WARNING: Inference mode is True but {max_len_discards} samples longer than max length were "
+                    f"found. The {max_len_discards} samples will be DISCARDED. If you are doing some kind of evaluation"
+                    f", this can INVALIDATE results. This might happen if the max length was not set to -1 or if the "
+                    f"sample length exceeds the maximum length supported by the current model."
+                )
+            else:
+                logger.warning(
+                    f"During iteration, {max_len_discards} elements were "
+                    f"discarded since longer than max length {self.max_length}"
+                )
 
         if min_len_discards > 0:
-            logger.warning(
-                f"During iteration, {min_len_discards} elements were "
-                f"discarded since shorter than min length {self.min_length}"
-            )
+            if self.for_inference:
+                logger.warning(
+                    f"WARNING: Inference mode is True but {min_len_discards} samples shorter than min length were "
+                    f"found. The {min_len_discards} samples will be DISCARDED. If you are doing some kind of evaluation"
+                    f", this can INVALIDATE results. This might happen if the min length was not set to -1 or if the "
+                    f"sample length is shorter than the minimum length supported by the current model."
+                )
+            else:
+                logger.warning(
+                    f"During iteration, {min_len_discards} elements were "
+                    f"discarded since shorter than min length {self.min_length}"
+                )
 
     def __iter__(self):
 
