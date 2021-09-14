@@ -27,7 +27,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         optim_conf: omegaconf.DictConfig,
     ):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore="vocabulary")
         self.classifier = AutoModelForSequenceClassification.from_pretrained(
             transformer_model, num_labels=vocabulary.get_size(k="labels")
         )
@@ -114,7 +114,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         optim_conf: omegaconf.DictConfig,
     ):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore="vocabulary")
 
         # encoder
         auto_config = AutoConfig.from_pretrained(transformer_model)
