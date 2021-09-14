@@ -11,7 +11,7 @@ datamodule:
     max_batch_size: 10
     section_size: 10000
     prebatch: True
-    shuffle: True
+    materialize: False
     for_inference: False
   validation_dataset:
     _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
@@ -22,8 +22,9 @@ datamodule:
     max_batch_size: 10
     section_size: 10000
     prebatch: True
-    shuffle: False
+    materialize: True
     for_inference: True
   validation_split_size: 0.1
   test_split_size: 0.1
   max_nontrain_split_size: 500
+  shuffle_dataset: True
