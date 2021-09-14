@@ -172,14 +172,15 @@ class ClassyDataModule(pl.LightningDataModule):
 
     def train_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
         return DataLoader(
-            self.train_dataset,
-            batch_size=None,
-            num_workers=1,
-            persistent_workers=True  # materialization support
+            self.train_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
         )
 
     def val_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(self.validation_dataset, batch_size=None, num_workers=1)
+        return DataLoader(
+            self.validation_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
+        )
 
     def test_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(self.test_dataset, batch_size=None, num_workers=1)
+        return DataLoader(
+            self.test_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
+        )
