@@ -1,11 +1,43 @@
-import random
 from pathlib import Path
 from typing import Tuple, Optional
+
+import numpy as np
 
 from classy.data.data_drivers import DataDriver
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
+
+
+def create_data_dir():
+    # create data folder
+    output_folder = Path("data")
+    output_folder.mkdir(exist_ok=True)
+
+
+def load_dataset(
+    dataset_path: str,
+    data_driver: DataDriver,
+) -> list:
+    return list(data_driver.read_from_path(dataset_path))
+
+
+def shuffle_dataset(
+    dataset_path: str,
+    data_driver: DataDriver,
+) -> list:
+    samples = load_dataset(dataset_path, data_driver)
+    np.random.shuffle(samples)
+    return samples
+
+
+def shuffle_and_store_dataset(
+    dataset_path: str,
+    data_driver: DataDriver,
+    output_path: str,
+) -> None:
+    samples = shuffle_dataset(dataset_path, data_driver)
+    data_driver.save(samples, output_path)
 
 
 def split_dataset(
@@ -15,6 +47,7 @@ def split_dataset(
     validation_split_size: Optional[float] = None,
     test_split_size: Optional[float] = None,
     data_max_split: Optional[int] = None,
+    shuffle: bool = True,
 ) -> Tuple[str, Optional[str], Optional[str]]:
 
     assert (
@@ -23,18 +56,21 @@ def split_dataset(
     output_extension = dataset_path.split(".")[-1]
 
     # create output folder
-    output_folder = Path(output_folder)
-    output_folder.mkdir()
+    create_data_dir()
 
     # read samples and shuffle
-    logger.info("Materializing and shuffling dataset before splitting it")
-    samples = list(data_driver.read_from_path(dataset_path))
-    random.shuffle(samples)
+    if shuffle:
+        logger.info("Materializing and shuffling dataset before splitting it")
+        samples = shuffle_dataset(dataset_path, data_driver)
+    else:
+        logger.info("Materializing dataset before splitting it")
+        samples = load_dataset(dataset_path, data_driver)
 
     # splitting
-
     training_samples = samples
     train_path, validation_path, test_path = None, None, None
+
+    output_folder = Path(output_folder)
 
     if validation_split_size is not None:
         n_validation_samples = min(int(len(samples) * validation_split_size), data_max_split or len(samples))
