@@ -3,8 +3,19 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 
+# All the code in this file comes from the official RAdam github repository
+# Paper: https://arxiv.org/pdf/1908.03265.pdf
+# github repo: https://github.com/
 class RAdam(Optimizer):
-    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0, degenerated_to_sgd=True):
+    def __init__(
+            self,
+            params,
+            lr=1e-3,
+            betas=(0.9, 0.999),
+            eps=1e-8,
+            weight_decay=0,
+            degenerated_to_sgd=True  # in the original repository they changed the default value to False
+    ):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -61,8 +72,8 @@ class RAdam(Optimizer):
                 exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
                 beta1, beta2 = group["betas"]
 
-                exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                exp_avg.mul_(beta1).add_(1 - beta1, grad)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
 
                 state["step"] += 1
                 buffered = group["buffer"][int(state["step"] % 10)]
@@ -95,14 +106,14 @@ class RAdam(Optimizer):
                 # more conservative since it's an approximated value
                 if N_sma >= 5:
                     if group["weight_decay"] != 0:
-                        p_data_fp32.add_(-group["weight_decay"] * group["lr"], p_data_fp32)
+                        p_data_fp32.add_(p_data_fp32, alpha=-group["weight_decay"] * group["lr"])
                     denom = exp_avg_sq.sqrt().add_(group["eps"])
-                    p_data_fp32.addcdiv_(-step_size * group["lr"], exp_avg, denom)
+                    p_data_fp32.addcdiv_(exp_avg, denom, value=-step_size * group["lr"])
                     p.data.copy_(p_data_fp32)
                 elif step_size > 0:
                     if group["weight_decay"] != 0:
-                        p_data_fp32.add_(-group["weight_decay"] * group["lr"], p_data_fp32)
-                    p_data_fp32.add_(-step_size * group["lr"], exp_avg)
+                        p_data_fp32.add_(p_data_fp32, alpha=-group["weight_decay"] * group["lr"])
+                    p_data_fp32.add_(exp_avg, alpha=-step_size * group["lr"])
                     p.data.copy_(p_data_fp32)
 
         return loss
