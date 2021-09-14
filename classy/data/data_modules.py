@@ -69,7 +69,6 @@ class ClassyDataModule(pl.LightningDataModule):
             self.test_path = os.path.join(self.dataset_path, f"test.{self.file_extension}")
 
             assert os.path.exists(self.train_path), f"Cannot find the training file 'train.{self.file_extension}'"
-            assert os.path.exists(self.test_path), f"Cannot find the test file 'test.{self.file_extension}'"
 
             if self.shuffle_dataset and not os.path.exists("data/train.shuffled.tsv"):
                 # create data folder
