@@ -28,13 +28,15 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
     ):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
         self.save_hyperparameters(ignore="vocabulary")
+        num_classes = vocabulary.get_size(k="labels")
         self.classifier = AutoModelForSequenceClassification.from_pretrained(
-            transformer_model, num_labels=vocabulary.get_size(k="labels")
+            transformer_model, num_labels=num_classes
         )
         self.accuracy_metric = torchmetrics.Accuracy()
         self.p_metric = torchmetrics.Precision()
         self.r_metric = torchmetrics.Recall()
-        self.f1_metric = torchmetrics.F1()
+        self.micro_f1_metric = torchmetrics.F1()
+        self.macro_f1_metric = torchmetrics.F1(num_classes, average="macro")
 
     def forward(
         self,
@@ -74,13 +76,15 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.micro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.macro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
 
         self.log("val_loss", classification_output.loss)
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
         self.log("val_precision", self.p_metric)
         self.log("val_recall", self.r_metric)
-        self.log("val_f1-score", self.f1_metric, prog_bar=True)
+        self.log("val_micro-f1-score", self.micro_f1_metric, prog_bar=True)
+        self.log("val_macro-f1-score", self.macro_f1_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
@@ -88,12 +92,14 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
         self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.micro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.macro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
 
         self.log("test_accuracy", self.accuracy_metric)
         self.log("test_precision", self.p_metric)
         self.log("test_recall", self.r_metric)
-        self.log("test_f1-score", self.f1_metric)
+        self.log("test_micro-f1-score", self.micro_f1_metric)
+        self.log("test_macro-f1-score", self.macro_f1_metric)
 
 
 class HFSequencePLModule(SequenceTask, HFSequenceCommonPLModule):
@@ -127,17 +133,13 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
                 param.requires_grad = False
 
         # classifier
+        num_classes = vocabulary.get_size(k="labels")
         self.classification_head = nn.Linear(
-            self.encoder.config.hidden_size, vocabulary.get_size(k="labels"), bias=False
+            self.encoder.config.hidden_size, num_classes, bias=False
         )
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metrics
-        self.accuracy_metric = torchmetrics.Accuracy()
-        self.p_metric = torchmetrics.Precision(mdmc_average="global")
-        self.r_metric = torchmetrics.Recall(mdmc_average="global")
-        self.f1_metric = torchmetrics.F1(mdmc_average="global")
-
         ignore_index = vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
         self.accuracy_metric = torchmetrics.Accuracy(
             mdmc_average="global",
@@ -151,8 +153,14 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             mdmc_average="global",
             ignore_index=ignore_index,
         )
-        self.f1_metric = torchmetrics.F1(
+        self.micro_f1_metric = torchmetrics.F1(
             mdmc_average="global",
+            ignore_index=ignore_index,
+        )
+        self.macro_f1_metric = torchmetrics.F1(
+            num_classes,
+            mdmc_average="global",
+            average="macro",
             ignore_index=ignore_index,
         )
 
@@ -214,13 +222,15 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)
         self.r_metric(classification_output.predictions, labels)
-        self.f1_metric(classification_output.predictions, labels)
+        self.micro_f1_metric(classification_output.predictions, labels)
+        self.macro_f1_metric(classification_output.predictions, labels)
 
         self.log("val_loss", classification_output.loss)
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
         self.log("val_precision", self.p_metric)
         self.log("val_recall", self.r_metric)
-        self.log("val_f1-score", self.f1_metric, prog_bar=True)
+        self.log("val_micro-f1-score", self.micro_f1_metric, prog_bar=True)
+        self.log("val_macro-f1-score", self.macro_f1_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
@@ -231,9 +241,11 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)
         self.r_metric(classification_output.predictions, labels)
-        self.f1_metric(classification_output.predictions, labels)
+        self.micro_f1_metric(classification_output.predictions, labels)
+        self.macro_f1_metric(classification_output.predictions, labels)
 
         self.log("test_accuracy", self.accuracy_metric)
         self.log("test_precision", self.p_metric)
         self.log("test_recall", self.r_metric)
-        self.log("test_f1-score", self.f1_metric)
+        self.log("test_micro-f1-score", self.micro_f1_metric)
+        self.log("test_macro-f1-score", self.macro_f1_metric)
