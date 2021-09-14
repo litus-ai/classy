@@ -254,17 +254,6 @@ class Termynal {
     }
 }
 
-/**
-* HTML API: If current script has container(s) specified, initialise Termynal.
-
-
-if (document.currentScript.hasAttribute('data-termynal-container')) {
-    const containers = document.currentScript.getAttribute('data-termynal-container');
-    containers.split('|')
-        .forEach(container => new Termynal(container))
-}
- */
-
 
 import React from "react";
 import './termynal.css';
@@ -276,10 +265,6 @@ export default class ReactTermynal extends React.Component {
             typeDelay: 40,
             lineDelay: 700
         });
-    }
-
-    componentWillUnmount() {
-        this.t.destroy();
     }
 
     render() {
