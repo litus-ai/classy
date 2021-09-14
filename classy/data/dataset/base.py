@@ -1,4 +1,3 @@
-import random
 from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
 
 import numpy as np
@@ -70,7 +69,7 @@ class BaseDataset(IterableDataset):
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         section_size: int,
         prebatch: bool,
-        shuffle: bool,
+        materialize: bool,
         min_length: int,
         max_length: int,
         for_inference: bool,
@@ -86,7 +85,7 @@ class BaseDataset(IterableDataset):
         self.tokens_per_batch, self.max_batch_size = tokens_per_batch, max_batch_size
         self.fields_batcher = fields_batchers
         self.prebatch, self.section_size = prebatch, section_size
-        self.shuffle = shuffle
+        self.materialize = materialize
         self.min_length, self.max_length = min_length, max_length
         self.for_inference = for_inference
 
@@ -97,15 +96,9 @@ class BaseDataset(IterableDataset):
 
         # used to store the materialized dataset
         self._dataset_store = None
-        if shuffle:
-            # todo: we should decide if shuffling the dataset automatically means materializing it or not.
-            #  As an alternative we could create a shuffled version of the dataset and store it in the experiment
-            #  directory.
-            logger.warning(
-                "Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory"
-            )
+        if materialize:
+            logger.warning("Materializing dataset.")
             self.materialize_dataset()
-            np.random.shuffle(self._dataset_store)
 
     def dataset_iterator_func(self):
         raise NotImplementedError
@@ -116,7 +109,7 @@ class BaseDataset(IterableDataset):
             key=lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1),
         )
         ds = list(chunks(dataset_elements, 512))
-        random.shuffle(ds)
+        np.random.shuffle(ds)
         return flatten(ds)
 
     def materialize_dataset(self) -> None:

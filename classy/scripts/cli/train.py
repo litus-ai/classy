@@ -23,6 +23,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-c", "--config", nargs="+", default=[])
     parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
+    parser.add_argument("--no-shuffle", action="store_true")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -101,6 +102,10 @@ def main(args):
 
     # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
+
+    # turn off shuffling if requested
+    if args.no_shuffle:
+        cmd.append(f"data.datamodule.shuffle_dataset=False")
 
     # wandb logging
     if args.wandb is not None:
