@@ -27,7 +27,7 @@ class ClassyDataModule(pl.LightningDataModule):
         validation_split_size: Optional[float] = None,
         test_split_size: Optional[float] = None,
         max_nontrain_split_size: Optional[int] = None,
-        shuffle_dataset: bool = True
+        shuffle_dataset: bool = True,
     ):
         super().__init__()
         self.task = task
@@ -75,8 +75,10 @@ class ClassyDataModule(pl.LightningDataModule):
                 create_data_dir()
                 # shuffle input dataset
                 shuffled_dataset_path = "data/train.shuffled.tsv"
-                logger.info(f"Shuffling training dataset. The shuffled dataset "
-                            f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}")
+                logger.info(
+                    f"Shuffling training dataset. The shuffled dataset "
+                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
+                )
                 shuffle_and_store_dataset(self.train_path, self.data_driver, output_path=shuffled_dataset_path)
                 self.train_path = shuffled_dataset_path
 
@@ -106,8 +108,10 @@ class ClassyDataModule(pl.LightningDataModule):
                 create_data_dir()
                 # shuffle training dataset
                 shuffled_dataset_path = "data/dataset.shuffled.tsv"
-                logger.info(f"Shuffling input dataset. The shuffled dataset "
-                            f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}")
+                logger.info(
+                    f"Shuffling input dataset. The shuffled dataset "
+                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
+                )
                 shuffle_and_store_dataset(self.dataset_path, self.data_driver, output_path=shuffled_dataset_path)
                 self.dataset_path = shuffled_dataset_path
 

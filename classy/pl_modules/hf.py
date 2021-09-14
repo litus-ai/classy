@@ -29,9 +29,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
         self.save_hyperparameters(ignore="vocabulary")
         num_classes = vocabulary.get_size(k="labels")
-        self.classifier = AutoModelForSequenceClassification.from_pretrained(
-            transformer_model, num_labels=num_classes
-        )
+        self.classifier = AutoModelForSequenceClassification.from_pretrained(transformer_model, num_labels=num_classes)
         self.accuracy_metric = torchmetrics.Accuracy()
         self.p_metric = torchmetrics.Precision()
         self.r_metric = torchmetrics.Recall()
@@ -134,9 +132,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
 
         # classifier
         num_classes = vocabulary.get_size(k="labels")
-        self.classification_head = nn.Linear(
-            self.encoder.config.hidden_size, num_classes, bias=False
-        )
+        self.classification_head = nn.Linear(self.encoder.config.hidden_size, num_classes, bias=False)
         self.criterion = torch.nn.CrossEntropyLoss()
 
         # metrics
