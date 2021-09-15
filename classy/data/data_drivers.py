@@ -256,5 +256,6 @@ def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
         logger.info(f"No reader available for task {task_type} and extension {file_extension}.")
     assert (
         reader_identifier in READERS_DICT
-    ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
+    ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. " \
+       f"Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
     return READERS_DICT[reader_identifier]()
