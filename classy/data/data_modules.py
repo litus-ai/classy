@@ -45,9 +45,6 @@ class ClassyDataModule(pl.LightningDataModule):
         self.max_nontrain_split_size = max_nontrain_split_size
         self.shuffle_dataset = shuffle_dataset
 
-        self.features_vocabulary: Optional[Vocabulary] = None
-        self.labels_vocabulary: Optional[Vocabulary] = None
-
         if os.path.exists("data/"):
             logger.info("Using data split from previous run")
             self.dataset_path = "data/"
