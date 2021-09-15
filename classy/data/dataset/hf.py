@@ -117,13 +117,14 @@ class HFSentencePairDataset(HFSequenceDataset):
 
         for sequence_sample in self.samples_iterator():
             sequence_sample: SentencePairSample
-            input_ids = self.tokenizer(sequence_sample.sentence1, sequence_sample.sentence2, return_tensors="pt",)[
-                "input_ids"
-            ][0]
+            tokenization_output = self.tokenizer(
+                sequence_sample.sentence1, sequence_sample.sentence2, return_tensors="pt"
+            )
 
             elem_dict = {
-                "input_ids": input_ids,
-                "attention_mask": torch.ones_like(input_ids),
+                "input_ids": tokenization_output["input_ids"].squeeze(),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(),
+                "token_type_ids": tokenization_output["token_type_ids"].squeeze(),
             }
 
             if sequence_sample.label is not None:
