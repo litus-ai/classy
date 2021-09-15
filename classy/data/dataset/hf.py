@@ -113,6 +113,11 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
+
+    def _init_fields_batcher(self) -> None:
+        super(HFSentencePairDataset, self)._init_fields_batcher()
+        self.fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
         for sequence_sample in self.samples_iterator():
