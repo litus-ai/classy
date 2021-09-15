@@ -1,10 +1,10 @@
-import random
 from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
+
+import numpy as np
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
-from tqdm import tqdm
 
 from classy.data.data_drivers import DataDriver, SentencePairSample, SequenceSample, TokensSample
 from classy.utils.commons import chunks, flatten, add_noise_to_value
@@ -69,7 +69,7 @@ class BaseDataset(IterableDataset):
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         section_size: int,
         prebatch: bool,
-        shuffle: bool,
+        materialize: bool,
         min_length: int,
         max_length: int,
         for_inference: bool,
@@ -85,7 +85,7 @@ class BaseDataset(IterableDataset):
         self.tokens_per_batch, self.max_batch_size = tokens_per_batch, max_batch_size
         self.fields_batcher = fields_batchers
         self.prebatch, self.section_size = prebatch, section_size
-        self.shuffle = shuffle
+        self.materialize = materialize
         self.min_length, self.max_length = min_length, max_length
         self.for_inference = for_inference
 
@@ -93,6 +93,12 @@ class BaseDataset(IterableDataset):
             logger.warning(
                 f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size"
             )
+
+        # used to store the materialized dataset
+        self._dataset_store = None
+        if materialize:
+            logger.warning("Materializing dataset.")
+            self.materialize_dataset()
 
     def dataset_iterator_func(self):
         raise NotImplementedError
@@ -103,8 +109,16 @@ class BaseDataset(IterableDataset):
             key=lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1),
         )
         ds = list(chunks(dataset_elements, 512))
-        random.shuffle(ds)
+        np.random.shuffle(ds)
         return flatten(ds)
+
+    def materialize_dataset(self) -> None:
+        if self._dataset_store is not None:
+            logger.info("The dataset is already materialized skipping materialization")
+            return
+        logger.info("Starting dataset materialization")
+        self._dataset_store = list(self.dataset_iterator_func())
+        logger.info("Materialization completed")
 
     def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None, None]:
 
@@ -156,33 +170,15 @@ class BaseDataset(IterableDataset):
                 k for k in self.batching_fields if self.max_length != -1 and len(de[k]) > self.max_length
             ]
             if len(too_long_batching_fields) > 0:
-                if self.for_inference:
-                    logger.warning(
-                        f"WARNING: Inference mode is True but a sample longer than max length was found. Sample will be DISCARDED. If you are doing some kind of evaluation, this can INVALIDATE results. This might happen if the max length was not set to -1 or if the the sample length exceeds the maximum length supported by the current model."
-                    )
-                else:
-                    max_len_discards += 1
-                    if max_len_discards % 1_000 == 0:
-                        logger.warning(
-                            f"{max_len_discards} elements discarded since longer than max length {self.max_length}"
-                        )
+                max_len_discards += 1
                 continue
 
             too_short_batching_fields = [
                 k for k in self.batching_fields if self.min_length != -1 and len(de[k]) < self.min_length
             ]
             if len(too_short_batching_fields) > 0:
-                if self.for_inference:
-                    logger.warning(
-                        f"WARNING: Inference mode is True but a sample shorter than min length was found. Sample will be DISCARDED. If you are doing some kind of evaluation, this can INVALIDATE results. This might happen if the min length was not set to -1 or if the the sample length is shorter than the minimum length supported by the current model."
-                    )
-                else:
-                    min_len_discards += 1
-                    if min_len_discards % 1_000 == 0:
-                        logger.warning(
-                            f"{min_len_discards} elements discarded since shorter than max length {self.min_length}"
-                        )
-                    continue
+                min_len_discards += 1
+                continue
 
             de_len = sum(len(de[k]) for k in self.batching_fields)
 
@@ -205,30 +201,41 @@ class BaseDataset(IterableDataset):
             yield output_batch()
 
         if max_len_discards > 0:
-            logger.warning(
-                f"During iteration, {max_len_discards} elements were discarded since longer than max length {self.max_length}"
-            )
+            if self.for_inference:
+                logger.warning(
+                    f"WARNING: Inference mode is True but {max_len_discards} samples longer than max length were "
+                    f"found. The {max_len_discards} samples will be DISCARDED. If you are doing some kind of evaluation"
+                    f", this can INVALIDATE results. This might happen if the max length was not set to -1 or if the "
+                    f"sample length exceeds the maximum length supported by the current model."
+                )
+            else:
+                logger.warning(
+                    f"During iteration, {max_len_discards} elements were "
+                    f"discarded since longer than max length {self.max_length}"
+                )
 
         if min_len_discards > 0:
-            logger.warning(
-                f"During iteration, {min_len_discards} elements were discarded since shorter than max length {self.min_length}"
-            )
+            if self.for_inference:
+                logger.warning(
+                    f"WARNING: Inference mode is True but {min_len_discards} samples shorter than min length were "
+                    f"found. The {min_len_discards} samples will be DISCARDED. If you are doing some kind of evaluation"
+                    f", this can INVALIDATE results. This might happen if the min length was not set to -1 or if the "
+                    f"sample length is shorter than the minimum length supported by the current model."
+                )
+            else:
+                logger.warning(
+                    f"During iteration, {min_len_discards} elements were "
+                    f"discarded since shorter than min length {self.min_length}"
+                )
 
     def __iter__(self):
 
-        dataset_iterator = self.dataset_iterator_func()
-        if self.shuffle:
-            logger.warning("Careful: shuffle is set to true and requires materializing the ENTIRE dataset into memory")
-            logger.info("Starting materialization")
-            dataset_iterator = list(dataset_iterator)
-            logger.info("Materialization completed, now shuffling")
-            random.shuffle(dataset_iterator)
-            logger.info("Shuffling completed")
+        dataset_iterator = self.dataset_iterator_func() if self._dataset_store is None else self._dataset_store
 
         current_dataset_elements = []
 
         i = None
-        for i, dataset_elem in enumerate(dataset_iterator):
+        for i, dataset_elem in enumerate(dataset_iterator, start=1):
 
             if len(current_dataset_elements) == self.section_size:
                 for batch in self.materialize_batches(current_dataset_elements):
@@ -237,7 +244,7 @@ class BaseDataset(IterableDataset):
 
             current_dataset_elements.append(dataset_elem)
 
-            if i % 100_000 == 0:
+            if i % 50_000 == 0:
                 logger.info(f"Processed: {i} number of elements")
 
         if len(current_dataset_elements) != 0:

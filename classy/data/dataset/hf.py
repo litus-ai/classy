@@ -21,7 +21,7 @@ class HFBaseDataset(BaseDataset):
         max_batch_size: Optional[int],
         section_size: int,
         prebatch: bool,
-        shuffle: bool,
+        materialize: bool,
         min_length: int,
         max_length: int,
         for_inference: bool,
@@ -36,7 +36,7 @@ class HFBaseDataset(BaseDataset):
             fields_batchers=None,
             section_size=section_size,
             prebatch=prebatch,
-            shuffle=shuffle,
+            materialize=materialize,
             min_length=min_length,
             max_length=max_length if max_length != -1 else self.tokenizer.model_max_length,
             for_inference=for_inference,
@@ -117,13 +117,14 @@ class HFSentencePairDataset(HFSequenceDataset):
 
         for sequence_sample in self.samples_iterator():
             sequence_sample: SentencePairSample
-            input_ids = self.tokenizer(sequence_sample.sentence1, sequence_sample.sentence2, return_tensors="pt",)[
-                "input_ids"
-            ][0]
+            tokenization_output = self.tokenizer(
+                sequence_sample.sentence1, sequence_sample.sentence2, return_tensors="pt"
+            )
 
             elem_dict = {
-                "input_ids": input_ids,
-                "attention_mask": torch.ones_like(input_ids),
+                "input_ids": tokenization_output["input_ids"].squeeze(),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(),
+                "token_type_ids": tokenization_output["token_type_ids"].squeeze(),
             }
 
             if sequence_sample.label is not None:
