@@ -39,7 +39,7 @@ def predict(
 
         # predict
         with autocast(enabled=True):
-            with torch.no_grad():
+            with torch.inference_mode():
                 batch_out = model.predict(**{k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()})
 
                 for sample, prediction in batch_out:

@@ -1,20 +1,20 @@
 import argparse
 import collections
+import html
 import itertools
 import random
 import re
+import time
 from typing import Union, Callable, List, Optional, Tuple
 
 import streamlit as st
 import torch
-from annotated_text import annotated_text
+from annotated_text import annotation
 
 from classy.data.data_drivers import (
-    TSV,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    DataDriver,
     TOKEN,
     get_data_driver,
     SENTENCE_PAIR,
@@ -30,27 +30,26 @@ def get_random_color_generator() -> Callable[[], str]:
     # colors taken from https://gist.githubusercontent.com/daniellevass/b0b8cfa773488e138037/raw/d2182c212a4132c0f3bb093fd0010395f927a219/android_material_design_colours.xml
     # md_.*_200
     default_colors = [
+        "#81D4fA",
+        "#B39DDB",
+        "#80CBC4",
+        "#C5E1A5",
         "#EF9A9A",
         "#F48FB1",
-        "#CE93D8",
-        "#B39DDB",
         "#9FA8DA",
-        "#90CAF9",
-        "#81D4fA",
+        "#CE93D8",
+        "#FFCC80",
+        "#FFE082",
         "#80DEEA",
-        "#80CBC4",
         "#A5D6A7",
-        "#C5E1A5",
+        "#FFAB91",
+        "#90CAF9",
+        "#EEEEEE",
+        "#BCAAA4",
         "#E6EE9C",
         "#FFF590",
-        "#FFE082",
-        "#FFCC80",
-        "#FFAB91",
-        "#BCAAA4",
-        "#EEEEEE",
         "#B0BBC5",
     ]
-    random.shuffle(default_colors)
 
     colors = iter(default_colors)
 
@@ -97,7 +96,7 @@ class TaskUI:
     def read_input(self) -> Union[SentencePairSample, SequenceSample, TokensSample]:
         raise NotImplementedError
 
-    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample]):
+    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample], time: float):
         raise NotImplementedError
 
 
@@ -145,8 +144,19 @@ class SentencePairTaskUI(TaskUI):
             return SentencePairSample(sentence1=sentence1, sentence2=sentence2)
         return None
 
-    def render(self, predicted_sample: SentencePairSample):
-        st.success(f"Model classified input with label: {predicted_sample.label}")
+    def render(self, predicted_sample: SentencePairSample, time: float):
+        st.markdown(
+            f"""
+            <div>
+                <div class="stAlert">
+                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                </div>
+                <p></p>
+                <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 class SequenceTaskUI(TaskUI):
@@ -180,8 +190,19 @@ class SequenceTaskUI(TaskUI):
             return SequenceSample(sequence=input_text)
         return None
 
-    def render(self, predicted_sample: SequenceSample):
-        st.success(f"Model classified input with label: {predicted_sample.label}")
+    def render(self, predicted_sample: SequenceSample, time: float):
+        st.markdown(
+            f"""
+            <div>
+                <div class="stAlert">
+                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                </div>
+                <p></p>
+                <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 class TokenTaskUI(TaskUI):
@@ -220,7 +241,7 @@ class TokenTaskUI(TaskUI):
             return TokensSample(tokens=input_text.split(" "))
         return None
 
-    def render(self, predicted_sample: TokensSample):
+    def render(self, predicted_sample: TokensSample, time: float):
 
         tokens, labels = predicted_sample.tokens, predicted_sample.labels
 
@@ -237,7 +258,25 @@ class TokenTaskUI(TaskUI):
 
         assert len(tokens) == len(labels)
 
-        annotated_text(*[(f" {t} " if l is None else (t, l, self.color_mapping[l])) for t, l in zip(tokens, labels)])
+        annotated_html_components = []
+        for t, l in zip(tokens, labels):
+            if l is None:
+                annotated_html_components.append(str(html.escape(f" {t} ")))
+            else:
+                annotated_html_components.append(str(annotation(*(t, l, self.color_mapping[l]))))
+
+        st.markdown(
+            "\n".join(
+                [
+                    "<div>",
+                    *annotated_html_components,
+                    "<p></p>"
+                    f'<div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>'
+                    "</div>",
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
 
 
 def demo(model_checkpoint_path: str, cuda_device: int):
@@ -272,11 +311,13 @@ def demo(model_checkpoint_path: str, cuda_device: int):
     if sample is not None:
 
         # predict
+        start = time.perf_counter()
         _, prediction = next(predict(model=model, samples=[sample], dataset_conf=dataset_conf))
+        end = time.perf_counter()
         sample.update_classification(prediction)
 
         # render output
-        task_ui.render(sample)
+        task_ui.render(sample, time=end - start)
 
 
 def main():
