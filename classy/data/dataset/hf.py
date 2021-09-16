@@ -1,9 +1,9 @@
 from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List
 
 import torch
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BatchEncoding
 
-from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample
+from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
 from classy.data.dataset.base import BaseDataset, batchify
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -113,7 +113,6 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
-
     def _init_fields_batcher(self) -> None:
         super(HFSentencePairDataset, self)._init_fields_batcher()
         self.fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
@@ -137,3 +136,70 @@ class HFSentencePairDataset(HFSequenceDataset):
 
             elem_dict["samples"] = sequence_sample
             yield elem_dict
+
+
+class HFQADataset(HFBaseDataset):
+    @staticmethod
+    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
+        raise NotImplementedError
+
+    @property
+    def requires_vocab(self) -> bool:
+        return False
+
+    @staticmethod
+    def get_word_to_char(tokenization_output: BatchEncoding) -> Tuple[int, Tuple[int, int]]:
+        second_sequence_offset = None
+        word_to_char = dict()
+        for widx in range(tokenization_output["input_ids"].squeeze().size(0)):
+            sequence = tokenization_output.token_to_sequence(0, widx)
+            if sequence is None:
+                continue
+            if sequence == 1 and second_sequence_offset is None:
+                second_sequence_offset = widx
+            word_start, word_end = tokenization_output.word_to_chars(
+                batch_or_word_index=0, word_index=widx, sequence_index=sequence
+            )
+            word_to_char[widx + (0 if second_sequence_offset is None else second_sequence_offset)] = (
+                word_start,
+                word_end,
+            )
+        return second_sequence_offset, word_to_char
+
+    def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
+        for sequence_sample in self.samples7_iterator():
+            sequence_sample: QASample
+
+            tokenization_output = self.tokenizer(sequence_sample.question, sequence_sample.context, return_tensors="pt")
+
+            elem_dict = {
+                "input_ids": tokenization_output["input_ids"].squeeze(),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(),
+                "token_type_ids": tokenization_output["token_type_ids"].squeeze(),
+            }
+
+            second_sequence_offset, word2chars = self.get_word_to_char(tokenization_output)
+
+            elem_dict["word2chars"] = word2chars
+
+            if sequence_sample.char_start is not None and sequence_sample.char_end is not None:
+                elem_dict["start_position"] = (
+                    tokenization_output.char_to_word(0, sequence_sample.char_start, sequence_index=1)
+                    + second_sequence_offset
+                )
+                elem_dict["end_position"] = (
+                    tokenization_output.char_to_word(0, sequence_sample.char_end, sequence_index=1)
+                    + second_sequence_offset
+                )
+
+            yield elem_dict
+
+    def _init_fields_batcher(self) -> None:
+        self.fields_batcher = {
+            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
+            "attention_mask": lambda lst: batchify(lst, padding_value=0),
+            "token_type_ids": lambda lst: batchify(lst, padding_value=0),
+            "word2chars": None,
+            "start_position": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "end_position": lambda lst: torch.tensor(lst, dtype=torch.long),
+        }

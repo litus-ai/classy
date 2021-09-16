@@ -5,7 +5,7 @@ import omegaconf
 import torch
 import torchmetrics
 from torch import nn
-from transformers import AutoModelForSequenceClassification, AutoModel, AutoConfig
+from transformers import AutoConfig, AutoModel, AutoModelForSequenceClassification, AutoModelForQuestionAnswering
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample
 from classy.pl_modules.base import (
@@ -14,6 +14,7 @@ from classy.pl_modules.base import (
     TokensTask,
     SequenceTask,
     SentencePairTask,
+    QATask,
 )
 from classy.utils.vocabulary import Vocabulary
 
@@ -182,6 +183,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             dtype=encoded_bpes.dtype,
             device=encoded_bpes.device,
         )
+        # todo: can we optimize it?
         for i, sample_offsets in enumerate(token_offsets):
             encoded_tokens[i, : len(sample_offsets)] = torch.stack([encoded_bpes[i, sj] for sj, ej in sample_offsets])
 
@@ -245,3 +247,95 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         self.log("test_recall", self.r_metric)
         self.log("test_micro-f1-score", self.micro_f1_metric)
         self.log("test_macro-f1-score", self.macro_f1_metric)
+
+
+class HFQAPLModule(QATask, ClassyPLModule):
+
+    def __init__(
+        self,
+        transformer_model: str,
+        optim_conf: omegaconf.DictConfig,
+    ):
+        super().__init__(vocabulary=None, optim_conf=optim_conf)
+        self.save_hyperparameters()
+
+        self.qa_model = AutoModelForQuestionAnswering.from_pretrained(transformer_model)
+
+        # metrics
+        # todo: rename them with metric at the end
+        self.start_accuracy_metric = torchmetrics.Accuracy()
+        self.end_accuracy_metric = torchmetrics.Accuracy()
+        self.accuracy_metric = torchmetrics.AverageMeter()
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        token_type_ids: Optional[torch.Tensor] = None,
+        start_position: Optional[torch.Tensor] = None,
+        end_position: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> ClassificationOutput:
+
+        model_input = {
+            "input_ids": input_ids, "attention_mask": attention_mask
+        }
+
+        if token_type_ids is not None:
+            model_input["token_type_ids"] = token_type_ids
+
+        qa_output = self.qa_model(**model_input, start_positions=start_position, end_positions=end_position)
+
+        packed_logits = torch.stack([qa_output.start_position, qa_output.end_position], dim=0)
+        packed_probabilities = torch.softmax(packed_logits, dim=-1)
+        packed_predictions = torch.argmax(packed_logits, dim=-1)
+
+        return ClassificationOutput(
+            logits=packed_logits,
+            probabilities=packed_probabilities,
+            predictions=packed_predictions,
+            loss=qa_output.loss,
+        )
+
+    def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        classification_output = self.forward(**batch)
+        self.log("loss", classification_output.loss)
+        return classification_output.loss
+
+    def validation_step(self, batch: dict, batch_idx: int) -> None:
+        classification_output = self.forward(**batch)
+
+        start_predictions = classification_output.predictions[0]
+        end_predictions = classification_output.predictions[1]
+
+        self.start_accuracy_metric(start_predictions, batch["start_position"])
+        self.end_accuracy_metric(end_predictions, batch["end_position"])
+
+        correct_full_predictions = torch.logical_and(
+            torch.eq(start_predictions, batch["start_position"]), torch.eq(end_predictions, batch["end_position"])
+        )
+        self.accuracy_metric(correct_full_predictions, torch.ones_like(correct_full_predictions))
+
+        self.log("val_loss", classification_output.loss)
+        self.log("val_start_accuracy", self.start_accuracy_metric, prog_bar=True)
+        self.log("val_end_accuracy", self.end_accuracy_metric, prog_bar=True)
+        self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
+
+    def test_step(self, batch: dict, batch_idx: int) -> None:
+        classification_output = self.forward(**batch)
+
+        start_predictions = classification_output.predictions[0]
+        end_predictions = classification_output.predictions[1]
+
+        self.start_accuracy_metric(start_predictions, batch["start_position"])
+        self.end_accuracy_metric(end_predictions, batch["end_position"])
+
+        correct_full_predictions = torch.logical_and(
+            torch.eq(start_predictions, batch["start_position"]), torch.eq(end_predictions, batch["end_position"])
+        )
+        self.accuracy_metric(correct_full_predictions, torch.ones_like(correct_full_predictions))
+
+        self.log("test_loss", classification_output.loss)
+        self.log("test_start_accuracy", self.start_accuracy_metric, prog_bar=True)
+        self.log("test_end_accuracy", self.end_accuracy_metric, prog_bar=True)
+        self.log("test_accuracy", self.accuracy_metric, prog_bar=True)

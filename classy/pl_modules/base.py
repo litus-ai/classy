@@ -15,6 +15,7 @@ from classy.data.data_drivers import (
     SEQUENCE,
     TOKEN,
     SENTENCE_PAIR,
+    QA,
 )
 from classy.utils.vocabulary import Vocabulary
 
@@ -27,7 +28,7 @@ class ClassificationOutput(NamedTuple):
 
 
 class ClassyPLModule(pl.LightningModule):
-    def __init__(self, vocabulary: Vocabulary, optim_conf: omegaconf.DictConfig):
+    def __init__(self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
@@ -73,3 +74,9 @@ class SentencePairTask(TaskMixin):
     @property
     def task(self) -> str:
         return SENTENCE_PAIR
+
+
+class QATask(TaskMixin):
+    @property
+    def task(self) -> str:
+        return QA

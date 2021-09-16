@@ -100,6 +100,10 @@ class BaseDataset(IterableDataset):
             logger.warning("Materializing dataset.")
             self.materialize_dataset()
 
+    @property
+    def requires_vocab(self) -> bool:
+        return True
+
     def dataset_iterator_func(self):
         raise NotImplementedError
 

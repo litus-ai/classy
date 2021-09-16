@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Iterator, Generator
+from typing import List, Union, Optional, Iterator, Generator, Tuple
 import json
 
 from classy.utils.log import get_project_logger
@@ -7,13 +7,13 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
         raise NotImplementedError
 
-    def update_classification(self, classification_result: Union[str, List[str]]):
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
-    def pretty_print(self, classification_result: Optional[Union[str, List[str]]] = None) -> str:
+    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
         raise NotImplementedError
 
 
@@ -23,13 +23,13 @@ class SentencePairSample(ClassyStruct):
         self.sentence2 = sentence2
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
         return self.label
 
-    def update_classification(self, classification_result: str):
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
         parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -43,13 +43,13 @@ class SequenceSample(ClassyStruct):
         self.sequence = sequence
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
         return self.label
 
-    def update_classification(self, classification_result: str):
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
         parts = [f"# sequence: {self.sequence}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -63,18 +63,41 @@ class TokensSample(ClassyStruct):
         self.tokens = tokens
         self.labels = labels
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
         return self.labels
 
-    def update_classification(self, classification_result: List[str]):
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         self.labels = classification_result
 
-    def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
+    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
         if self.labels is not None:
             parts.append(f'\t# labels: {" ".join(self.labels)}')
         if classification_result is not None:
             parts.append(f'\t# classification_result: {" ".join(classification_result)}')
+        return "\n".join(parts)
+
+
+class QASample(ClassyStruct):
+    def __init__(self, question: str, context: str, char_start: Optional[int], char_end: Optional[int]):
+        self.question = question
+        self.context = context
+        self.char_start = char_start
+        self.char_end = char_end
+
+    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+        return self.char_start, self.char_end
+
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+        self.char_start, self.char_end = classification_result
+
+    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+        parts = [
+            f"# question: {self.question}",
+            f"# context: {self.context}",
+            f"# answer start: {self.char_start}, answer end: {self.char_end}",
+            f"# answer: {self.context[self.char_start:self.char_end]}",
+        ]
         return "\n".join(parts)
 
 
@@ -123,6 +146,14 @@ class TokensDataDriver(DataDriver):
         raise NotImplementedError
 
     def save(self, samples: Iterator[TokensSample], path: str):
+        raise NotImplementedError
+
+
+class QADataDriver(DataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        raise NotImplementedError
+
+    def save(self, samples: Iterator[QASample], path: str):
         raise NotImplementedError
 
 
@@ -235,6 +266,7 @@ class JSONLTokensDataDriver(TokensDataDriver):
 SEQUENCE = "sequence"
 SENTENCE_PAIR = "sentence-pair"
 TOKEN = "token"
+QA = "qa"
 
 # FILE EXTENSIONS
 TSV = "tsv"
@@ -254,8 +286,8 @@ def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
     reader_identifier = (task_type, file_extension)
     if reader_identifier not in READERS_DICT:
         logger.info(f"No reader available for task {task_type} and extension {file_extension}.")
-    assert (
-        reader_identifier in READERS_DICT
-    ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. " \
-       f"Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
+    assert reader_identifier in READERS_DICT, (
+        f"Extension '{file_extension}' does not appear to be supported for task {task_type}. "
+        f"Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
+    )
     return READERS_DICT[reader_identifier]()
