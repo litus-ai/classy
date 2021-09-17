@@ -111,10 +111,7 @@ def serve(
     )  # todo can we do it better?
 
     # mock call to load resources
-    try:
-        next(backend_predict(model=model, samples=[], dataset_conf=dataset_conf))
-    except StopIteration:
-        pass
+    next(backend_predict(model=model, samples=[], dataset_conf=dataset_conf), None)
 
     # compute dynamic type
     if model.task == SEQUENCE:

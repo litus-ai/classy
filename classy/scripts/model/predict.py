@@ -58,10 +58,7 @@ def interactive_main(
     data_driver = get_data_driver(model.task, TSV)
 
     # mock call to load resources
-    try:
-        next(predict(model=model, samples=[], dataset_conf=dataset_conf))
-    except StopIteration:
-        pass
+    next(predict(model=model, samples=[], dataset_conf=dataset_conf), None)
 
     while True:
         source = input("Enter source text: ").strip()

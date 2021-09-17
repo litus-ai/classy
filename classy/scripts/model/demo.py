@@ -365,10 +365,7 @@ def demo(model_checkpoint_path: str, cuda_device: int):
         task_ui = TaskUI.from_task(model.task, model_checkpoint_path)
 
         # mock call to load resources
-        try:
-            next(predict(model=model, samples=[], dataset_conf=dataset_conf))
-        except StopIteration:
-            pass
+        next(predict(model=model, samples=[], dataset_conf=dataset_conf), None)
 
         return model, dataset_conf, task_ui
 
