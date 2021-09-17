@@ -1,0 +1,11 @@
+dataset:
+  _target_: 'classy.data.dataset.hf.HFQADataset.from_samples'
+  transformer_model: ${transformer_model}
+  min_length: -1
+  max_length: -1
+  tokens_per_batch: 800
+  max_batch_size: -1
+  section_size: 10000
+  prebatch: True
+  materialize: False
+  for_inference: True
