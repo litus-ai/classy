@@ -38,14 +38,12 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
 
     # extract and build vocabulary
     vocabulary_path = Path(checkpoint_path).parent.parent / "vocabulary"
-    if not vocabulary_path.exists():
-        logger.warning(
-            "No vocabulary found for the selected checkpoint. In the current version of classy this is "
-            "correct only if the task is 'qa'"
-        )
-        vocabulary = None
-    else:
+    assert conf.task == "qa" or vocabulary_path.exists(), f"No vocabulary found at path {vocabulary_path}"
+
+    vocabulary = None
+    if vocabulary_path.exists():
         vocabulary = Vocabulary.from_folder(vocabulary_path)
+
 
     # instantiate and return
     instantiate_input = dict(checkpoint_path=checkpoint_path)
