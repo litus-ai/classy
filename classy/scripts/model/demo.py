@@ -19,6 +19,8 @@ from classy.data.data_drivers import (
     get_data_driver,
     SENTENCE_PAIR,
     SEQUENCE,
+    QA,
+    QASample,
 )
 from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.scripts.model.predict import predict
@@ -71,6 +73,8 @@ class TaskUI:
             return SequenceTaskUI(task, model_checkpoint_path)
         elif task == TOKEN:
             return TokenTaskUI(task, model_checkpoint_path)
+        elif task == QA:
+            return QATaskUI(task, model_checkpoint_path)
         else:
             raise ValueError
 
@@ -79,7 +83,7 @@ class TaskUI:
         self.model_checkpoint_path = model_checkpoint_path
         self.__cached_examples, self.__infer_failed = None, False
 
-    def auto_infer_examples(self) -> List[Union[SentencePairSample, SequenceSample, TokensSample]]:
+    def auto_infer_examples(self) -> List[Union[SentencePairSample, SequenceSample, TokensSample, QASample]]:
         if not self.__infer_failed and self.__cached_examples is None:
             try:
                 test_path = automatically_infer_test_path(self.model_checkpoint_path)
@@ -93,10 +97,10 @@ class TaskUI:
     def render_task_in_sidebar(self):
         raise NotImplementedError
 
-    def read_input(self) -> Union[SentencePairSample, SequenceSample, TokensSample]:
+    def read_input(self) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample]:
         raise NotImplementedError
 
-    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample], time: float):
+    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample, QASample], time: float):
         raise NotImplementedError
 
 
@@ -138,6 +142,7 @@ class SentencePairTaskUI(TaskUI):
         selection_message = "Examples from test set." if auto_infer else "Examples."
         selection_message += f" Examples are in the format (<sentence1>, <sentence2>); for space constraints, only the first {self.truncate_k} characters of each sentence are shown."
         selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
+        # build input area
         sentence1 = st.text_area("First input sequence", option2example[selected_option][0])
         sentence2 = st.text_area("Second input sequence", option2example[selected_option][1])
         if st.button("Classify", key="classify"):
@@ -265,6 +270,82 @@ class TokenTaskUI(TaskUI):
             else:
                 annotated_html_components.append(str(annotation(*(t, l, self.color_mapping[l]))))
 
+        st.markdown(
+            "\n".join(
+                [
+                    "<div>",
+                    *annotated_html_components,
+                    "<p></p>"
+                    f'<div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>'
+                    "</div>",
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
+
+
+class QATaskUI(TaskUI):
+    def __init__(self, task: str, model_checkpoint_path: str):
+        super().__init__(task, model_checkpoint_path)
+        self.truncate_k = 40
+
+    def render_task_in_sidebar(self):
+        st.sidebar.header("Task")
+        st.sidebar.markdown(
+            f"""
+                        * **task**: QA
+                        * **input**: context and question
+                    """
+        )
+
+    def get_examples(self) -> Tuple[List[Tuple[str, str]], bool]:
+        inferred_examples = self.auto_infer_examples()
+        if inferred_examples is not None:
+            return [
+                ("Rome is in Italy", "Where is Rome?"),
+                (
+                    "classy is a library",
+                    "What is classy?",
+                ),
+            ] + [(ie.context, ie.question) for ie in inferred_examples], True
+        else:
+            # todo these examples are not ideal for pretty much any sentence-pair task, suggestions?
+            return [
+                ("Rome is in Italy", "Where is Rome?"),
+                (
+                    "classy is a library",
+                    "What is classy?",
+                ),
+            ], False
+
+    def read_input(self) -> QASample:
+        examples, auto_infer = self.get_examples()
+        # tuple can't be used for selection boxes, let's use incipts
+        option2example = {}
+        for sentence1, sentence2 in examples:
+            option2example[f"({sentence1[: self.truncate_k]}, {sentence2[: self.truncate_k]})"] = (sentence1, sentence2)
+        # build selection box
+        selection_message = "Examples from test set." if auto_infer else "Examples."
+        selection_message += f" Examples are in the format (<context>, <question>); for space constraints, only the first {self.truncate_k} characters of each sentence are shown."
+        selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
+        # build input area
+        context = st.text_area("Context", option2example[selected_option][0])
+        question = st.text_area("Question", option2example[selected_option][1])
+        if st.button("Classify", key="classify"):
+            return QASample(context=context, question=question)
+        return None
+
+    def render(self, predicted_sample: QASample, time: float):
+        annotated_html_components = [
+            str(html.escape(f"{predicted_sample.context[: predicted_sample.char_start]} ")),
+            str(
+                annotation(
+                    f"{predicted_sample.context[predicted_sample.char_start: predicted_sample.char_end]}",
+                    background="#f1e740",
+                )
+            ),
+            str(html.escape(f"{predicted_sample.context[predicted_sample.char_end:]} ")),
+        ]
         st.markdown(
             "\n".join(
                 [

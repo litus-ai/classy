@@ -37,7 +37,7 @@ def predict(
 
         # predict
         with autocast(enabled=True):  # todo: always enabled?
-            with torch.no_grad():
+            with torch.inference_mode():
                 batch = move_data_to_device(batch, model.device)
                 batch_out = model.predict(**batch)
 
