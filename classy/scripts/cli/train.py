@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def populate_parser(parser: ArgumentParser):
 
     # TODO: add help?
-    parser.add_argument("task", choices=("sequence", "token", "sentence-pair"))
+    parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
     parser.add_argument("dataset", type=Path)
     parser.add_argument("-m", "--model-name", default="bert")
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
@@ -24,6 +24,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
     parser.add_argument("--no-shuffle", action="store_true")
+    parser.add_argument("--fp16", action="store_true")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -105,7 +106,11 @@ def main(args):
 
     # turn off shuffling if requested
     if args.no_shuffle:
-        cmd.append(f"data.datamodule.shuffle_dataset=False")
+        cmd.append("data.datamodule.shuffle_dataset=False")
+
+    # use fp16 if requested
+    if args.fp16:
+        cmd.append("device=cuda_amp")
 
     # wandb logging
     if args.wandb is not None:

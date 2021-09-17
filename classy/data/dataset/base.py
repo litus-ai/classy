@@ -30,13 +30,17 @@ def batchify_matrices(tensors: List[torch.Tensor], padding_value: int) -> torch.
 
 class BaseDataset(IterableDataset):
     @staticmethod
+    def requires_vocab() -> bool:
+        return True
+
+    @staticmethod
     def fit_vocabulary(samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]) -> Vocabulary:
         raise NotImplementedError
 
     @classmethod
     def from_file(cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs) -> "BaseDataset":
 
-        if vocabulary is None:
+        if vocabulary is None and cls.requires_vocab():
             # vocabulary fitting here
             logger.info("Fitting vocabulary")
             vocabulary = cls.fit_vocabulary(data_driver.read_from_path(path))
@@ -99,10 +103,6 @@ class BaseDataset(IterableDataset):
         if materialize:
             logger.warning("Materializing dataset.")
             self.materialize_dataset()
-
-    @property
-    def requires_vocab(self) -> bool:
-        return True
 
     def dataset_iterator_func(self):
         raise NotImplementedError

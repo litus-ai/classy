@@ -140,57 +140,37 @@ class HFSentencePairDataset(HFSequenceDataset):
 
 class HFQADataset(HFBaseDataset):
     @staticmethod
-    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
-        raise NotImplementedError
-
-    @property
-    def requires_vocab(self) -> bool:
+    def requires_vocab() -> bool:
         return False
 
     @staticmethod
-    def get_word_to_char(tokenization_output: BatchEncoding) -> Tuple[int, Tuple[int, int]]:
-        second_sequence_offset = None
-        word_to_char = dict()
-        for widx in range(tokenization_output["input_ids"].squeeze().size(0)):
-            sequence = tokenization_output.token_to_sequence(0, widx)
-            if sequence is None:
-                continue
-            if sequence == 1 and second_sequence_offset is None:
-                second_sequence_offset = widx
-            word_start, word_end = tokenization_output.word_to_chars(
-                batch_or_word_index=0, word_index=widx, sequence_index=sequence
-            )
-            word_to_char[widx + (0 if second_sequence_offset is None else second_sequence_offset)] = (
-                word_start,
-                word_end,
-            )
-        return second_sequence_offset, word_to_char
+    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
+        raise NotImplementedError
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-        for sequence_sample in self.samples7_iterator():
-            sequence_sample: QASample
+        for qa_sample in self.samples_iterator():
+            qa_sample: QASample
 
-            tokenization_output = self.tokenizer(sequence_sample.question, sequence_sample.context, return_tensors="pt")
+            tokenization_output = self.tokenizer(
+                qa_sample.context, qa_sample.question, return_tensors="pt", return_offsets_mapping=True
+            )
 
             elem_dict = {
-                "input_ids": tokenization_output["input_ids"].squeeze(),
-                "attention_mask": tokenization_output["attention_mask"].squeeze(),
-                "token_type_ids": tokenization_output["token_type_ids"].squeeze(),
+                "input_ids": tokenization_output["input_ids"].squeeze(0),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(0),
+                "token_type_ids": tokenization_output["token_type_ids"].squeeze(0),
+                "word2chars": tokenization_output["offset_mapping"].squeeze(0),
             }
 
-            second_sequence_offset, word2chars = self.get_word_to_char(tokenization_output)
-
-            elem_dict["word2chars"] = word2chars
-
-            if sequence_sample.char_start is not None and sequence_sample.char_end is not None:
-                elem_dict["start_position"] = (
-                    tokenization_output.char_to_word(0, sequence_sample.char_start, sequence_index=1)
-                    + second_sequence_offset
+            if qa_sample.char_start is not None and qa_sample.char_end is not None:
+                elem_dict["start_position"] = tokenization_output.char_to_token(
+                    0, qa_sample.char_start, sequence_index=0
                 )
-                elem_dict["end_position"] = (
-                    tokenization_output.char_to_word(0, sequence_sample.char_end, sequence_index=1)
-                    + second_sequence_offset
+                elem_dict["end_position"] = tokenization_output.char_to_token(
+                    0, qa_sample.char_end - 1, sequence_index=0
                 )
+
+            elem_dict["samples"] = qa_sample
 
             yield elem_dict
 
@@ -202,4 +182,5 @@ class HFQADataset(HFBaseDataset):
             "word2chars": None,
             "start_position": lambda lst: torch.tensor(lst, dtype=torch.long),
             "end_position": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "samples": None,
         }

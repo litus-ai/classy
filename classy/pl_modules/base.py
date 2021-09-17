@@ -12,6 +12,7 @@ from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
+    QASample,
     SEQUENCE,
     TOKEN,
     SENTENCE_PAIR,
@@ -40,7 +41,14 @@ class ClassyPLModule(pl.LightningModule):
 
     def predict(
         self, *args, **kwargs
-    ) -> List[Iterator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]],]]]:
+    ) -> List[
+        Iterator[
+            Tuple[
+                Union[SentencePairSample, SequenceSample, TokensSample, QASample],
+                Union[str, List[str]],
+            ]
+        ]
+    ]:
         raise NotImplementedError
 
     def configure_optimizers(self):

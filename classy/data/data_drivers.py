@@ -79,9 +79,9 @@ class TokensSample(ClassyStruct):
 
 
 class QASample(ClassyStruct):
-    def __init__(self, question: str, context: str, char_start: Optional[int], char_end: Optional[int]):
-        self.question = question
+    def __init__(self, context: str, question: str, char_start: Optional[int] = None, char_end: Optional[int] = None):
         self.context = context
+        self.question = question
         self.char_start = char_start
         self.char_end = char_end
 
@@ -93,8 +93,8 @@ class QASample(ClassyStruct):
 
     def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
         parts = [
-            f"# question: {self.question}",
             f"# context: {self.context}",
+            f"# question: {self.question}",
             f"# answer start: {self.char_start}, answer end: {self.char_end}",
             f"# answer: {self.context[self.char_start:self.char_end]}",
         ]
@@ -262,6 +262,52 @@ class JSONLTokensDataDriver(TokensDataDriver):
                 f.write(json.dumps({"tokens": sample.tokens, "labels": sample.labels}) + "\n")
 
 
+class TSVQADataDriver(QADataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        for i, line in enumerate(lines):
+            parts = line.split("\t")
+            assert len(parts) in [2, 4,], (
+                f"TSVQADataDriver expects 2 (context, question) or 4 (context, question, answer_start, answer_end) "
+                f"fields, but {len(parts)} were found at line {i}: {line}"
+            )
+            context, question = parts[:2]
+            answer_start, answer_end = None, None
+            if len(parts) > 2:
+                answer_start, answer_end = parts[2:]
+                answer_start, answer_end = int(answer_start), int(answer_end)
+            yield QASample(context, question, answer_start, answer_end)
+
+    def save(self, samples: Iterator[QASample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                sample_parts = [sample.context, sample.question]
+                if sample.char_start is not None and sample.char_end is not None:
+                    sample_parts += [str(sample.char_start), str(sample.char_end)]
+                f.write("\t".join(sample_parts))
+                f.write("\n")
+
+
+class JSONLQADataDriver(QADataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        for line in lines:
+            yield QASample(**json.loads(line))
+
+    def save(self, samples: Iterator[QASample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                f.write(
+                    json.dumps(
+                        {
+                            "question": sample.question,
+                            "context": sample.context,
+                            "answer_start": sample.char_start,
+                            "answer_end": sample.char_end,
+                        }
+                    )
+                    + "\n"
+                )
+
+
 # TASK TYPES
 SEQUENCE = "sequence"
 SENTENCE_PAIR = "sentence-pair"
@@ -275,10 +321,12 @@ JSONL = "jsonl"
 READERS_DICT = {
     (SEQUENCE, TSV): TSVSequenceDataDriver,
     (SENTENCE_PAIR, TSV): TSVSentencePairDataDriver,
-    (TOKEN, TSV): TSVTokensDataDriver,
     (SEQUENCE, JSONL): JSONLSequenceDataDriver,
     (SENTENCE_PAIR, JSONL): JSONLSentencePairDataDriver,
     (TOKEN, JSONL): JSONLTokensDataDriver,
+    (TOKEN, TSV): TSVTokensDataDriver,
+    (QA, TSV): TSVQADataDriver,
+    (QA, JSONL): JSONLQADataDriver,
 }
 
 

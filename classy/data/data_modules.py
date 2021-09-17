@@ -145,7 +145,8 @@ class ClassyDataModule(pl.LightningDataModule):
                 path=self.train_path,
                 data_driver=self.data_driver,
             ).vocabulary
-            self.vocabulary.save("vocabulary/")
+            if self.vocabulary is not None:
+                self.vocabulary.save("vocabulary/")
 
     def setup(self, stage: Optional[str] = None) -> None:
 
@@ -171,16 +172,10 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(
-            self.train_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
-        )
+        return DataLoader(self.train_dataset, batch_size=None, num_workers=0)
 
     def val_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(
-            self.validation_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
-        )
+        return DataLoader(self.validation_dataset, batch_size=None, num_workers=0)
 
     def test_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(
-            self.test_dataset, batch_size=None, num_workers=1, persistent_workers=True  # materialization support
-        )
+        return DataLoader(self.test_dataset, batch_size=None, num_workers=0)
