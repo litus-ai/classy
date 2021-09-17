@@ -23,13 +23,13 @@ class SentencePairSample(ClassyStruct):
         self.sentence2 = sentence2
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+    def get_current_classification(self) -> Optional[str]:
         return self.label
 
-    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+    def update_classification(self, classification_result: str):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -43,13 +43,13 @@ class SequenceSample(ClassyStruct):
         self.sequence = sequence
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+    def get_current_classification(self) -> Optional[str]:
         return self.label
 
-    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+    def update_classification(self, classification_result: str):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[str]) -> str:
         parts = [f"# sequence: {self.sequence}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -63,13 +63,13 @@ class TokensSample(ClassyStruct):
         self.tokens = tokens
         self.labels = labels
 
-    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+    def get_current_classification(self) -> Optional[List[str]]:
         return self.labels
 
-    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+    def update_classification(self, classification_result: List[str]):
         self.labels = classification_result
 
-    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[List[str]]) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
         if self.labels is not None:
             parts.append(f'\t# labels: {" ".join(self.labels)}')
@@ -85,19 +85,34 @@ class QASample(ClassyStruct):
         self.char_start = char_start
         self.char_end = char_end
 
-    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+    def get_current_classification(self) -> Optional[Tuple[int, int]]:
         return self.char_start, self.char_end
 
-    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+    def update_classification(self, classification_result: Tuple[int, int]):
         self.char_start, self.char_end = classification_result
 
-    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[Tuple[int, int]] = None) -> str:
         parts = [
             f"# context: {self.context}",
             f"# question: {self.question}",
-            f"# answer start: {self.char_start}, answer end: {self.char_end}",
-            f"# answer: {self.context[self.char_start:self.char_end]}",
         ]
+
+        if self.char_start is not None and self.char_end is not None:
+            parts += [
+                "### Gold positions ###",
+                f"# answer start: {self.char_start}, answer end: {self.char_end}",
+                f"# answer: {self.context[self.char_start:self.char_end]}",
+            ]
+
+        if classification_result is not None:
+            classification_start, classification_end = classification_result
+            parts += [
+                "### Predicted positions ###",
+                f"# answer start: {classification_start}, answer end: {classification_end}",
+                f"# answer: {self.context[classification_start:classification_end]}",
+            ]
+
+
         return "\n".join(parts)
 
 
