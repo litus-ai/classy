@@ -365,7 +365,7 @@ By default, `classy serve` uses port 8000. Use the *-p* parameter to specify a d
 
 :::
 
-### Present
+### Demo
 
 You can use `classy demo` to spawn a [Streamlit](https://streamlit.io/) demo of your model.
 
