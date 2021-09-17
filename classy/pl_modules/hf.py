@@ -172,10 +172,13 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
     ) -> ClassificationOutput:
 
         # encode bpes and merge them (sum strategy)
-        encoded_bpes = torch.stack(
-            self.encoder(input_ids, attention_mask)[2][-self.use_last_n_layers :],
-            dim=-1,
-        ).sum(-1)
+        if self.use_last_n_layers > 1:
+            encoded_bpes = torch.stack(
+                self.encoder(input_ids, attention_mask)[2][-self.use_last_n_layers :],
+                dim=-1,
+            ).sum(-1)
+        else:
+            encoded_bpes = self.encoder(input_ids, attention_mask)[0]
 
         # bpe -> token (first strategy)
         encoded_tokens = torch.zeros(

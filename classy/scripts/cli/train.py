@@ -16,7 +16,8 @@ def populate_parser(parser: ArgumentParser):
     # TODO: add help?
     parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
     parser.add_argument("dataset", type=Path)
-    parser.add_argument("-m", "--model-name", default="bert")
+    parser.add_argument("--profile", type=str, default=None)
+    parser.add_argument("--transformer_model", type=str, default=None)
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
@@ -85,9 +86,12 @@ def main(args):
     if args.root is not None:
         config_name = args.root
     else:
-        config_name = f"{args.task}-{args.model_name}"
+        config_name = args.task
 
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
+
+    if args.profile is not None:
+        cmd.append(f"+profiles={args.profile}")
 
     # choose device
     device = get_device(args.device)
@@ -129,6 +133,9 @@ def main(args):
             project, experiment = args.wandb.split("@")
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
+
+    if args.transformer_model is not None:
+        cmd.append(f"transformer_model={args.transformer_model}")
 
     # append all user-provided configuration overrides
     cmd += args.config

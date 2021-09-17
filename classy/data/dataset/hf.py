@@ -26,7 +26,7 @@ class HFBaseDataset(BaseDataset):
         max_length: int,
         for_inference: bool,
     ):
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True, add_prefix_space=True)
         super().__init__(
             samples_iterator=samples_iterator,
             vocabulary=vocabulary,

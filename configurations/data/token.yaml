@@ -5,7 +5,7 @@ datamodule:
   train_dataset:
     _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
-    min_length: 5
+    min_length: -1
     max_length: 500
     tokens_per_batch: 1000
     max_batch_size: 10
@@ -16,7 +16,7 @@ datamodule:
   validation_dataset:
     _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
-    min_length: 5
+    min_length: -1
     max_length: 500
     tokens_per_batch: 1000
     max_batch_size: 10
