@@ -7,5 +7,5 @@ dataset:
   max_batch_size: -1
   section_size: 10000
   prebatch: True
-  shuffle: False
+  materialize: False
   for_inference: True
