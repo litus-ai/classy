@@ -112,7 +112,6 @@ class QASample(ClassyStruct):
                 f"# answer: {self.context[classification_start:classification_end]}",
             ]
 
-
         return "\n".join(parts)
 
 

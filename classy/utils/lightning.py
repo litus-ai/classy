@@ -52,7 +52,6 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     if vocabulary_path.exists():
         vocabulary = Vocabulary.from_folder(vocabulary_path)
 
-
     # instantiate and return
     instantiate_input = dict(checkpoint_path=checkpoint_path)
     if vocabulary is not None:
