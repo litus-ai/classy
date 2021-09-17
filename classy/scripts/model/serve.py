@@ -7,7 +7,16 @@ from fastapi import FastAPI, Body
 from pydantic import BaseModel, Field
 
 from classy.scripts.model.predict import predict as backend_predict
-from classy.data.data_drivers import SEQUENCE, TOKEN, SENTENCE_PAIR, TokensSample, SentencePairSample, SequenceSample
+from classy.data.data_drivers import (
+    SEQUENCE,
+    TOKEN,
+    SENTENCE_PAIR,
+    QA,
+    TokensSample,
+    SentencePairSample,
+    SequenceSample,
+    QASample,
+)
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 from classy.utils.log import get_project_logger
@@ -37,6 +46,14 @@ class MarshalInputTokensSample(BaseModel):
         return TokensSample(tokens=self.tokens)
 
 
+class MarshalInputQASample(BaseModel):
+    context: str = Field(None, description="Input context")
+    question: str = Field(None, description="Input question")
+
+    def unmarshal(self) -> QASample:
+        return QASample(context=self.context, question=self.question)
+
+
 class MarshalOutputSequenceSample(MarshalInputSequenceSample):
     label: str = Field(None, description="Label resulting from model classification")
 
@@ -59,6 +76,20 @@ class MarshalOutputTokensSample(MarshalInputTokensSample):
     @classmethod
     def marshal(cls, sample: TokensSample):
         return cls(tokens=sample.tokens, labels=sample.labels)
+
+
+class MarshalOutputQASample(MarshalInputQASample):
+    answer_char_start: int = Field(None, description="Answer starting char index")
+    answer_char_end: int = Field(None, description="Answer ending char index")
+
+    @classmethod
+    def marshal(cls, sample: QASample):
+        return cls(
+            context=sample.context,
+            question=sample.question,
+            answer_char_start=sample.char_start,
+            answer_char_end=sample.char_end,
+        )
 
 
 def serve(
@@ -86,6 +117,8 @@ def serve(
         i_type, o_type = MarshalInputSentencePairSample, MarshalOutputSentencePairSample
     elif model.task == TOKEN:
         i_type, o_type = MarshalInputTokensSample, MarshalOutputTokensSample
+    elif model.task == QA:
+        i_type, o_type = MarshalInputQASample, MarshalOutputQASample
     else:
         raise ValueError()
 

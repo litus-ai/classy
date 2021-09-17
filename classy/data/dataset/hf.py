@@ -1,9 +1,9 @@
 from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List
 
 import torch
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BatchEncoding
 
-from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample
+from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
 from classy.data.dataset.base import BaseDataset, batchify
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -113,6 +113,10 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
+    def _init_fields_batcher(self) -> None:
+        super(HFSentencePairDataset, self)._init_fields_batcher()
+        self.fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
         for sequence_sample in self.samples_iterator():
@@ -132,3 +136,51 @@ class HFSentencePairDataset(HFSequenceDataset):
 
             elem_dict["samples"] = sequence_sample
             yield elem_dict
+
+
+class HFQADataset(HFBaseDataset):
+    @staticmethod
+    def requires_vocab() -> bool:
+        return False
+
+    @staticmethod
+    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
+        raise NotImplementedError
+
+    def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
+        for qa_sample in self.samples_iterator():
+            qa_sample: QASample
+
+            tokenization_output = self.tokenizer(
+                qa_sample.context, qa_sample.question, return_tensors="pt", return_offsets_mapping=True
+            )
+
+            elem_dict = {
+                "input_ids": tokenization_output["input_ids"].squeeze(0),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(0),
+                "token_type_ids": tokenization_output["token_type_ids"].squeeze(0),
+                "word2chars": tokenization_output["offset_mapping"].squeeze(0),
+            }
+
+            if qa_sample.char_start is not None and qa_sample.char_end is not None:
+                elem_dict["start_position"] = tokenization_output.char_to_token(
+                    0, qa_sample.char_start, sequence_index=0
+                )
+                elem_dict["end_position"] = tokenization_output.char_to_token(
+                    0, qa_sample.char_end - 1, sequence_index=0
+                )
+
+            elem_dict["samples"] = qa_sample
+
+            yield elem_dict
+
+    def _init_fields_batcher(self) -> None:
+        self.fields_batcher = {
+            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
+            "attention_mask": lambda lst: batchify(lst, padding_value=0),
+            "token_type_ids": lambda lst: batchify(lst, padding_value=0),
+            "word2chars": None,
+            "start_position": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "end_position": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "samples": None,
+        }
