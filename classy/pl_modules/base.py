@@ -45,7 +45,7 @@ class ClassyPLModule(pl.LightningModule):
         Iterator[
             Tuple[
                 Union[SentencePairSample, SequenceSample, TokensSample, QASample],
-                Union[str, List[str]],
+                Union[str, List[str], Tuple[int, int]],
             ]
         ]
     ]:
