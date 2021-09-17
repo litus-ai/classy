@@ -17,7 +17,6 @@ classy serve <model-path> [-p|--port] [--token-batch-size] [--device]
 - **edoardo**: create different profiles to train the various tasks (try to build them based on the gpu memory size and report the training time on different gpus)
 - **edoardo**: look for and train "una mazzettata" of models
 - **niccolò**: classy download
-- **edoardo**: extractive classification
 - docs
   - docusaurus
   - comment extensively at least all classes and some important function

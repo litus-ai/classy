@@ -110,6 +110,12 @@ def serve(
         ".from_lines", ".from_samples"
     )  # todo can we do it better?
 
+    # mock call to load resources
+    try:
+        next(backend_predict(model=model, samples=[], dataset_conf=dataset_conf))
+    except StopIteration:
+        pass
+
     # compute dynamic type
     if model.task == SEQUENCE:
         i_type, o_type = MarshalInputSequenceSample, MarshalOutputSequenceSample

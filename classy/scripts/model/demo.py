@@ -301,13 +301,7 @@ class QATaskUI(TaskUI):
     def get_examples(self) -> Tuple[List[Tuple[str, str]], bool]:
         inferred_examples = self.auto_infer_examples()
         if inferred_examples is not None:
-            return [
-                ("Rome is in Italy", "Where is Rome?"),
-                (
-                    "classy is a library",
-                    "What is classy?",
-                ),
-            ] + [(ie.context, ie.question) for ie in inferred_examples], True
+            return [(ie.context, ie.question) for ie in inferred_examples], True
         else:
             # todo these examples are not ideal for pretty much any sentence-pair task, suggestions?
             return [
@@ -369,6 +363,12 @@ def demo(model_checkpoint_path: str, cuda_device: int):
 
         dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
         task_ui = TaskUI.from_task(model.task, model_checkpoint_path)
+
+        # mock call to load resources
+        try:
+            next(predict(model=model, samples=[], dataset_conf=dataset_conf))
+        except StopIteration:
+            pass
 
         return model, dataset_conf, task_ui
 

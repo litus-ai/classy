@@ -57,6 +57,12 @@ def interactive_main(
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
     data_driver = get_data_driver(model.task, TSV)
 
+    # mock call to load resources
+    try:
+        next(predict(model=model, samples=[], dataset_conf=dataset_conf))
+    except StopIteration:
+        pass
+
     while True:
         source = input("Enter source text: ").strip()
         _, prediction = next(
