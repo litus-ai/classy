@@ -1,5 +1,5 @@
 dataset:
-  _target_: 'classy.data.dataset.hf.HFSentencePairDataset.from_samples'
+  _target_: 'classy.data.dataset.hf.HFQADataset.from_samples'
   transformer_model: ${transformer_model}
   min_length: -1
   max_length: -1

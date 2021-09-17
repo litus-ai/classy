@@ -3,10 +3,16 @@ from typing import Optional, List, Callable, Union, Tuple, Dict
 
 import matplotlib.pyplot as plt
 import torch
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, ConfusionMatrixDisplay, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    precision_recall_fscore_support,
+    ConfusionMatrixDisplay,
+    confusion_matrix,
+    f1_score,
+)
 from sklearn.utils.multiclass import unique_labels
 
-from classy.data.data_drivers import get_data_driver, SEQUENCE, SENTENCE_PAIR, TOKEN
+from classy.data.data_drivers import get_data_driver, SEQUENCE, SENTENCE_PAIR, TOKEN, QA
 from classy.scripts.model.predict import predict as backend_predict
 from classy.utils.commons import flatten
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
@@ -16,6 +22,10 @@ def get_default_metrics(
     task: str,
 ) -> Dict[str, Callable[[List[Union[Tuple[str, str], Tuple[List[str], List[str]]]]], None]]:
     def preprocess(labels, task):
+        if task == QA:
+            gold, pred = [str(l[0]) for l in labels], [str(l[1]) for l in labels]
+            return gold, pred
+
         gold, pred = [l[0] for l in labels], [l[1] for l in labels]
         if task == TOKEN:
             gold, pred = flatten(gold), flatten(pred)
@@ -23,6 +33,9 @@ def get_default_metrics(
 
     def accuracy(gold, pred):
         print(f"# accuracy: {accuracy_score(gold, pred):.4f}")
+
+    def f1(gold, pred):
+        print(f"# f1-score: {f1_score(gold, pred, average='micro')}")
 
     def p_r_f_support(gold, pred):
         parts = [f"# classification metrics"]
@@ -39,6 +52,10 @@ def get_default_metrics(
         disp.plot(cmap=plt.cm.Blues, values_format=".2f")
         plt.show()
 
+    if task == QA:
+        return {
+            "f1": lambda labels: f1(*preprocess(labels, task=task)),
+        }
     return {
         "accuracy": lambda labels: accuracy(*preprocess(labels, task=task)),
         "classification metrics": lambda labels: p_r_f_support(*preprocess(labels, task=task)),
@@ -87,6 +104,7 @@ def evaluate(
                 f.write(sample.pretty_print(classification_result=p) + "\n")
 
     # compute metrics
+    # TODO: why should we have a metric_name?
     for metric_name, metric_f in metrics.items():
         metric_f([(sample.get_current_classification(), p) for sample, p in predicted_samples])
 
