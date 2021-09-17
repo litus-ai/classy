@@ -7,6 +7,10 @@ from omegaconf import OmegaConf, DictConfig
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.vocabulary import Vocabulary
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
@@ -34,14 +38,22 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
 
     # extract and build vocabulary
     vocabulary_path = Path(checkpoint_path).parent.parent / "vocabulary"
-    assert vocabulary_path.exists(), f"No vocabulary found at path {vocabulary_path}"
-    vocabulary = Vocabulary.from_folder(vocabulary_path)
+    if not vocabulary_path.exists():
+        logger.warning(
+            "No vocabulary found for the selected checkpoint. In the current version of classy this is "
+            "correct only if the task is 'qa'"
+        )
+        vocabulary = None
+    else:
+        vocabulary = Vocabulary.from_folder(vocabulary_path)
 
     # instantiate and return
+    instantiate_input = dict(checkpoint_path=checkpoint_path)
+    if vocabulary is not None:
+        instantiate_input["vocabulary"] = vocabulary
+
     return hydra.utils.instantiate(
-        {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'},
-        checkpoint_path=checkpoint_path,
-        vocabulary=vocabulary,
+        {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'}, **instantiate_input
     )
 
 
