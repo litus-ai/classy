@@ -7,13 +7,13 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
-    def get_current_classification(self) -> Union[str, List[str], Tuple[int, int]]:
+    def get_current_classification(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
         raise NotImplementedError
 
     def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
-    def pretty_print(self, classification_result: Union[str, List[str], Tuple[int, int]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[Union[str, List[str], Tuple[int, int]]] = None) -> str:
         raise NotImplementedError
 
 
