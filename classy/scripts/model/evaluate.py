@@ -54,7 +54,6 @@ def get_default_metrics(
 
     if task == QA:
         return {
-            "accuracy": lambda labels: accuracy(*preprocess(labels, task=task)),
             "f1": lambda labels: f1(*preprocess(labels, task=task)),
         }
     return {
