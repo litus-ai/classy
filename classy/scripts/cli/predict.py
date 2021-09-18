@@ -19,7 +19,7 @@ def populate_parser(parser: ArgumentParser):
     file_parser.add_argument("file_path").completer = FilesCompleter()
     file_parser.add_argument("-d", "--device", default="gpu")
     file_parser.add_argument("-o", "--output-path", required=True).completer = FilesCompleter()
-    file_parser.add_argument("--token-batch-size", type=int, default=2014)
+    file_parser.add_argument("--token-batch-size", type=int, default=1024)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
