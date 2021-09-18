@@ -73,7 +73,7 @@ class WeightDecayOptimizer(Factory, ABC):
         return optimizer_grouped_parameters
 
 
-class AdagradFactory(WeightDecayOptimizer):
+class AdagradWithWarmupFactory(WeightDecayOptimizer):
     """
     Factory for Adagrad optimizer with warmup learning rate scheduler
     reference paper for Adagrad: https://jmlr.org/papers/v12/duchi11a.html
@@ -92,7 +92,7 @@ class AdagradFactory(WeightDecayOptimizer):
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
 
 
-class AdamWFactory(WeightDecayOptimizer):
+class AdamWWithWarmupFactory(WeightDecayOptimizer):
     """
     Factory for AdamW optimizer with warmup learning rate scheduler
     reference paper for AdamW: https://arxiv.org/abs/1711.05101
@@ -111,7 +111,7 @@ class AdamWFactory(WeightDecayOptimizer):
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
 
 
-class RAdamWithDecayFactory(WeightDecayOptimizer):
+class RAdamFactory(WeightDecayOptimizer):
     """
     Factory for RAdam optimizer
     reference paper for RAdam: https://arxiv.org/abs/1908.03265
