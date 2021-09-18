@@ -4,7 +4,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from classy.scripts.cli.utils import get_device
-from classy.utils.lightning import load_training_conf_from_checkpoint, load_classy_module_from_checkpoint
 
 import logging
 
@@ -66,6 +65,7 @@ def _main_resume(model_dir: str):
 
     # import here to avoid importing torch before it's actually needed
     from classy.scripts.model.train import fix, train
+    from classy.utils.lightning import load_training_conf_from_checkpoint
 
     os.chdir(model_dir)
 
