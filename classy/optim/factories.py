@@ -113,7 +113,7 @@ class AdamWFactory(WeightDecayOptimizer):
 
 class RAdamWithDecayFactory(WeightDecayOptimizer):
     """
-    Factory for RAdam optimizer.
+    Factory for RAdam optimizer
     reference paper for RAdam: https://arxiv.org/abs/1908.03265
     """
 
