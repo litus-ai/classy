@@ -1,4 +1,4 @@
-task: sequence
+task: token
 project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}
@@ -21,10 +21,10 @@ hydra:
 # defaults
 defaults:
   - callbacks: empty
-  - data: sequence-hf
+  - data: token
   - device: cuda
-  - model: sequence-bert
-  - prediction: sequence-hf
+  - model: token
+  - prediction: token
   - training: default
   - logging: default
   - _self_

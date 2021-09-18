@@ -21,10 +21,10 @@ hydra:
 # defaults
 defaults:
   - callbacks: empty
-  - data: sentence-pair-hf
+  - data: sentence-pair
   - device: cuda
-  - model: sentence-pair-bert
-  - prediction: sentence-pair-hf
+  - model: sentence-pair
+  - prediction: sentence-pair
   - training: default
   - logging: default
   - _self_
