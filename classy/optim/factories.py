@@ -44,7 +44,6 @@ class TorchFactory(Factory):
 
 
 class WeightDecayOptimizer(Factory, ABC):
-
     def __init__(self, weight_decay: float, no_decay_params: Optional[List[str]]):
         self.weight_decay = weight_decay
         self.no_decay_params = no_decay_params
@@ -79,7 +78,9 @@ class AdagradWithWarmupFactory(WeightDecayOptimizer):
     reference paper for Adagrad: https://jmlr.org/papers/v12/duchi11a.html
     """
 
-    def __init__(self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]):
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
         self.warmup_steps = warmup_steps
@@ -92,13 +93,42 @@ class AdagradWithWarmupFactory(WeightDecayOptimizer):
         return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
 
 
+class AdafactorWithWarmupFactory(WeightDecayOptimizer):
+    """
+    Factory for AdaFactor optimizer with warmup learning rate scheduler
+    reference paper for Adafactor: https://arxiv.org/abs/1804.04235
+    """
+
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = transformers.Adafactor(
+            optimizer_grouped_parameters,
+            lr=self.lr,
+            weight_decay=self.weight_decay,
+            warmup_init=False,
+            relative_step=False,
+            scale_parameter=False,
+        )
+        return optimizer
+
+
 class AdamWWithWarmupFactory(WeightDecayOptimizer):
     """
     Factory for AdamW optimizer with warmup learning rate scheduler
     reference paper for AdamW: https://arxiv.org/abs/1711.05101
     """
 
-    def __init__(self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]):
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
         self.warmup_steps = warmup_steps
