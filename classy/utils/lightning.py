@@ -75,22 +75,3 @@ def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
     """
     conf = load_training_conf_from_checkpoint(checkpoint_path)
     return dict(conf.prediction.dataset)
-
-
-def get_exp_dir(exp_dir: Optional[str] = None):
-    return
-
-
-def get_experiment_runs():
-    pass
-
-
-def get_checkpoints(exp_name: str, exp_dir: Optional[str] = None):
-    directory = get_exp_dir(exp_dir)
-    target = directory / exp_name
-    assert target.exists() and target.is_dir()  # TODO: error message
-
-
-def list_experiments(exp_dir: Optional[str] = None) -> List[str]:
-    directory = get_exp_dir(exp_dir)
-    return [path.name for path in directory.iterdir() if path.is_dir() and path.rglob("*.ckpt")]
