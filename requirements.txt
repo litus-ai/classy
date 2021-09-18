@@ -14,3 +14,4 @@ streamlit==0.88.0
 st-annotated-text==2.0.0
 # black
 black==21.8b0
+argcomplete==1.12.3
