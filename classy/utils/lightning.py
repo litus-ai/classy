@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict
 
 import hydra
 from omegaconf import OmegaConf, DictConfig
