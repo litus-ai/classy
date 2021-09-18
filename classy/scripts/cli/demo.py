@@ -1,11 +1,10 @@
 from argparse import ArgumentParser
 
-from classy.scripts.cli.utils import get_device
-from classy.utils.commons import execute_bash_command
+from classy.scripts.cli.utils import get_device, autocomplete_model_path
 
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_path")
+    parser.add_argument("model_path").completer = autocomplete_model_path
     parser.add_argument("-p", "--port", type=int, default=8000)
     parser.add_argument("-d", "--device", default="gpu")
 

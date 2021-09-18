@@ -1,16 +1,16 @@
-import os
 from argparse import ArgumentParser
 from pathlib import Path
 
-from classy.scripts.cli.utils import get_device
-from classy.utils.lightning import load_training_conf_from_checkpoint
+from argcomplete import FilesCompleter
+
+from classy.scripts.cli.utils import get_device, autocomplete_model_path
 
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_path")
-    parser.add_argument("file_path", nargs="?", default=None)
+    parser.add_argument("model_path").completer = autocomplete_model_path
+    parser.add_argument("file_path", nargs="?", default=None).completer = FilesCompleter()
     parser.add_argument("-d", "--device", default="gpu")
-    parser.add_argument("-o", "--output-path", default=None, required=False)
+    parser.add_argument("-o", "--output-path", default=None, required=False).completer = FilesCompleter()
     parser.add_argument("--token-batch-size", type=int, default=128)
 
 
@@ -30,6 +30,7 @@ def parse_args():
 
 
 def automatically_infer_test_path(model_path: str) -> str:
+    from classy.utils.lightning import load_training_conf_from_checkpoint
 
     checkpoint_path = Path(model_path)
     exp_split_data_folder = checkpoint_path.parent.parent.joinpath("data")
