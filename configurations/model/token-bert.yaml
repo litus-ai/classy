@@ -1,9 +1,0 @@
-_target_: 'classy.pl_modules.hf.HFTokensPLModule'
-transformer_model: ${transformer_model}
-use_last_n_layers: 1
-fine_tune: False
-optim_conf:
-  _target_: "src.optim.factories.TorchFactory"
-  optimizer:
-    _target_: torch.optim.Adam
-    lr: 1e-5

@@ -7,6 +7,10 @@ from omegaconf import OmegaConf, DictConfig
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.vocabulary import Vocabulary
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
@@ -32,16 +36,29 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
 
     conf = load_training_conf_from_checkpoint(checkpoint_path)
 
+    # check if the model requires a vocab
+    train_dataset_class = conf["data"]["datamodule"]["train_dataset"]["_target_"]
+    if not train_dataset_class.split(".")[-1][0].isupper():  # if it is not upper then it is a class method
+        train_dataset_class = ".".join(train_dataset_class.split(".")[:-1])
+
+    requires_vocab = hydra.utils.instantiate({"_target_": f"{train_dataset_class}.requires_vocab"})
+
     # extract and build vocabulary
     vocabulary_path = Path(checkpoint_path).parent.parent / "vocabulary"
-    assert vocabulary_path.exists(), f"No vocabulary found at path {vocabulary_path}"
-    vocabulary = Vocabulary.from_folder(vocabulary_path)
+
+    assert (not requires_vocab) or vocabulary_path.exists(), f"No vocabulary found at path {vocabulary_path}"
+
+    vocabulary = None
+    if vocabulary_path.exists():
+        vocabulary = Vocabulary.from_folder(vocabulary_path)
 
     # instantiate and return
+    instantiate_input = dict(checkpoint_path=checkpoint_path)
+    if vocabulary is not None:
+        instantiate_input["vocabulary"] = vocabulary
+
     return hydra.utils.instantiate(
-        {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'},
-        checkpoint_path=checkpoint_path,
-        vocabulary=vocabulary,
+        {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'}, **instantiate_input
     )
 
 

@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Iterator, Generator
+from typing import List, Union, Optional, Iterator, Generator, Tuple
 import json
 
 from classy.utils.log import get_project_logger
@@ -7,13 +7,13 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
         raise NotImplementedError
 
-    def update_classification(self, classification_result: Union[str, List[str]]):
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
-    def pretty_print(self, classification_result: Optional[Union[str, List[str]]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[Union[str, List[str], Tuple[int, int]]] = None) -> str:
         raise NotImplementedError
 
 
@@ -23,7 +23,7 @@ class SentencePairSample(ClassyStruct):
         self.sentence2 = sentence2
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Optional[str]:
         return self.label
 
     def update_classification(self, classification_result: str):
@@ -43,13 +43,13 @@ class SequenceSample(ClassyStruct):
         self.sequence = sequence
         self.label = label
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Optional[str]:
         return self.label
 
     def update_classification(self, classification_result: str):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self, classification_result: Optional[str]) -> str:
         parts = [f"# sequence: {self.sequence}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -63,18 +63,55 @@ class TokensSample(ClassyStruct):
         self.tokens = tokens
         self.labels = labels
 
-    def get_current_classification(self) -> Union[str, List[str]]:
+    def get_current_classification(self) -> Optional[List[str]]:
         return self.labels
 
     def update_classification(self, classification_result: List[str]):
         self.labels = classification_result
 
-    def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
+    def pretty_print(self, classification_result: Optional[List[str]]) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
         if self.labels is not None:
             parts.append(f'\t# labels: {" ".join(self.labels)}')
         if classification_result is not None:
             parts.append(f'\t# classification_result: {" ".join(classification_result)}')
+        return "\n".join(parts)
+
+
+class QASample(ClassyStruct):
+    def __init__(self, context: str, question: str, char_start: Optional[int] = None, char_end: Optional[int] = None):
+        self.context = context
+        self.question = question
+        self.char_start = char_start
+        self.char_end = char_end
+
+    def get_current_classification(self) -> Optional[Tuple[int, int]]:
+        return self.char_start, self.char_end
+
+    def update_classification(self, classification_result: Tuple[int, int]):
+        self.char_start, self.char_end = classification_result
+
+    def pretty_print(self, classification_result: Optional[Tuple[int, int]] = None) -> str:
+        parts = [
+            f"# context: {self.context}",
+            f"# question: {self.question}",
+        ]
+
+        if self.char_start is not None and self.char_end is not None:
+            parts += [
+                "### Gold positions ###",
+                f"# answer start: {self.char_start}, answer end: {self.char_end}",
+                f"# answer: {self.context[self.char_start:self.char_end]}",
+            ]
+
+        if classification_result is not None:
+            classification_start, classification_end = classification_result
+            parts += [
+                "### Predicted positions ###",
+                f"# answer start: {classification_start}, answer end: {classification_end}",
+                f"# answer: {self.context[classification_start:classification_end]}",
+            ]
+
         return "\n".join(parts)
 
 
@@ -123,6 +160,14 @@ class TokensDataDriver(DataDriver):
         raise NotImplementedError
 
     def save(self, samples: Iterator[TokensSample], path: str):
+        raise NotImplementedError
+
+
+class QADataDriver(DataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        raise NotImplementedError
+
+    def save(self, samples: Iterator[QASample], path: str):
         raise NotImplementedError
 
 
@@ -231,10 +276,57 @@ class JSONLTokensDataDriver(TokensDataDriver):
                 f.write(json.dumps({"tokens": sample.tokens, "labels": sample.labels}) + "\n")
 
 
+class TSVQADataDriver(QADataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        for i, line in enumerate(lines):
+            parts = line.split("\t")
+            assert len(parts) in [2, 4,], (
+                f"TSVQADataDriver expects 2 (context, question) or 4 (context, question, answer_start, answer_end) "
+                f"fields, but {len(parts)} were found at line {i}: {line}"
+            )
+            context, question = parts[:2]
+            answer_start, answer_end = None, None
+            if len(parts) > 2:
+                answer_start, answer_end = parts[2:]
+                answer_start, answer_end = int(answer_start), int(answer_end)
+            yield QASample(context, question, answer_start, answer_end)
+
+    def save(self, samples: Iterator[QASample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                sample_parts = [sample.context, sample.question]
+                if sample.char_start is not None and sample.char_end is not None:
+                    sample_parts += [str(sample.char_start), str(sample.char_end)]
+                f.write("\t".join(sample_parts))
+                f.write("\n")
+
+
+class JSONLQADataDriver(QADataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+        for line in lines:
+            yield QASample(**json.loads(line))
+
+    def save(self, samples: Iterator[QASample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                f.write(
+                    json.dumps(
+                        {
+                            "question": sample.question,
+                            "context": sample.context,
+                            "answer_start": sample.char_start,
+                            "answer_end": sample.char_end,
+                        }
+                    )
+                    + "\n"
+                )
+
+
 # TASK TYPES
 SEQUENCE = "sequence"
 SENTENCE_PAIR = "sentence-pair"
 TOKEN = "token"
+QA = "qa"
 
 # FILE EXTENSIONS
 TSV = "tsv"
@@ -243,10 +335,12 @@ JSONL = "jsonl"
 READERS_DICT = {
     (SEQUENCE, TSV): TSVSequenceDataDriver,
     (SENTENCE_PAIR, TSV): TSVSentencePairDataDriver,
-    (TOKEN, TSV): TSVTokensDataDriver,
     (SEQUENCE, JSONL): JSONLSequenceDataDriver,
     (SENTENCE_PAIR, JSONL): JSONLSentencePairDataDriver,
     (TOKEN, JSONL): JSONLTokensDataDriver,
+    (TOKEN, TSV): TSVTokensDataDriver,
+    (QA, TSV): TSVQADataDriver,
+    (QA, JSONL): JSONLQADataDriver,
 }
 
 
@@ -254,7 +348,8 @@ def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
     reader_identifier = (task_type, file_extension)
     if reader_identifier not in READERS_DICT:
         logger.info(f"No reader available for task {task_type} and extension {file_extension}.")
-    assert (
-        reader_identifier in READERS_DICT
-    ), f"Extension '{file_extension}' does not appear to be supported for task {task_type}. Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
+    assert reader_identifier in READERS_DICT, (
+        f"Extension '{file_extension}' does not appear to be supported for task {task_type}. "
+        f"Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
+    )
     return READERS_DICT[reader_identifier]()

@@ -1,4 +1,4 @@
-task: token
+task: sentence-pair
 project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}
@@ -20,9 +20,11 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: conll2003
-  - data: token-hf
+  - callbacks: empty
+  - data: sentence-pair
   - device: cuda
-  - model: conll2003-bert
-  - prediction: token-hf
-  - training: conll2003-bert
+  - model: sentence-pair
+  - prediction: sentence-pair
+  - training: default
+  - logging: default
+  - _self_

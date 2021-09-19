@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from classy.data.data_drivers import get_data_driver
-from classy.utils.data import split_dataset
+from classy.utils.data import split_dataset, create_data_dir, shuffle_and_store_dataset
 
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -27,6 +27,7 @@ class ClassyDataModule(pl.LightningDataModule):
         validation_split_size: Optional[float] = None,
         test_split_size: Optional[float] = None,
         max_nontrain_split_size: Optional[int] = None,
+        shuffle_dataset: bool = True,
     ):
         super().__init__()
         self.task = task
@@ -42,9 +43,9 @@ class ClassyDataModule(pl.LightningDataModule):
         self.validation_split_size = validation_split_size
         self.test_split_size = test_split_size
         self.max_nontrain_split_size = max_nontrain_split_size
+        self.shuffle_dataset = shuffle_dataset
 
-        self.features_vocabulary: Optional[Vocabulary] = None
-        self.labels_vocabulary: Optional[Vocabulary] = None
+        self.vocabulary = None
 
         if os.path.exists("data/"):
             logger.info("Using data split from previous run")
@@ -67,7 +68,18 @@ class ClassyDataModule(pl.LightningDataModule):
             self.test_path = os.path.join(self.dataset_path, f"test.{self.file_extension}")
 
             assert os.path.exists(self.train_path), f"Cannot find the training file 'train.{self.file_extension}'"
-            assert os.path.exists(self.test_path), f"Cannot find the training file 'test.{self.file_extension}'"
+
+            if self.shuffle_dataset and not os.path.exists("data/train.shuffled.tsv"):
+                # create data folder
+                create_data_dir()
+                # shuffle input dataset
+                shuffled_dataset_path = "data/train.shuffled.tsv"
+                logger.info(
+                    f"Shuffling training dataset. The shuffled dataset "
+                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
+                )
+                shuffle_and_store_dataset(self.train_path, self.data_driver, output_path=shuffled_dataset_path)
+                self.train_path = shuffled_dataset_path
 
             if not os.path.exists(self.validation_path):
                 logger.info(
@@ -81,20 +93,34 @@ class ClassyDataModule(pl.LightningDataModule):
                     "data/",  # hydra takes care of placing this folder within the appropriate folder
                     validation_split_size=self.validation_split_size,
                     data_max_split=self.max_nontrain_split_size,
+                    shuffle=(not self.shuffle_dataset),
                 )
                 logger.info(f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'")
 
         else:
 
+            self.file_extension = self.dataset_path.split(".")[-1]
+            self.data_driver = get_data_driver(self.task, self.file_extension)
+
+            if self.shuffle_dataset and not os.path.exists("data/dataset.shuffled.tsv"):
+                # create data folder
+                create_data_dir()
+                # shuffle training dataset
+                shuffled_dataset_path = "data/dataset.shuffled.tsv"
+                logger.info(
+                    f"Shuffling input dataset. The shuffled dataset "
+                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
+                )
+                shuffle_and_store_dataset(self.dataset_path, self.data_driver, output_path=shuffled_dataset_path)
+                self.dataset_path = shuffled_dataset_path
+
+            # splitting dataset in train, validation and test
             logger.info(
                 "Splitting the dataset in train, validation and test. "
                 f"(split_size: {1 - self.validation_split_size - self.test_split_size} "
                 f"/ {self.validation_split_size}, {self.test_split_size}) "
                 f"enforcing a maximum of {self.max_nontrain_split_size} instances on non-train splits"
             )
-
-            self.file_extension = self.dataset_path.split(".")[-1]
-            self.data_driver = get_data_driver(self.task, self.file_extension)
 
             self.train_path, self.validation_path, self.test_path = split_dataset(
                 self.dataset_path,
@@ -103,6 +129,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 validation_split_size=self.validation_split_size,
                 test_split_size=self.test_split_size,
                 data_max_split=self.max_nontrain_split_size,
+                shuffle=(not self.shuffle_dataset),
             )
 
             logger.info(
@@ -120,7 +147,8 @@ class ClassyDataModule(pl.LightningDataModule):
                 path=self.train_path,
                 data_driver=self.data_driver,
             ).vocabulary
-            self.vocabulary.save("vocabulary/")
+            if self.vocabulary is not None:
+                self.vocabulary.save("vocabulary/")
 
     def setup(self, stage: Optional[str] = None) -> None:
 
@@ -146,10 +174,10 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(self.train_dataset, batch_size=None, num_workers=1)
+        return DataLoader(self.train_dataset, batch_size=None, num_workers=0)
 
     def val_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(self.validation_dataset, batch_size=None, num_workers=1)
+        return DataLoader(self.validation_dataset, batch_size=None, num_workers=0)
 
     def test_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
-        return DataLoader(self.test_dataset, batch_size=None, num_workers=1)
+        return DataLoader(self.test_dataset, batch_size=None, num_workers=0)

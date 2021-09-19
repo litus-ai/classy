@@ -14,15 +14,18 @@ logger = logging.getLogger(__name__)
 def populate_parser(parser: ArgumentParser):
 
     # TODO: add help?
-    parser.add_argument("task", choices=("sequence", "token", "sentence-pair"))
+    parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
     parser.add_argument("dataset", type=Path)
-    parser.add_argument("-m", "--model-name", default="bert")
+    parser.add_argument("--profile", type=str, default=None)
+    parser.add_argument("--transformer_model", type=str, default=None)
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
     parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
+    parser.add_argument("--no-shuffle", action="store_true")
+    parser.add_argument("--fp16", action="store_true")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -83,16 +86,25 @@ def main(args):
     if args.root is not None:
         config_name = args.root
     else:
-        config_name = f"{args.task}-{args.model_name}"
+        config_name = args.task
 
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
+
+    if args.profile is not None:
+        cmd.append(f"+profiles={args.profile}")
 
     # choose device
     device = get_device(args.device)
     if device >= 0:
-        cmd.append(f"device=cuda")
+        if args.fp16:
+            cmd.append("device=cuda_amp")
+        else:
+            cmd.append(f"device=cuda")
         cmd.append(f"device.gpus=[{device}]")
     else:
+        if args.fp16:
+            logger.error("fp16 is only available when training on a GPU")
+            return
         cmd.append(f"device=cpu")
 
     # create default experiment name if not provided
@@ -101,6 +113,10 @@ def main(args):
 
     # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
+
+    # turn off shuffling if requested
+    if args.no_shuffle:
+        cmd.append("data.datamodule.shuffle_dataset=False")
 
     # wandb logging
     if args.wandb is not None:
@@ -117,6 +133,9 @@ def main(args):
             project, experiment = args.wandb.split("@")
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
+
+    if args.transformer_model is not None:
+        cmd.append(f"transformer_model={args.transformer_model}")
 
     # append all user-provided configuration overrides
     cmd += args.config

@@ -9,44 +9,25 @@ classy predict file <model-path> <file-path> [-o|--output-path] [--token-batch-s
 classy serve <model-path> [-p|--port] [--token-batch-size] [--device]
 ```
 
-### Current Commands
-
-```bash
-PYTHONPATH=$(pwd) python classy/classy/scripts/model/train.py \
-  exp_name=debug \
-  device=cuda \
-  --config-name sequence-bert
-```
-
-```bash
-PYTHONPATH=$(pwd) python classy/classy/scripts/model/predict.py \
-  experiments/debug/2021-09-01/10-59-28/checkpoints/epoch=00-val_loss=0.32.ckpt \
-  -t
-```
-
-```bash
-black -l 120 classy/
-```
-
 ## TODOs
 
-### Short Term
-- random -> np.random everywhere
-- demo: add inference time
-- Profiles: Create different profiles to train the various tasks. Try to build them based on the gpu memory size and report the training time on different gpus.
-- Pretrained Models: look for and train "una mazzettata" of models
+### V0.1
+- **luigi**: random -> np.random everywhere
+- **luigi**: add inference time to demo
+- **edoardo**: create different profiles to train the various tasks (try to build them based on the gpu memory size and report the training time on different gpus)
+- **edoardo**: look for and train "una mazzettata" of models
+- **niccolò**: classy download
+- **edoardo**: extractive classification
+- docs
+  - docusaurus
+  - comment extensively at least all classes and some important function
+  - write readme
+- **niccolò**: package install
+- **luigi**: Dockerfile
 
-### Mid Term
+### Later on
 - num_workers can't be >1 right now
-- Docs: comment extensively at least all classes and some important function.
 - pre-commit black (github actions?)
 - training on colab notebooks
-
-### Long Term
 - logging
-- pip package
-- Docs: tutorials (no lines of code / few lines of code / I know what I am doing)
-- gradio / streamlit
-- test (haha!)
-- Dockerfile
-- bash screenshots
+- testing

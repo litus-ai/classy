@@ -4,6 +4,7 @@ from typing import List, Tuple, Generator, Dict, Union, Iterator
 import hydra.utils
 import torch
 from omegaconf import DictConfig
+from pytorch_lightning.utilities import move_data_to_device
 from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -21,9 +22,6 @@ def predict(
     progress_bar: bool = False,
 ) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:
 
-    # todo only works on single gpu
-    device = next(model.parameters()).device
-
     # instantiate dataset
     dataset_conf["tokens_per_batch"] = token_batch_size
     dataset = hydra.utils.instantiate(dataset_conf, samples=samples, vocabulary=model.vocabulary)
@@ -38,9 +36,10 @@ def predict(
     for batch in iterator:
 
         # predict
-        with autocast(enabled=True):
+        with autocast(enabled=True):  # todo: always enabled?
             with torch.no_grad():
-                batch_out = model.predict(**{k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()})
+                batch = move_data_to_device(batch, model.device)
+                batch_out = model.predict(**batch)
 
                 for sample, prediction in batch_out:
                     yield sample, prediction
