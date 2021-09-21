@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: CLI
+sidebar_label: CLI
 ---
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -14,20 +14,22 @@ import Modal from 'react-bootstrap/Modal';
 
 import ReactTermynal from '../../../src/components/termynal';
 
+# CLI
+
 Once task identification and data organization are complete, your "have-to-code" section is over, and you can use classy
 CLI to handle the rest, covering every step during the lifecycle of a ML model:
-* Train
-* Predict (both file-based and bash-interactive)
-* Evaluate
-* Serve via a REST API
-* Present a demo
+* train
+* predict (both file-based and bash-interactive)
+* evaluate
+* serve via a REST API
+* present a demo
 
 ## Train
 
 The core syntax of the train command is the following:
 ```bash
 classy train 
-    <task>                # any in {sequence,token,sentence-pair}
+    <task>                # any in *{sequence,token,sentence-pair}*
     <path-to-dataset>     # path to your dataset
     -n <exp-name>         # name you want to give to your model
     -d <device>           # device on which to train ("cpu" for cpu, or device number for gpu)
@@ -51,9 +53,9 @@ consider moving only one of them, for instance the best one, *checkpoints/best.c
 :::
 
 Note that *&lt;path-to-dataset&gt;* is a bit of a special parameter and can be either:
-* a **folder**, or, actually, a *ML-ready* folder: that is, it must contain a training file, named *train.#* 
+* **folder**, or, actually, a *ML-ready* folder: that is, it must contain a training file, named *train.#* 
   (# denotes a classy supported extension), and, optionally, a validation file and a test file, *validation.#* and *test.#*
-* a **file**: classy uses the file provided to automatically generate an ML-ready folder for you, storing it in the
+* **file**: classy uses the file provided to automatically generate an ML-ready folder for you, storing it in the
   *data/* folder inside the current experiment
   
 :::info
@@ -71,9 +73,10 @@ This does not hold for *test.#* and, if not present, classy **will not** create 
   <span data-ty="input">ls experiments</span>
   <span data-ty>sequence-sample/</span>
   <span data-ty="input">tree -L 2 sequence-example</span>
-  <span className="data-ty-treefix" data-ty>experiments/sequence-example/&lt;day&gt;/&lt;time&gt;/
+  <span className="data-ty-treefix" data-ty>
     <div>
-        {`├── checkpoints
+        {`experiments/sequence-example/<day>/<time>/
+          ├── checkpoints
             │   ├── best.ckpt
             │   ├── epoch=00-val_loss=0.51.ckpt
             │   └── last.ckpt
@@ -88,9 +91,9 @@ This does not hold for *test.#* and, if not present, classy **will not** create 
 
 <p />
 
-For all CLI commands that involve using a trained model, you can use 4 ways to specify it:
+For all CLI commands that involve using a trained model, you can use 3 ways to specify it:
 ```bash
-# the <exp-name> you used at training time (classy will search in the experiments/ folder and use the latest best.ckpt)
+# the <exp-name> you used at training time (classy will find and use the latest best.ckpt)
 classy <cmd> sequence-example ... 
 # path to model folder
 classy <cmd> experiments/sequence-example/ ... 
@@ -108,9 +111,11 @@ For all CLI commands, you can checkout `classy <command> -h` for more informatio
 
 ## Predict
 
-You can use `classy predict` to perform predictions with a trained model. Two modes are supported:
-* File-based prediction
-* Bash-interactive
+You can use `classy predict` to perform predictions with a trained model, using 
+
+Two modes are supported:
+* **file-based prediction** 
+* **bash-interactive**
 
 File-based prediction allows you to automatically tag files. Such files can be in any supported format and need not contain 
 label information: that is, the corresponding area, such as the second column for .tsv files in sequence classification, 
@@ -123,18 +128,19 @@ can be missing (if present, it will just be ignored).
   <span data-ty="progress"></span>
   <span data-ty>Prediction complete</span>
   <span data-ty="input">cat target.out.tsv | head -1</span>
-  <span data-ty>I wish I had never bought these terrible headphones! &lt;tab&gt; negative</span>
+  <span data-ty>I wish I had never bought these terrible headphones!    negative</span>
 </ReactTermynal>
 
 <p />
 
-On the other hand, bash-interactive predictions allows you to interactively query models via bash:
+On the other hand, bash-interactive predictions allows you to interactively query models via bash. 
+Here, the input is expected to be a tab-separated string that is interpreted as the input in .tsv files.
 
 <ReactTermynal>
   <span data-ty="input">classy predict interactive sequence-sample</span>
-  <span data-ty="input" data-ty-prompt="Enter sequence text: ">I wish I had never bought these terrible headphones!</span>
+  <span data-ty="input" data-ty-prompt="Enter source text: ">I wish I had never bought these terrible headphones!</span>
   <span data-ty data-ty-start-delay="2000">  # prediction: negative</span>
-  <span data-ty data-ty-prompt="Enter sequence text: "></span>
+  <span data-ty data-ty-prompt="Enter source text: "></span>
 </ReactTermynal>
 
 <p />
