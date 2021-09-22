@@ -1,9 +1,8 @@
 import argparse
 import collections
 import itertools
-import random
 import re
-from typing import Union, Callable, List, Optional, Tuple
+from typing import Union, List, Optional, Tuple
 
 import streamlit as st
 import torch
@@ -23,44 +22,7 @@ from classy.data.data_drivers import (
 from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.scripts.model.predict import predict
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
-
-
-def get_random_color_generator() -> Callable[[], str]:
-
-    # colors taken from https://gist.githubusercontent.com/daniellevass/b0b8cfa773488e138037/raw/d2182c212a4132c0f3bb093fd0010395f927a219/android_material_design_colours.xml
-    # md_.*_200
-    default_colors = [
-        "#EF9A9A",
-        "#F48FB1",
-        "#CE93D8",
-        "#B39DDB",
-        "#9FA8DA",
-        "#90CAF9",
-        "#81D4fA",
-        "#80DEEA",
-        "#80CBC4",
-        "#A5D6A7",
-        "#C5E1A5",
-        "#E6EE9C",
-        "#FFF590",
-        "#FFE082",
-        "#FFCC80",
-        "#FFAB91",
-        "#BCAAA4",
-        "#EEEEEE",
-        "#B0BBC5",
-    ]
-    random.shuffle(default_colors)
-
-    colors = iter(default_colors)
-
-    def f():
-        try:
-            return next(colors)
-        except StopIteration:
-            return "#%06x" % random.randint(0x000000, 0xFFFFFF)
-
-    return f
+from classy.utils.streamlit import get_md_200_random_color_generator
 
 
 class TaskUI:
@@ -187,7 +149,7 @@ class SequenceTaskUI(TaskUI):
 class TokenTaskUI(TaskUI):
     def __init__(self, task: str, model_checkpoint_path: str):
         super().__init__(task, model_checkpoint_path)
-        self.color_generator = get_random_color_generator()
+        self.color_generator = get_md_200_random_color_generator()
         self.color_mapping = collections.defaultdict(lambda: self.color_generator())
 
     def render_task_in_sidebar(self):
