@@ -26,6 +26,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
     parser.add_argument("--no-shuffle", action="store_true")
     parser.add_argument("--fp16", action="store_true")
+    parser.add_argument("--vocabulary-dir", default=None)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -134,8 +135,13 @@ def main(args):
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
 
+    # change the underlying transformer model
     if args.transformer_model is not None:
         cmd.append(f"transformer_model={args.transformer_model}")
+
+    # precomputed vocabulary from the user
+    if args.vocabulary_dir is not None:
+        cmd.append(f"+data.vocabulary_dir={args.vocabulary_dir}")
 
     # append all user-provided configuration overrides
     cmd += args.config

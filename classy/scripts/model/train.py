@@ -14,7 +14,9 @@ def train(conf: omegaconf.DictConfig) -> None:
     pl.seed_everything(conf.training.seed)
 
     # data module declaration
-    pl_data_module: ClassyDataModule = hydra.utils.instantiate(conf.data.datamodule, _recursive_=False)
+    pl_data_module: ClassyDataModule = hydra.utils.instantiate(
+        conf.data.datamodule, external_vocabulary_path=getattr(conf.data, "vocabulary_dir", None), _recursive_=False
+    )
     pl_data_module.prepare_data()
 
     # main module declaration
@@ -42,10 +44,6 @@ def train(conf: omegaconf.DictConfig) -> None:
     for callback in conf.callbacks.callbacks:
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
-    # learning rate monitor
-    learning_rate_monitor = pl.callbacks.LearningRateMonitor(logging_interval="step")
-    callbacks_store.append(learning_rate_monitor)
-
     # logging
     logger = None
 
@@ -66,6 +64,10 @@ def train(conf: omegaconf.DictConfig) -> None:
 
         if conf.logging.wandb.run_id is None:
             conf.logging.wandb.run_id = logger.experiment.id
+
+        # learning rate monitor
+        learning_rate_monitor = pl.callbacks.LearningRateMonitor(logging_interval="step")
+        callbacks_store.append(learning_rate_monitor)
 
     # trainer
     if conf.training.resume_from is not None:

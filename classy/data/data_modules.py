@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional, Union, List, Dict
 
@@ -28,6 +29,7 @@ class ClassyDataModule(pl.LightningDataModule):
         test_split_size: Optional[float] = None,
         max_nontrain_split_size: Optional[int] = None,
         shuffle_dataset: bool = True,
+        external_vocabulary_path: Optional[str] = None,
     ):
         super().__init__()
         self.task = task
@@ -45,16 +47,28 @@ class ClassyDataModule(pl.LightningDataModule):
         self.max_nontrain_split_size = max_nontrain_split_size
         self.shuffle_dataset = shuffle_dataset
 
+        self.external_vocabulary_path = external_vocabulary_path
         self.vocabulary = None
 
+        # If the data directory exists this run is being resumed from a previous one.
+        # If the previous run stored some data we have to load them instead of recomputing
+        # the splits or the shuffling.
         if os.path.exists("data/"):
-            logger.info("Using data split from previous run")
-            self.dataset_path = "data/"
+            files_in_dir = os.listdir("data/")
+            if len(files_in_dir) > 1:  # the directory contains all the splits
+                logger.info("Using data split from previous run")
+                self.dataset_path = "data/"
+            else:  # the directory contains the shuffling of the training dataset
+                logger.info("Using the shuffled training dataset from previous run")
+                train_file_name = [f for f in files_in_dir if "train" in f][0]
+                self.train_path = os.path.join("data/", train_file_name)
+                self.dataset_path = dataset_path
         else:
             self.dataset_path = dataset_path
 
     def prepare_data(self) -> None:
 
+        # TODO: we should improve the flow of this code
         if os.path.isdir(self.dataset_path):
             dir_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
 
@@ -63,11 +77,13 @@ class ClassyDataModule(pl.LightningDataModule):
             self.file_extension = dir_files[0].split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
-            self.train_path = os.path.join(self.dataset_path, f"train.{self.file_extension}")
+            if self.train_path is None:  # does not belong to the train shuffling of a resume run
+                self.train_path = os.path.join(self.dataset_path, f"train.{self.file_extension}")
+
             self.validation_path = os.path.join(self.dataset_path, f"validation.{self.file_extension}")
             self.test_path = os.path.join(self.dataset_path, f"test.{self.file_extension}")
 
-            assert os.path.exists(self.train_path), f"Cannot find the training file 'train.{self.file_extension}'"
+            assert os.path.exists(self.train_path), f"Cannot find the training file '{self.train_path}'"
 
             if self.shuffle_dataset and not os.path.exists(f"data/train.shuffled.{self.file_extension}"):
                 # create data folder
@@ -141,6 +157,10 @@ class ClassyDataModule(pl.LightningDataModule):
         if os.path.exists("vocabulary/"):
             logger.info("Loading vocabulary from previous run")
             self.vocabulary = Vocabulary.from_folder("vocabulary/")
+        elif self.external_vocabulary_path is not None:
+            logging.info("Loading vocabulary from external passed directory")
+            self.vocabulary = Vocabulary.from_folder(self.external_vocabulary_path)
+            self.vocabulary.save("vocabulary")
         else:
             self.vocabulary = hydra.utils.instantiate(
                 self.train_dataset_conf,
