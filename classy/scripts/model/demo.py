@@ -1,5 +1,6 @@
 import argparse
 import itertools
+from pathlib import Path
 from typing import List, Union, Tuple
 
 import streamlit as st
@@ -13,18 +14,16 @@ from classy.utils.lightning import load_classy_module_from_checkpoint, load_pred
 def auto_infer_examples(
     task: str, model_checkpoint_path: str
 ) -> Tuple[str, List[Union[SentencePairSample, SequenceSample, TokensSample]]]:
-
-    try:
-        test_path = automatically_infer_test_path(model_checkpoint_path)
-        return "Examples from test set", list(
-            itertools.islice(get_data_driver(task, test_path.split(".")[-1]).read_from_path(test_path), 5)
+    experiment_folder = Path(model_checkpoint_path).parent.parent
+    if (experiment_folder / 'data' / 'examples-test.jsonl').exists():
+        return "Examples from test", list(
+            itertools.islice(get_data_driver(task, 'jsonl').read_from_path(str((experiment_folder / 'data' / 'examples-test.jsonl'))), 5)
         )
-    except ValueError:
-        pass
-
-    # todo try safe dumped option
-
-    raise ValueError("Could not find any examples")
+    else:
+        assert (experiment_folder / 'data' / 'examples-validation.jsonl').exists()
+        return "Examples from validation", list(
+            itertools.islice(get_data_driver(task, 'jsonl').read_from_path(str((experiment_folder / 'data' / 'examples-validation.jsonl'))), 5)
+        )
 
 
 def demo(model_checkpoint_path: str, cuda_device: int):

@@ -1,7 +1,7 @@
 import itertools
 import os
 from pathlib import Path
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, Tuple
 
 import hydra.utils
 import omegaconf
@@ -59,10 +59,10 @@ class ClassyDataModule(pl.LightningDataModule):
         else:
             self.dataset_path = dataset_path
 
-    def get_test_or_validation_examples(self, n: int):
+    def get_examples(self, n: int) -> Tuple[str, List]:
         source = self.test_path or self.validation_path
         assert source is not None
-        return list(itertools.islice(self.data_driver.read_from_path(source), n))
+        return 'test' if self.test_path is not None else 'validation', list(itertools.islice(self.data_driver.read_from_path(source), n))
 
     def prepare_data(self) -> None:
 

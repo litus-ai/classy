@@ -20,10 +20,11 @@ class SavingMixin:
         experiment_folder = Path(experiment_folder)
 
         # save examples
+        source, examples = data_module.get_examples(n=5)
         experiment_folder.joinpath("data").mkdir(exist_ok=True)
         get_data_driver(self.task, "jsonl").save(
-            data_module.get_test_or_validation_examples(n=5),
-            str(experiment_folder.joinpath("data").joinpath("examples.jsonl")),
+            examples,
+            str(experiment_folder.joinpath("data").joinpath(f"examples-{source}.jsonl")),
         )
 
         # move every paths into "./resources/" and overwrite the config

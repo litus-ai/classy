@@ -25,7 +25,7 @@ import networkx as nx
 import torch
 
 from classy.models.consec.dataset import ConsecSample
-from classy.models.consec.dependency_finder import DependencyFinder
+from classy.models.consec.dependency_finder import DependencyFinder, EmptyDependencyFinder
 from classy.utils.log import get_project_logger
 
 
@@ -89,8 +89,12 @@ class ConsecPredictionMixin(PredictionMixin):
 
             # convert TokensSample to ConsecSample
             dataset_conf["tokens_per_batch"] = token_batch_size
-            dataset = hydra.utils.instantiate(dataset_conf, samples=sample_group, vocabulary=self.vocabulary)
+            # todo code garbage
+            actual_dependency_finder = dataset_conf.pop('dependency_finder')
+            dataset = hydra.utils.instantiate(dataset_conf, dependency_finder=EmptyDependencyFinder(), samples=sample_group, vocabulary=self.vocabulary)
             consec_samples = list(dataset.consec_samples_iterator())
+            dataset_conf['dependency_finder'] = actual_dependency_finder
+            dataset = hydra.utils.instantiate(dataset_conf, samples=sample_group, vocabulary=self.vocabulary)
 
             # predict
             predicted_sample_group = self.predictor.predict(
