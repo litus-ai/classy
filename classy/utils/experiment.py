@@ -69,12 +69,12 @@ class Experiment:
         for config_file in self.directory.rglob(".hydra/config.yaml"):
             yield Run.from_hydra_config(hydra_config_path=config_file, experiment=self)
 
-    def iter_candidate_runs(self, prefix: Optional[str] = None):
+    def iter_candidate_runs(self, prefix: Optional[str] = None) -> Iterator["Run"]:
         valid_runs = filter(lambda r: r.has_checkpoints, self.iter_runs())
         if prefix is not None:
             valid_runs = filter(lambda r: prefix in str(r.relative_directory), valid_runs)
 
-        return [str(run.relative_directory) for run in valid_runs]
+        yield from valid_runs
 
     @classmethod
     def get_exp_dir(cls, exp_dir: Optional[Union[str, Path]] = None) -> Path:

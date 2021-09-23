@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 
 def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
-    hydra_config_path = "/".join(checkpoint_path.split("/")[:-2])
+    run_dir = Path(checkpoint_path).parent.parent
     # load hydra config
     conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
-    conf = OmegaConf.load(f"{hydra_config_path}/.hydra/{conf_file}".lstrip("/"))
+    conf_path = run_dir / ".hydra" / conf_file
+    conf = OmegaConf.load(conf_path)
     # return
     return conf
 

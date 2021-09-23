@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from argcomplete import FilesCompleter
 
-from classy.scripts.cli.utils import get_device, autocomplete_model_path
+from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
 
 
 def populate_parser(parser: ArgumentParser):
@@ -11,7 +11,9 @@ def populate_parser(parser: ArgumentParser):
 
     subcmd = parser.add_subparsers(dest="subcmd", required=True)
     interactive_parser = subcmd.add_parser("interactive")
-    interactive_parser.add_argument("model_path").completer = autocomplete_model_path
+    interactive_parser.add_argument(
+        "model_path", type=checkpoint_path_from_user_input
+    ).completer = autocomplete_model_path
     interactive_parser.add_argument("-d", "--device", default="gpu")
 
     file_parser = subcmd.add_parser("file")
