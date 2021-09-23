@@ -1,48 +1,9 @@
 import argparse
-from typing import List, Tuple, Generator, Dict, Union, Iterator
 
-import hydra.utils
 import torch
-from omegaconf import DictConfig
-from pytorch_lightning.utilities import move_data_to_device
-from torch.cuda.amp import autocast
-from torch.utils.data import DataLoader
-from tqdm import tqdm
 
-from classy.data.data_drivers import get_data_driver, TSV, SentencePairSample, SequenceSample, TokensSample
-from classy.pl_modules.base import ClassyPLModule
+from classy.data.data_drivers import get_data_driver, TSV
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
-
-
-def predict(
-    model: ClassyPLModule,
-    samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
-    dataset_conf: Union[Dict, DictConfig],
-    token_batch_size: int = 1024,
-    progress_bar: bool = False,
-) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:
-
-    # instantiate dataset
-    dataset_conf["tokens_per_batch"] = token_batch_size
-    dataset = hydra.utils.instantiate(dataset_conf, samples=samples, vocabulary=model.vocabulary)
-
-    # instantiate dataloader
-    dataloader = DataLoader(dataset, batch_size=None, num_workers=0)
-
-    iterator = dataloader
-    if progress_bar:
-        iterator = tqdm(iterator, desc="Predicting")
-
-    for batch in iterator:
-
-        # predict
-        with autocast(enabled=True):  # todo: always enabled?
-            with torch.no_grad():
-                batch = move_data_to_device(batch, model.device)
-                batch_out = model.predict(**batch)
-
-                for sample, prediction in batch_out:
-                    yield sample, prediction
 
 
 def interactive_main(
@@ -60,8 +21,7 @@ def interactive_main(
     while True:
         source = input("Enter source text: ").strip()
         _, prediction = next(
-            predict(
-                model,
+            model.predict(
                 data_driver.read([source]),
                 dataset_conf=dataset_conf,
             )
@@ -91,8 +51,7 @@ def file_main(
     data_driver = get_data_driver(model.task, input_extension)
 
     def it():
-        for source, prediction in predict(
-            model,
+        for source, prediction in model.predict(
             data_driver.read_from_path(input_path),
             token_batch_size=token_batch_size,
             dataset_conf=dataset_conf,

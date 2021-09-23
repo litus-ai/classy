@@ -12,5 +12,9 @@ fastapi==0.68.1
 uvicorn[standard]==0.15.0
 streamlit==0.88.0
 st-annotated-text==2.0.0
+# optional(?)
+wandb==0.12.2  # required for logging
+nltk==3.4.5  # required by esc
+networkx==2.5  # required by esc
 # black
 black==21.8b0

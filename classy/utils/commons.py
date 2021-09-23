@@ -1,3 +1,4 @@
+import itertools
 import subprocess
 
 import numpy as np
@@ -32,6 +33,15 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
+
+
+def grouper(iterable, n):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk
 
 
 def add_noise_to_value(value: int, noise_param: float):

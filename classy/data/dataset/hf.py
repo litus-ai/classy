@@ -1,4 +1,4 @@
-from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List
+from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List, Union
 
 import torch
 from transformers import AutoTokenizer, BatchEncoding
@@ -14,7 +14,7 @@ logger = get_project_logger(__name__)
 class HFBaseDataset(BaseDataset):
     def __init__(
         self,
-        samples_iterator: Callable[[], Iterator[SequenceSample]],
+        samples_iterator: Callable[[], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]],
         vocabulary: Vocabulary,
         transformer_model: str,
         tokens_per_batch: int,
@@ -96,8 +96,9 @@ class HFTokenDataset(HFBaseDataset):
             }
             if token_sample.labels is not None:
                 elem_dict["labels"] = torch.tensor(
-                    [self.vocabulary.get_idx(k="labels", elem=label) for label in token_sample.labels]
+                    [self.vocabulary.get_idx(k="labels", elem=self.labels[idx]) for idx in token_sample.target]
                 )
+
             elem_dict["samples"] = token_sample
             yield elem_dict
 

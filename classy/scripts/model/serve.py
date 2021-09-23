@@ -6,7 +6,6 @@ import uvicorn
 from fastapi import FastAPI, Body
 from pydantic import BaseModel, Field
 
-from classy.scripts.model.predict import predict as backend_predict
 from classy.data.data_drivers import (
     SEQUENCE,
     TOKEN,
@@ -137,7 +136,7 @@ def serve(
 
         output_samples = []
 
-        for source, prediction in backend_predict(
+        for source, prediction in model.predict(
             model=model,
             samples=[input_sample.unmarshal() for input_sample in input_samples],
             dataset_conf=dataset_conf,

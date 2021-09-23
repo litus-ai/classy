@@ -1,19 +1,16 @@
 import itertools
 from pathlib import Path
-from typing import Iterator, Tuple, Union, List, Dict, Any
+from typing import Tuple, Union, List, Dict, Any
 
 import hydra
 import pytorch_lightning as pl
 import torchmetrics
 from datasets import load_metric
-from hydra._internal import instantiate
 from omegaconf import DictConfig
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, TSV, TOKEN
+from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, TOKEN
 from classy.pl_modules.base import ClassyPLModule
-from classy.scripts.model.predict import predict
 from classy.utils.log import get_project_logger
-
 
 logger = get_project_logger(__name__)
 
@@ -127,8 +124,7 @@ class PredictionPLCallback(pl.Callback):
                     lines_it = itertools.islice(lines_it, limit)
 
                 predicted_samples = list(
-                    predict(
-                        model,
+                    model.predict(
                         data_driver.read(lines_it),
                         dataset_conf=self.prediction_dataset_conf,
                         token_batch_size=token_batch_size,

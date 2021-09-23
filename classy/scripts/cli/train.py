@@ -44,13 +44,20 @@ def parse_args():
 
 def _main_mock(cfg):
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
+    import hydra
+    from classy.scripts.model.train import fix_paths, train
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path)
+    )
     train(cfg)
 
 
 def _main_resume(model_dir: str):
+
+    import hydra
 
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
@@ -63,7 +70,7 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
+    from classy.scripts.model.train import fix_paths, train
 
     os.chdir(model_dir)
 
@@ -71,7 +78,11 @@ def _main_resume(model_dir: str):
     cfg = load_training_conf_from_checkpoint(last_ckpt_path, post_trainer_init=True)
     cfg.training.resume_from = last_ckpt_path
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path)
+    )
     train(cfg)
 
 

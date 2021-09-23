@@ -1,6 +1,5 @@
 import collections
-
-from typing import NamedTuple, Optional, Union, List, Iterator, Tuple, Dict
+from typing import NamedTuple, Optional
 
 import hydra
 import omegaconf
@@ -9,15 +8,14 @@ import torch
 import torchmetrics
 
 from classy.data.data_drivers import (
-    SentencePairSample,
-    SequenceSample,
-    TokensSample,
-    QASample,
     SEQUENCE,
     TOKEN,
     SENTENCE_PAIR,
     QA,
 )
+from classy.pl_modules.mixins.prediction import PredictionMixin
+from classy.pl_modules.mixins.saving import SavingMixin
+from classy.pl_modules.mixins.task_ui import SequenceTaskUIMixin, TokenTaskUIMixin, SentencePairTaskUIMixin, TaskUIMixin
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -28,7 +26,7 @@ class ClassificationOutput(NamedTuple):
     loss: Optional[torch.Tensor] = None
 
 
-class ClassyPLModule(pl.LightningModule):
+class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
     def __init__(self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
@@ -37,18 +35,6 @@ class ClassyPLModule(pl.LightningModule):
 
     @property
     def task(self) -> str:
-        raise NotImplementedError
-
-    def predict(
-        self, *args, **kwargs
-    ) -> List[
-        Iterator[
-            Tuple[
-                Union[SentencePairSample, SequenceSample, TokensSample, QASample],
-                Union[str, List[str], Tuple[int, int]],
-            ]
-        ]
-    ]:
         raise NotImplementedError
 
     def configure_optimizers(self):
@@ -60,25 +46,25 @@ class ClassyPLModule(pl.LightningModule):
         metric(v)
 
 
-class TaskMixin:
+class TaskMixin(TaskUIMixin):
     @property
     def task(self) -> str:
         raise NotImplementedError
 
 
-class SequenceTask(TaskMixin):
+class SequenceTask(SequenceTaskUIMixin, TaskMixin):
     @property
     def task(self) -> str:
         return SEQUENCE
 
 
-class TokensTask(TaskMixin):
+class TokensTask(TokenTaskUIMixin, TaskMixin):
     @property
     def task(self) -> str:
         return TOKEN
 
 
-class SentencePairTask(TaskMixin):
+class SentencePairTask(SentencePairTaskUIMixin, TaskMixin):
     @property
     def task(self) -> str:
         return SENTENCE_PAIR

@@ -58,7 +58,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
             loss=model_output.loss,
         )
 
-    def predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
@@ -201,7 +201,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             loss=self.criterion(logits.view(-1, logits.shape[-1]), labels.view(-1)) if labels is not None else None,
         )
 
-    def predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
@@ -339,7 +339,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         self.log("test_end_accuracy", self.end_accuracy_metric, prog_bar=True)
         self.log("test_accuracy", self.accuracy_metric, prog_bar=True)
 
-    def predict(
+    def batch_predict(
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
@@ -348,7 +348,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         token_type_ids: Optional[torch.Tensor] = None,
         *args,
         **kwargs,
-    ) -> List[Iterator[Tuple[QASample, Tuple[int, int]]]]:
+    ) -> Iterator[Tuple[QASample, Tuple[int, int]]]:
         classification_output = self.forward(input_ids, attention_mask, token_type_ids)
         predictions = classification_output.predictions.to("cpu")
         for i in range(len(samples)):

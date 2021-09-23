@@ -1,0 +1,79 @@
+# commons
+text_encoding_strategy: relative-positions
+use_definition_start: True
+
+# sense inventory
+sense_inventory:
+  _target_: classy.models.consec.sense_inventories.WordNetSenseInventory
+  wn_candidates_path: data/wsd/wordnet.txt
+
+dependency_finder:
+  _target_: classy.models.consec.dependency_finder.PPMIPolysemyDependencyFinder
+  max_dependencies: 9
+  sense_inventory: ${data.sense_inventory}
+  single_counter_path: data/pmi/lemma_counter.txt
+  pair_counter_path: data/pmi/pairs_counter.txt
+  energy: 0.7
+  normalize_ppmi: True
+  minimum_ppmi: 0.1
+
+# tokenizer
+tokenizer:
+  _target_: classy.models.consec.tokenizer.DeBERTaTokenizer
+  transformer_model: ${transformer_model}
+  add_prefix_space: True
+  target_marker: ["<d>", "</d>"]
+  context_definitions_token: 'CONTEXT_DEFS'
+  context_markers:
+     number: 1
+     pattern: ['DEF_SEP', 'DEF_END']
+  optimize_relative_positions: True
+  enforce_symmetry: False
+
+# actual datamodule
+datamodule:
+  _target_: 'classy.data.data_modules.ClassyDataModule'
+  task: ${task}
+  dataset_path: null  # set via kwargs
+  train_dataset:
+    _target_: "classy.models.consec.dataset.ConsecDataset.from_file"
+    tokenizer: ${data.tokenizer}
+    sense_inventory: ${data.sense_inventory}
+    dependency_finder: ${data.dependency_finder}
+    sentence_window: 2  # one prev one next
+    randomize_sentence_window: True
+    use_definition_start: ${data.use_definition_start}
+    remove_multilabel_instances: True
+    shuffle_definitions: True
+    randomize_dependencies: True
+    text_encoding_strategy: ${data.text_encoding_strategy}
+    is_doc_based: True
+    min_length: 5
+    max_length: 500
+    tokens_per_batch: 1536
+    max_batch_size: 128
+    section_size: 45_000
+    prebatch: True
+    materialize: False
+    for_inference: False
+  validation_dataset:
+    _target_: "classy.models.consec.dataset.ConsecDataset.from_file"
+    tokenizer: ${data.tokenizer}
+    sense_inventory: ${data.sense_inventory}
+    dependency_finder: ${data.dependency_finder}
+    sentence_window: 2  # one prev one next
+    randomize_sentence_window: False
+    use_definition_start: ${data.use_definition_start}
+    remove_multilabel_instances: False
+    shuffle_definitions: False
+    randomize_dependencies: False
+    text_encoding_strategy: ${data.text_encoding_strategy}
+    is_doc_based: True
+    min_length: 5
+    max_length: 500
+    tokens_per_batch: 4096
+    max_batch_size: 1024
+    section_size: -1
+    prebatch: True
+    materialize: True
+    for_inference: True

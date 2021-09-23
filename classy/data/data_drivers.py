@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Iterator, Generator, Tuple
+from typing import List, Union, Optional, Iterator, Generator, Tuple, Dict, Any
 import json
 
 from classy.utils.log import get_project_logger
@@ -7,6 +7,25 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
+    def __init__(self, **kwargs):
+        super().__setattr__("_d", {})
+        self._d = kwargs
+
+    def __getattr__(self, item):
+        if item in self._d:
+            return self._d[item]
+        else:
+            return None
+
+    def __setattr__(self, key, value):
+        if key in self._d:
+            self._d[key] = value
+        else:
+            super().__setattr__(key, value)
+
+    def get_additional_attributes(self) -> Dict[Any, Any]:
+        return self._d
+
     def get_current_classification(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
         raise NotImplementedError
 
@@ -18,7 +37,8 @@ class ClassyStruct:
 
 
 class SentencePairSample(ClassyStruct):
-    def __init__(self, sentence1: str, sentence2: str, label: Optional[str] = None):
+    def __init__(self, sentence1: str, sentence2: str, label: Optional[str] = None, **kwargs):
+        super().__init__(**kwargs)
         self.sentence1 = sentence1
         self.sentence2 = sentence2
         self.label = label
@@ -39,7 +59,8 @@ class SentencePairSample(ClassyStruct):
 
 
 class SequenceSample(ClassyStruct):
-    def __init__(self, sequence: str, label: Optional[str] = None):
+    def __init__(self, sequence: str, label: Optional[str] = None, **kwargs):
+        super().__init__(**kwargs)
         self.sequence = sequence
         self.label = label
 
@@ -49,7 +70,7 @@ class SequenceSample(ClassyStruct):
     def update_classification(self, classification_result: str):
         self.label = classification_result
 
-    def pretty_print(self, classification_result: Optional[str]) -> str:
+    def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sequence: {self.sequence}"]
         if self.label is not None:
             parts.append(f"\t# label: {self.label}")
@@ -59,9 +80,14 @@ class SequenceSample(ClassyStruct):
 
 
 class TokensSample(ClassyStruct):
-    def __init__(self, tokens: List[str], labels: Optional[List[str]] = None):
+    def __init__(
+        self, tokens: List[str], labels: Optional[List[str]] = None, target: Optional[List[int]] = None, **kwargs
+    ):
+        super().__init__(**kwargs)
         self.tokens = tokens
         self.labels = labels
+        self.target = target if target is not None else list(range(len(tokens)))
+        self.was_target_provided = target is not None
 
     def get_current_classification(self) -> Optional[List[str]]:
         return self.labels
@@ -69,7 +95,7 @@ class TokensSample(ClassyStruct):
     def update_classification(self, classification_result: List[str]):
         self.labels = classification_result
 
-    def pretty_print(self, classification_result: Optional[List[str]]) -> str:
+    def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
         if self.labels is not None:
             parts.append(f'\t# labels: {" ".join(self.labels)}')
@@ -79,7 +105,10 @@ class TokensSample(ClassyStruct):
 
 
 class QASample(ClassyStruct):
-    def __init__(self, context: str, question: str, char_start: Optional[int] = None, char_end: Optional[int] = None):
+    def __init__(
+        self, context: str, question: str, char_start: Optional[int] = None, char_end: Optional[int] = None, **kwargs
+    ):
+        super().__init__(**kwargs)
         self.context = context
         self.question = question
         self.char_start = char_start
@@ -202,6 +231,7 @@ class JSONLSentencePairDataDriver(SentencePairDataDriver):
                         {
                             "sentence1": sample.sentence1,
                             "sentence2": sample.sentence2,
+                            **sample.get_additional_attributes(),
                             "label": sample.label,
                         }
                     )
@@ -235,7 +265,12 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
     def save(self, samples: Iterator[SequenceSample], path: str):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(json.dumps({"sequence": sample.sequence, "label": sample.label}) + "\n")
+                f.write(
+                    json.dumps(
+                        {"sequence": sample.sequence, **sample.get_additional_attributes(), "label": sample.label}
+                    )
+                    + "\n"
+                )
 
 
 class TSVTokensDataDriver(TokensDataDriver):
@@ -265,22 +300,35 @@ class JSONLTokensDataDriver(TokensDataDriver):
         for line in lines:
             sample = TokensSample(**json.loads(line))
             if sample.labels is not None:
-                assert len(sample.tokens) == len(
-                    sample.labels
-                ), f"Token Classification requires as many token as labels: found {len(sample.tokens)} tokens != {len(sample.labels)} labels at line {line}"
+                if not sample.was_target_provided:
+                    assert len(sample.tokens) == len(
+                        sample.labels
+                    ), f"Token Classification requires as many tokens as labels (please specify a target list if you need otherwise): found {len(sample.tokens)} tokens != {len(sample.labels)} labels at line {line}"
+                else:
+                    assert len(sample.target) == len(
+                        sample.labels
+                    ), f"Token Classification requires as many targets as labels: found {len(sample.target)} targets != {len(sample.labels)} labels at line {line}"
             yield TokensSample(**json.loads(line))
 
     def save(self, samples: Iterator[TokensSample], path: str):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(json.dumps({"tokens": sample.tokens, "labels": sample.labels}) + "\n")
+                d = {
+                    "tokens": sample.tokens,
+                    "target": list(sample.target),
+                    **sample.get_additional_attributes(),
+                    "labels": sample.labels,
+                }
+                if sample.was_target_provided:
+                    d["target"] = list(sample.target)
+                f.write(json.dumps(d) + "\n")
 
 
 class TSVQADataDriver(QADataDriver):
     def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
         for i, line in enumerate(lines):
             parts = line.split("\t")
-            assert len(parts) in [2, 4,], (
+            assert len(parts) in [2, 4], (
                 f"TSVQADataDriver expects 2 (context, question) or 4 (context, question, answer_start, answer_end) "
                 f"fields, but {len(parts)} were found at line {i}: {line}"
             )
@@ -314,6 +362,7 @@ class JSONLQADataDriver(QADataDriver):
                         {
                             "question": sample.question,
                             "context": sample.context,
+                            **sample.get_additional_attributes(),
                             "answer_start": sample.char_start,
                             "answer_end": sample.char_end,
                         }

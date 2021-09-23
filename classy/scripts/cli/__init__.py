@@ -30,10 +30,7 @@ def get_commands():
             parser=demo_parser,
             main=demo_main,
         ),
-        describe=dict(
-            parser=describe_parser,
-            main=describe_main
-        ),
+        describe=dict(parser=describe_parser, main=describe_main),
     )
 
 
