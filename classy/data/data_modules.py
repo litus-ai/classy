@@ -109,7 +109,7 @@ class ClassyDataModule(pl.LightningDataModule):
                     "data/",  # hydra takes care of placing this folder within the appropriate folder
                     validation_split_size=self.validation_split_size,
                     data_max_split=self.max_nontrain_split_size,
-                    shuffle=(not self.shuffle_dataset),
+                    shuffle=False,
                 )
                 logger.info(f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'")
 
@@ -145,7 +145,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 validation_split_size=self.validation_split_size,
                 test_split_size=self.test_split_size,
                 data_max_split=self.max_nontrain_split_size,
-                shuffle=(not self.shuffle_dataset),
+                shuffle=False,
             )
 
             logger.info(

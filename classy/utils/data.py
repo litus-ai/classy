@@ -40,6 +40,7 @@ def shuffle_and_store_dataset(
     data_driver.save(samples, output_path)
 
 
+# TODO: we have to modify this script in order to support the split without loading the whole dataset in memory
 def split_dataset(
     dataset_path: str,
     data_driver: DataDriver,
