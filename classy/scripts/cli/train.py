@@ -156,10 +156,3 @@ def test(cmd):
 
 if __name__ == "__main__":
     main(parse_args())
-    # test("train.py sentence-pair data/glue/mrpc")
-    # test("train.py token data/mrpc -m small -n mrpc-small")
-    # test(
-    #     "train.py token data/mrpc -m small "
-    #     "-c training.pl_trainer.val_check_interval=1.0 data.pl_module.batch_size=16"
-    # )
-    # test("train.py sentence data/s")
