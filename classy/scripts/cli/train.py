@@ -17,7 +17,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--profile", type=str, default=None)
-    parser.add_argument("--transformer_model", type=str, default=None)
+    parser.add_argument("--transformer-model", type=str, default=None)
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
