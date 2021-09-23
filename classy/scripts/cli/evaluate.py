@@ -3,11 +3,11 @@ from pathlib import Path
 
 from argcomplete import FilesCompleter
 
-from classy.scripts.cli.utils import get_device, autocomplete_model_path
+from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
 
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_path").completer = autocomplete_model_path
+    parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
     parser.add_argument("file_path", nargs="?", default=None).completer = FilesCompleter()
     parser.add_argument("-d", "--device", default="gpu")
     parser.add_argument("-o", "--output-path", default=None, required=False).completer = FilesCompleter()
