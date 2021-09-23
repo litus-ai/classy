@@ -42,6 +42,10 @@ def train(conf: omegaconf.DictConfig) -> None:
     for callback in conf.callbacks.callbacks:
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
+    # learning rate monitor
+    learning_rate_monitor = pl.callbacks.LearningRateMonitor(logging_interval="step")
+    callbacks_store.append(learning_rate_monitor)
+
     # logging
     logger = None
 
