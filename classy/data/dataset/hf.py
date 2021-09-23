@@ -128,8 +128,10 @@ class HFSentencePairDataset(HFSequenceDataset):
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
                 "attention_mask": tokenization_output["attention_mask"].squeeze(),
-                "token_type_ids": tokenization_output["token_type_ids"].squeeze(),
             }
+
+            if "token_type_ids" in tokenization_output:
+                elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze()
 
             if sequence_sample.label is not None:
                 elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]

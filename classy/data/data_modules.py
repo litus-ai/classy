@@ -69,11 +69,11 @@ class ClassyDataModule(pl.LightningDataModule):
 
             assert os.path.exists(self.train_path), f"Cannot find the training file 'train.{self.file_extension}'"
 
-            if self.shuffle_dataset and not os.path.exists("data/train.shuffled.{self.file_extension}"):
+            if self.shuffle_dataset and not os.path.exists(f"data/train.shuffled.{self.file_extension}"):
                 # create data folder
                 create_data_dir()
                 # shuffle input dataset
-                shuffled_dataset_path = "data/train.shuffled.{self.file_extension}"
+                shuffled_dataset_path = f"data/train.shuffled.{self.file_extension}"
                 logger.info(
                     f"Shuffling training dataset. The shuffled dataset "
                     f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
@@ -106,7 +106,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 # create data folder
                 create_data_dir()
                 # shuffle training dataset
-                shuffled_dataset_path = "data/dataset.shuffled.{self.file_extension}"
+                shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
                 logger.info(
                     f"Shuffling input dataset. The shuffled dataset "
                     f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
