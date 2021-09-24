@@ -43,7 +43,7 @@ the model in the experiment folder.
 
 :::
 
-## Config Groups
+## A Minimal Example
 
 However, if you were to specify every aspect of your experiment in a single .yaml file, it would eventually become gigantic
 and pretty much useless. To avoid this, we use Hydra *config groups*, which is just a fancy name to say that the 
@@ -84,13 +84,13 @@ defaults:
 
 ## Full Structure
 
-As a matter of fact, there are quite a few details more than *data/*, *model/* and *train/* that you would want to specify.
+As a matter of fact, there are quite a few details more *data/*, *model/* and *train/* that you would want to specify.
 Thus, the actual structure of the config groups is the following:
 
 ```bash
 $ tree -L 1 configurations/
 configurations/
-├── callbacks/          # used to define callbacks that are executed during training (at precise steps, like every validation epoch)
+├── callbacks/          # used to define callbacks that are executed during training (at precise steps, like every end of validation)
 ├── data/               # data-related configuration (e.g. PyTorch Dataset)
 ├── model/              # model-related configuration (e.g. architecture)
 ├── prediction/         # data-configuration to be used at prediction time

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-sidebar_label: CLI
+title: CLI
 ---
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -13,8 +13,6 @@ import Col from 'react-bootstrap/Col';
 import Modal from 'react-bootstrap/Modal';
 
 import ReactTermynal from '../../../src/components/termynal';
-
-# CLI
 
 Once task identification and data organization are complete, your "have-to-code" section is over, and you can use classy
 CLI to handle the rest, covering every step during the lifecycle of a ML model:

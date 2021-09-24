@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Changing Config
 ---
 
-Most .yaml configs used in classy simply define the parameters that are passed at construction time to actual Python
+Most .yaml configs used in classy simply define the parametrs that are passed at construction time to actual Python
 objects. For instance, the following config:
 
 ```yaml title="configurations/model/token.yaml"
@@ -46,7 +46,7 @@ By default, the instantiation process is recursive. You can change this behavior
 ## Changing values
 
 With this in mind, you can see how easy it is to change things. For instance, if you want to change the fine-tuning behavior
-as in the previous Section, you just need to change the .yaml file:
+as in the previous Section, you just need to change the yaml file:
 
 ```yaml title="configurations/model/token.yaml"
 _target_: 'classy.pl_modules.hf.HFTokensPLModule'
@@ -60,15 +60,14 @@ and this will reflect automatically on your instantiated HFTokensPLModule.
 :::tip
 
 Having to enter the configuration folder, open the yaml file, edit the desired field and start the run every time
-can be a bit of a nuisance, especially if you then have to revert your changes if you get worse results. 
-To avoid this, for simple modifications, you can use the *-c* option of classy train, to provide Hydra CLI overrides on params. For
+can be a bit of a nuisance. Rather, you can use the *-c* option of classy train, to provide Hydra CLI overrides on params. For
 instance, to change the fine tuning strategy, ```classy train ... -c model.fine_tune=False```.
 
 :::
 
 ## Writing a new config
 
-Similarly, if you want to write a new config, perhaps specifying a new super-cool model, you just need to specify what to instantiate
+Similarly, if you want to write a new config, perhaps specifying a new super-cool model, you just need to specify what 
 (the *\_target\_* param) and how (the other params) to instantiate it:
 
 ```yaml title="configurations/model/model-new.yaml"
@@ -82,7 +81,7 @@ param2: value2
 
 :::caution
 
-This section involves fairly complex concepts. Feel free to skip it if you are not planning on extensively
+This section involves fairly complex concepts. Feel free to skip it for the moment if you are not planning on extensively
 editing classy configs for the moment.
 
 :::
@@ -139,4 +138,4 @@ manually passing the additional parameter via kwargs to *hydra.utils.instantiate
 :::
 
 Second, classy disables recursive instantiation on models, meaning that *optim_conf* will not be instantiated automatically.
-Rather, *\_\_init\_\_* will receive a DictConfig object and will have to take care itself of instantiating it.
+Rather, *\_\_init\_\_* will receive a DictConfig object and will have to take care itself of instating it.

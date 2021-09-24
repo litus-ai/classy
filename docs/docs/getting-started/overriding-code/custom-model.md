@@ -21,7 +21,7 @@ For instance, considering Sequence Classification, you would need to implement t
 
 ```python
 # subclass your task and ClassyPLModule
-class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
+class CustomModel(SequenceTask, ClassyPLModule):
     
     def __init__(
         self,
@@ -63,7 +63,7 @@ class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
 Practically, imagine you want to build a Sequence Classification model on top of a Huggingface Transformer model.
 
 ```python title="classy.pl_modules.custom_model.py"
-class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
+class CustomModel(SequenceTask, ClassyPLModule):
     pass 
 ```
 
@@ -111,7 +111,7 @@ There's nothing really special about this forward. ClassificationOutput is just 
 probabilities, predictions and loss. The only important thing is the signature: it **must match** with the batches your 
 dataset emits (here, we are using *classy.data.dataset.hf.HFSequenceDataset*).
 
-Then, there's the batch predict method, which wraps your forward method to emit classified *SequenceSample*-s:
+Then, there's the batch predict method, which wraps your forward method to emit classified SequenceSample-s:
 
 ```python
 def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
@@ -146,13 +146,15 @@ Finally, you have to implement lightning hooks:
 The only missing component is writing the configuration file:
 
 ```yaml title="model/sequence-custom.yaml"
-_target_: 'classy.pl_modules.custom_model.MyCustomClassyPLModule'
+_target_: 'classy.pl_modules.custom_model.CustomModel'
 transformer_model: ${transformer_model}
 optim_conf:
-  _target_: classy.optim.factories.TorchFactory
-  optimizer:
-    _target_: torch.optim.Adam
-    lr: 1e-5
+  _target_: classy.optim.factories.RAdamFactory
+  lr: 1e-5
+  weight_decay: 0.01
+  no_decay_params:
+    - bias
+    - LayerNorm.weight
 ```
 
 and start the training:
