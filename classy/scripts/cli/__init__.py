@@ -32,7 +32,7 @@ def get_commands():
         ),
         describe=dict(
             parser=describe_parser,
-            main=describe_main
+            main=describe_main,
         ),
     )
 
