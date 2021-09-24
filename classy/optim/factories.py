@@ -117,7 +117,8 @@ class AdafactorWithWarmupFactory(WeightDecayOptimizer):
             relative_step=False,
             scale_parameter=False,
         )
-        return optimizer
+        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
 
 
 class AdamWWithWarmupFactory(WeightDecayOptimizer):
