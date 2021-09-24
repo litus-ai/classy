@@ -1,6 +1,4 @@
 ---
-sidebar_position: 1
-sidebar_label: Span Encoding
+sidebar_position: 2
+title: Span Encoding
 ---
-
-# Span Encoding
