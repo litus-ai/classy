@@ -33,6 +33,7 @@ class ClassyDataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.task = task
+        self.dataset_path = dataset_path
         self.file_extension = None
         self.data_driver = None
 
@@ -55,37 +56,53 @@ class ClassyDataModule(pl.LightningDataModule):
         # the splits or the shuffling.
         if os.path.exists("data/"):
             files_in_dir = os.listdir("data/")
-            if len(files_in_dir) > 1:  # the directory contains all the splits
-                logger.info("Using data split from previous run")
-                self.dataset_path = "data/"
-            else:  # the directory contains the shuffling of the training dataset
-                logger.info("Using the shuffled training dataset from previous run")
-                train_file_name = [f for f in files_in_dir if "train" in f][0]
-                self.train_path = os.path.join("data/", train_file_name)
-                self.dataset_path = dataset_path
-        else:
-            self.dataset_path = dataset_path
+
+            # check if the previous run stored a train file
+            possible_train_paths = [fp for fp in files_in_dir if "train" in fp]
+            if len(possible_train_paths) == 1:
+                self.train_path = possible_train_paths[0]
+
+            # check if the previous run stored a validation file
+            possible_validation_paths = [fp for fp in files_in_dir if "validation" in fp]
+            if len(possible_validation_paths) == 1:
+                self.validation_path = possible_validation_paths[0]
+
+            # check if the previous run stored a test file
+            possible_test_paths = [fp for fp in files_in_dir if "test" in fp]
+            if len(possible_test_paths) == 1:
+                self.test_path = possible_test_paths[0]
 
     def prepare_data(self) -> None:
 
         # TODO: we should improve the flow of this code
-        if os.path.isdir(self.dataset_path):
-            dir_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
+        if self.train_path is not None and self.validation_path is not None and self.test_path is not None:
+            logger.info("Using train dev and test splits produced by the run being resumed")
+        elif os.path.isdir(self.dataset_path):  # the user provided a directory containing the datasets
+            dir_train_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
 
-            assert len(dir_files) == 1, "Found more than one file with 'train' in their name"  # todo: expand
+            assert len(dir_train_files) == 1, "Found more than one file with 'train' in their name"  # todo: expand
 
-            self.file_extension = dir_files[0].split(".")[-1]
+            train_file = dir_train_files[0]
+            self.file_extension = train_file.split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
             if self.train_path is None:  # does not belong to the train shuffling of a resume run
                 self.train_path = os.path.join(self.dataset_path, f"train.{self.file_extension}")
 
-            self.validation_path = os.path.join(self.dataset_path, f"validation.{self.file_extension}")
+            if self.validation_path is None:
+                self.validation_path = os.path.join(self.dataset_path, f"validation.{self.file_extension}")
+
             self.test_path = os.path.join(self.dataset_path, f"test.{self.file_extension}")
 
             assert os.path.exists(self.train_path), f"Cannot find the training file '{self.train_path}'"
 
-            if self.shuffle_dataset and not os.path.exists(f"data/train.shuffled.{self.file_extension}"):
+            must_shuffle_dataset = (
+                self.shuffle_dataset
+                and not os.path.exists(f"data/train.shuffled.{self.file_extension}")
+                and not os.path.exists(f"data/dataset.shuffled.{self.file_extension}")
+            )
+
+            if must_shuffle_dataset:
                 # create data folder
                 create_data_dir()
                 # shuffle input dataset
@@ -103,6 +120,13 @@ class ClassyDataModule(pl.LightningDataModule):
                     f"(split_size: {1 - self.validation_split_size} / {self.validation_split_size})"
                     f"enforcing a maximum of {self.max_nontrain_split_size} instances on validation dataset"
                 )
+
+                # if we must split the shuffled train dataset in two, then we must change its name
+                if must_shuffle_dataset:
+                    shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
+                    os.rename(self.train_path, shuffled_dataset_path)
+                    self.train_path = shuffled_dataset_path  # will be modified in the next lines of code
+
                 self.train_path, self.validation_path, _ = split_dataset(
                     self.train_path,
                     self.data_driver,
@@ -113,8 +137,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 )
                 logger.info(f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'")
 
-        else:
-
+        else:  # the user provided just one file that must be split in train, dev and test
             self.file_extension = self.dataset_path.split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
