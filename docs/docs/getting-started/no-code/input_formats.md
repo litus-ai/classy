@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-sidebar_label: Input Formats
+title: Input Formats
 ---
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -14,8 +14,6 @@ import Modal from 'react-bootstrap/Modal';
 
 import ReactTermynal from '../../../src/components/termynal';
 
-# Input Formats
-
 Once you have realized which of these tasks you are dealing with, you have to organize your data. Currently, for each of 
 these tasks, classy supports two possible input formats:
 * .tsv
@@ -28,7 +26,7 @@ and ".jsonl" for .jsonl files.
 
 :::
 
-### .tsv
+## .tsv
 
 With the .tsv format, files are expected to be standard .tsv files. Their structure varies depending on the selected task:
 
@@ -45,7 +43,7 @@ I love these headphones !   <tab>   PRON VERB DET NOUN PUNCT
 * Sentence-Pair Classification: three columns per line, first input text, second input text and label associated with this pair
 * Token Classification: two columns per line, **space-separated** list of input tokens and **space-separated** list of corresponding labels
 
-### .jsonl
+## .jsonl
 
 With the .jsonl format, each line contains a JSON object that represents a sample, whose type depends on the task under 
 consideration:
