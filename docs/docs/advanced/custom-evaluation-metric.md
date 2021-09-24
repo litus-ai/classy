@@ -1,6 +1,5 @@
 ---
-sidebar_position: 2
-sidebar_label: Custom Evaluation Metric
+sidebar_position: 1
+title: Custom Evaluation Metric
 ---
 
-# Custom Evaluation Metric
