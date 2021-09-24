@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-sidebar_label: Tasks
+title: Tasks
 ---
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -13,8 +13,6 @@ import Col from 'react-bootstrap/Col';
 import Modal from 'react-bootstrap/Modal';
 
 import ReactTermynal from '../../../src/components/termynal';
-
-# Tasks
 
 In its simplest flavor, classy lets **you focus entirely on your data** and automatically handles the development
 of full-fledged models for you, with no ML knowledge or additional line of code required. To achieve this, classy only 

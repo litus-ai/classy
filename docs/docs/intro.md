@@ -1,11 +1,10 @@
 ---
+title: classy
 sidebar_position: 1
 sidebar_label: Introduction
 ---
 
 import ReactTermynal from '../src/components/termynal';
-
-# classy
 
 <div style={{textAlign: "center"}}>
   <em>Your data, our code, the hardware you prefer.</em>
@@ -36,9 +35,7 @@ Its key features include:
 * **modular**: if you have special needs, whether simple (e.g. support a different input format) or advanced (e.g. use a different optimizer),
   classy is extremely modular and offers straightforward hooks to cover every aspect of your desired use case
 
-## Quick Start Guide
-
-### Installation
+## Installation
 
 <ReactTermynal>
   <span data-ty="input">pip install classy-ml</span>
@@ -46,7 +43,7 @@ Its key features include:
   <span data-ty>Successfully installed classy-ml</span>
 </ReactTermynal>
 
-### Example Walkthrough
+## Example Walkthrough
 
 You have the following data at disposal:
 
