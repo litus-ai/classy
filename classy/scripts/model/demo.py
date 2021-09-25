@@ -1,5 +1,6 @@
 import argparse
 import itertools
+import time
 from pathlib import Path
 from typing import List, Union, Tuple
 
@@ -46,6 +47,9 @@ def demo(model_checkpoint_path: str, cuda_device: int):
         dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
         inference_message, inferred_examples = auto_infer_examples(model.task, model_checkpoint_path)
 
+        # mock call to load resources
+        next(model.predict(samples=[inferred_examples[0]], dataset_conf=dataset_conf), None)
+
         return model, dataset_conf, (inference_message, inferred_examples)
 
     model, dataset_conf, (inference_message, inferred_examples) = load_resources()
@@ -68,11 +72,13 @@ def demo(model_checkpoint_path: str, cuda_device: int):
     if sample is not None:
 
         # predict
+        start = time.perf_counter()
         _, prediction = next(model.predict(samples=[sample], dataset_conf=dataset_conf))
+        end = time.perf_counter()
         sample.update_classification(prediction)
 
         # render output
-        model.render(sample)
+        model.render(sample, time=end - start)
 
 
 def main():
