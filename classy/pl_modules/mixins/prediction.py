@@ -44,7 +44,7 @@ class PredictionMixin:
 
         for batch in iterator:
             with autocast(enabled=True):  # todo: always enabled?
-                with torch.no_grad():
+                with torch.inference_mode():
                     batch = move_data_to_device(batch, self.device)
                     batch_out = self.batch_predict(**batch)
                     for sample, prediction in batch_out:

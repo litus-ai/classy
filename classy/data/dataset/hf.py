@@ -12,6 +12,8 @@ logger = get_project_logger(__name__)
 
 
 class HFBaseDataset(BaseDataset):
+    _shared_state = {}
+
     def __init__(
         self,
         samples_iterator: Callable[[], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]],
@@ -26,7 +28,9 @@ class HFBaseDataset(BaseDataset):
         max_length: int,
         for_inference: bool,
     ):
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True, add_prefix_space=True)
+        if 'tokenizer' not in self._shared_state:
+            self._shared_state['tokenizer'] = AutoTokenizer.from_pretrained(transformer_model, use_fast=True, add_prefix_space=True)
+        self.tokenizer = self._shared_state['tokenizer']
         super().__init__(
             samples_iterator=samples_iterator,
             vocabulary=vocabulary,

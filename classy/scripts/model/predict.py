@@ -17,6 +17,9 @@ def interactive_main(
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
 
+    # mock call to load resources
+    next(model.predict(samples=[], dataset_conf=dataset_conf), None)
+
     while True:
         _, prediction = next(
             model.predict(

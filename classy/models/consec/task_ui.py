@@ -1,9 +1,10 @@
 import collections
+import html
 import re
 from typing import List, Optional, Tuple
 
 import streamlit as st
-from annotated_text import annotated_text
+from annotated_text import annotated_text, annotation
 
 from classy.data.data_drivers import TokensSample
 from classy.pl_modules.mixins.task_ui import TokenTaskUIMixin
@@ -53,9 +54,29 @@ class ConSeCTaskUIMixin(TokenTaskUIMixin):
             )
         return None
 
-    def render(self, predicted_sample: TokensSample):
+    def render(self, predicted_sample: TokensSample, time: float):
+
         tokens = predicted_sample.tokens
         labels = [None] * len(tokens)
         for t, l in zip(predicted_sample.target, predicted_sample.labels):
             labels[t] = l
-        annotated_text(*[(f" {t} " if l is None else (t, l, self.color_mapping[l])) for t, l in zip(tokens, labels)])
+
+        annotated_html_components = []
+        for t, l in zip(tokens, labels):
+            if l is None:
+                annotated_html_components.append(str(html.escape(f" {t} ")))
+            else:
+                annotated_html_components.append(str(annotation(*(t, l, self.color_mapping[l]))))
+
+        st.markdown(
+            "\n".join(
+                [
+                    "<div>",
+                    *annotated_html_components,
+                    "<p></p>"
+                    f'<div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>'
+                    "</div>",
+                ]
+            ),
+            unsafe_allow_html=True,
+        )

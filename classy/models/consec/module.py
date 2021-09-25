@@ -1,16 +1,15 @@
-from typing import Optional, List, Iterator, Tuple, Union, Any
+from typing import Optional, List, Iterator, Tuple
 
 import hydra
 import omegaconf
 import torch
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample
 from classy.models.consec.dataset import ConsecSample
 from classy.models.consec.prediction import ConsecPredictionMixin
-from classy.models.consec.task_ui import ConSeCTaskUIMixin
-from classy.pl_modules.base import QATask, ClassyPLModule, TokensTask
 from classy.models.consec.sense_extractors import SenseExtractor
-from classy.utils.vocabulary import Vocabulary
+from classy.models.consec.task_ui import ConSeCTaskUIMixin
+from classy.pl_modules.base import ClassyPLModule
+from classy.pl_modules.mixins.task import TokensTask
 
 
 class ConsecPLModule(ConSeCTaskUIMixin, ConsecPredictionMixin, TokensTask, ClassyPLModule):

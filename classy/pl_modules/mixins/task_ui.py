@@ -1,16 +1,17 @@
 import collections
+import html
 import itertools
 import re
 from typing import Union, List, Optional, Tuple
 
 import streamlit as st
-from annotated_text import annotated_text
+from annotated_text import annotated_text, annotation
 
 from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    get_data_driver,
+    get_data_driver, QASample,
 )
 from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.utils.streamlit import get_md_200_random_color_generator
@@ -21,11 +22,11 @@ class TaskUIMixin:
         raise NotImplementedError
 
     def read_input(
-        self, inference_message: str, inferred_examples: List[Union[SentencePairSample, SequenceSample, TokensSample]]
-    ) -> Optional[Union[SentencePairSample, SequenceSample, TokensSample]]:
+        self, inference_message: str, inferred_examples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample]]
+    ) -> Optional[Union[SentencePairSample, SequenceSample, TokensSample, QASample]]:
         raise NotImplementedError
 
-    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample]):
+    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample, QASample], time: float):
         raise NotImplementedError
 
 
@@ -41,20 +42,6 @@ class SentencePairTaskUIMixin(TaskUIMixin):
                 * **input**: Pair of input sentences
             """
         )
-
-    def get_examples(self) -> Tuple[List[Tuple[str, str]], bool]:
-        inferred_examples = self.auto_infer_examples()
-        if inferred_examples is not None:
-            return [(ie.sentence1, ie.sentence2) for ie in inferred_examples], True
-        else:
-            # todo these examples are not ideal for pretty much any sentence-pair task, suggestions?
-            return [
-                ("Classy is really nice for token classification!", "Classy is a product of SunglassesAI."),
-                (
-                    "It focuses on classification tasks at token- and sequence level.",
-                    "Ease of usability is our primary objective.",
-                ),
-            ], False
 
     def read_input(
         self, inference_message: str, inferred_examples: List[SentencePairSample]
@@ -78,8 +65,19 @@ class SentencePairTaskUIMixin(TaskUIMixin):
             return SentencePairSample(sentence1=sentence1, sentence2=sentence2)
         return None
 
-    def render(self, predicted_sample: SentencePairSample):
-        st.success(f"Model classified input with label: {predicted_sample.label}")
+    def render(self, predicted_sample: SentencePairSample, time: float):
+        st.markdown(
+            f"""
+            <div>
+                <div class="stAlert">
+                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                </div>
+                <p></p>
+                <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 class SequenceTaskUIMixin(TaskUIMixin):
@@ -99,8 +97,19 @@ class SequenceTaskUIMixin(TaskUIMixin):
             return SequenceSample(sequence=input_text)
         return None
 
-    def render(self, predicted_sample: SequenceSample):
-        st.success(f"Model classified input with label: {predicted_sample.label}")
+    def render(self, predicted_sample: SequenceSample, time: float):
+        st.markdown(
+            f"""
+            <div>
+                <div class="stAlert">
+                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                </div>
+                <p></p>
+                <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 class TokenTaskUIMixin(TaskUIMixin):
@@ -112,9 +121,9 @@ class TokenTaskUIMixin(TaskUIMixin):
         st.sidebar.header("Task")
         st.sidebar.markdown(
             f"""
-            * **task**: Token Classification
-            * **input**: Space-separeted list of tokens
-        """
+                * **task**: Token Classification
+                * **input**: Space-separeted list of tokens
+            """
         )
 
     def read_input(self, inference_message: str, inferred_examples: List[TokensSample]) -> Optional[TokensSample]:
@@ -126,7 +135,7 @@ class TokenTaskUIMixin(TaskUIMixin):
             return TokensSample(tokens=input_text.split(" "))
         return None
 
-    def render(self, predicted_sample: TokensSample):
+    def render(self, predicted_sample: TokensSample, time: float):
 
         tokens, labels = predicted_sample.tokens, predicted_sample.labels
 
@@ -143,4 +152,78 @@ class TokenTaskUIMixin(TaskUIMixin):
 
         assert len(tokens) == len(labels)
 
-        annotated_text(*[(f" {t} " if l is None else (t, l, self.color_mapping[l])) for t, l in zip(tokens, labels)])
+        annotated_html_components = []
+        for t, l in zip(tokens, labels):
+            if l is None:
+                annotated_html_components.append(str(html.escape(f" {t} ")))
+            else:
+                annotated_html_components.append(str(annotation(*(t, l, self.color_mapping[l]))))
+
+        st.markdown(
+            "\n".join(
+                [
+                    "<div>",
+                    *annotated_html_components,
+                    "<p></p>"
+                    f'<div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>'
+                    "</div>",
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
+
+
+class QATaskUIMixin(TaskUIMixin):
+
+    truncate_k = 40
+
+    def render_task_in_sidebar(self):
+        st.sidebar.header("Task")
+        st.sidebar.markdown(
+            f"""
+                * **task**: QA
+                * **input**: context and question
+            """
+        )
+
+    def read_input(self, inference_message: str, inferred_examples: List[QASample]) -> Optional[QASample]:
+        # tuple can't be used for selection boxes, let's use incipts
+        option2example = {}
+        for ie in inferred_examples:
+            option2example[f"({ie.question[: self.truncate_k]}, {ie.context[: self.truncate_k]})"] = (ie.question, ie.context)
+        # build selection box
+        selection_message = (
+                inference_message.rstrip(".")
+                + f". Examples are in the format (<question>, <context>); for space constraints, only the first {self.truncate_k} characters of both are shown."
+        )
+        selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
+        # build input area
+        context = st.text_area("Question", option2example[selected_option][0])
+        question = st.text_area("Context", option2example[selected_option][1])
+        if st.button("Classify", key="classify"):
+            return QASample(context=context, question=question)
+        return None
+
+    def render(self, predicted_sample: QASample, time: float):
+        annotated_html_components = [
+            str(html.escape(f"{predicted_sample.context[: predicted_sample.char_start]} ")),
+            str(
+                annotation(
+                    f"{predicted_sample.context[predicted_sample.char_start: predicted_sample.char_end]}",
+                    background="#f1e740",
+                )
+            ),
+            str(html.escape(f"{predicted_sample.context[predicted_sample.char_end:]} ")),
+        ]
+        st.markdown(
+            "\n".join(
+                [
+                    "<div>",
+                    *annotated_html_components,
+                    "<p></p>"
+                    f'<div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>'
+                    "</div>",
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
