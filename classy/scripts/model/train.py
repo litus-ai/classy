@@ -81,6 +81,13 @@ def train(conf: omegaconf.DictConfig) -> None:
             **conf.device,
         )
 
+    # saving post trainer-init conf
+    with open(".hydra/config_post_trainer_init.yaml", "w") as f:
+        f.write(OmegaConf.to_yaml(conf))
+
+    # module fit
+    trainer.fit(pl_module, datamodule=pl_data_module)
+
     pl_module.save_resources_and_update_config(
         conf=conf,
         working_folder=hydra.utils.get_original_cwd(),
@@ -88,18 +95,13 @@ def train(conf: omegaconf.DictConfig) -> None:
         data_module=pl_data_module,
     )
 
-    # saving update conf
+    # saving update confs
     with open(".hydra/config.yaml", "w") as f:
         f.write(OmegaConf.to_yaml(conf))
 
-    # saving post trainer-init conf
+    # todo should i write also this one?
     with open(".hydra/config_post_trainer_init.yaml", "w") as f:
         f.write(OmegaConf.to_yaml(conf))
-
-    exit(0)
-
-    # module fit
-    trainer.fit(pl_module, datamodule=pl_data_module)
 
 
 @hydra.main(config_path="../../../configurations/", config_name="root")

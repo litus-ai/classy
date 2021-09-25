@@ -13,7 +13,8 @@ from classy.data.data_drivers import (
     get_data_driver,
     JSONL,
 )
-from classy.pl_modules.mixins.task_ui import TaskUIMixin, SequenceTaskUIMixin, TokenTaskUIMixin, SentencePairTaskUIMixin
+from classy.pl_modules.mixins.task_ui import TaskUIMixin, SequenceTaskUIMixin, TokenTaskUIMixin, \
+    SentencePairTaskUIMixin, QATaskUIMixin
 
 
 class TaskMixin(TaskUIMixin):
@@ -66,7 +67,7 @@ class SentencePairTask(SentencePairTaskUIMixin, TaskMixin):
         return SENTENCE_PAIR
 
 
-class QATask(TaskMixin):
+class QATask(QATaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(QA, JSONL)
 
     def read_input_from_bash(self) -> QASample:

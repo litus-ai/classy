@@ -198,8 +198,8 @@ class QATaskUIMixin(TaskUIMixin):
         )
         selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
         # build input area
-        context = st.text_area("Question", option2example[selected_option][0])
-        question = st.text_area("Context", option2example[selected_option][1])
+        question = st.text_area("Question", option2example[selected_option][0])
+        context = st.text_area("Context", option2example[selected_option][1])
         if st.button("Classify", key="classify"):
             return QASample(context=context, question=question)
         return None
@@ -215,6 +215,7 @@ class QATaskUIMixin(TaskUIMixin):
             ),
             str(html.escape(f"{predicted_sample.context[predicted_sample.char_end:]} ")),
         ]
+        print(annotated_html_components)
         st.markdown(
             "\n".join(
                 [
