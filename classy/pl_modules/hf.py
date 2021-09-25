@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, List, Iterator, Tuple, Union, Dict
+from typing import Optional, List, Iterator, Tuple, Union, Dict, NamedTuple
 
 import omegaconf
 import torch
@@ -8,15 +8,22 @@ from torch import nn
 from transformers import AutoConfig, AutoModel, AutoModelForSequenceClassification, AutoModelForQuestionAnswering
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
-from classy.pl_modules.base import (
-    ClassificationOutput,
-    ClassyPLModule,
+from classy.pl_modules.base import ClassyPLModule
+from classy.utils.vocabulary import Vocabulary
+
+from classy.pl_modules.mixins.task import (
     TokensTask,
     SequenceTask,
     SentencePairTask,
     QATask,
 )
-from classy.utils.vocabulary import Vocabulary
+
+
+class ClassificationOutput(NamedTuple):
+    logits: torch.Tensor
+    probabilities: torch.Tensor
+    predictions: torch.Tensor
+    loss: Optional[torch.Tensor] = None
 
 
 # subclassed and mixed with both SequenceTask and SentencePairTask, as the underlying logic is identical (see below)
@@ -58,7 +65,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
             loss=model_output.loss,
         )
 
-    def predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
@@ -172,10 +179,13 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
     ) -> ClassificationOutput:
 
         # encode bpes and merge them (sum strategy)
-        encoded_bpes = torch.stack(
-            self.encoder(input_ids, attention_mask)[2][-self.use_last_n_layers :],
-            dim=-1,
-        ).sum(-1)
+        if self.use_last_n_layers > 1:
+            encoded_bpes = torch.stack(
+                self.encoder(input_ids, attention_mask)[2][-self.use_last_n_layers :],
+                dim=-1,
+            ).sum(-1)
+        else:
+            encoded_bpes = self.encoder(input_ids, attention_mask)[0]
 
         # bpe -> token (first strategy)
         encoded_tokens = torch.zeros(
@@ -198,7 +208,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             loss=self.criterion(logits.view(-1, logits.shape[-1]), labels.view(-1)) if labels is not None else None,
         )
 
-    def predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
@@ -336,7 +346,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         self.log("test_end_accuracy", self.end_accuracy_metric, prog_bar=True)
         self.log("test_accuracy", self.accuracy_metric, prog_bar=True)
 
-    def predict(
+    def batch_predict(
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
@@ -345,7 +355,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         token_type_ids: Optional[torch.Tensor] = None,
         *args,
         **kwargs,
-    ) -> List[Iterator[Tuple[QASample, Tuple[int, int]]]]:
+    ) -> Iterator[Tuple[QASample, Tuple[int, int]]]:
         classification_output = self.forward(input_ids, attention_mask, token_type_ids)
         predictions = classification_output.predictions.to("cpu")
         for i in range(len(samples)):

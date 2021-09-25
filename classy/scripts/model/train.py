@@ -1,3 +1,5 @@
+import os
+
 import omegaconf
 import hydra
 
@@ -5,7 +7,7 @@ import pytorch_lightning as pl
 from omegaconf import OmegaConf
 
 from classy.data.data_modules import ClassyDataModule
-from classy.utils.hydra import fix
+from classy.utils.hydra import fix_paths
 
 
 def train(conf: omegaconf.DictConfig) -> None:
@@ -79,9 +81,22 @@ def train(conf: omegaconf.DictConfig) -> None:
             **conf.device,
         )
 
+    pl_module.save_resources_and_update_config(
+        conf=conf,
+        working_folder=hydra.utils.get_original_cwd(),
+        experiment_folder=os.getcwd(),
+        data_module=pl_data_module,
+    )
+
+    # saving update conf
+    with open(".hydra/config.yaml", "w") as f:
+        f.write(OmegaConf.to_yaml(conf))
+
     # saving post trainer-init conf
     with open(".hydra/config_post_trainer_init.yaml", "w") as f:
         f.write(OmegaConf.to_yaml(conf))
+
+    exit(0)
 
     # module fit
     trainer.fit(pl_module, datamodule=pl_data_module)
@@ -89,7 +104,11 @@ def train(conf: omegaconf.DictConfig) -> None:
 
 @hydra.main(config_path="../../../configurations/", config_name="root")
 def main(conf: omegaconf.DictConfig):
-    fix(conf)
+    fix_paths(
+        conf,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+    )
     train(conf)
 
 

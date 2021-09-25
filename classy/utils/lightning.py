@@ -1,10 +1,13 @@
 from pathlib import Path
 from typing import Dict
 
+import omegaconf
+
 import hydra
 from omegaconf import OmegaConf, DictConfig
 
 from classy.pl_modules.base import ClassyPLModule
+from classy.utils.hydra import fix_paths
 from classy.utils.vocabulary import Vocabulary
 
 import logging
@@ -14,10 +17,16 @@ logger = logging.getLogger(__name__)
 
 def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
-    hydra_config_path = "/".join(checkpoint_path.split("/")[:-2])
+    experiment_folder = Path(checkpoint_path).parent.parent
     # load hydra config
     conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
-    conf = OmegaConf.load(f"{hydra_config_path}/.hydra/{conf_file}".lstrip("/"))
+    conf = OmegaConf.load(f"{experiment_folder}/.hydra/{conf_file}".lstrip("/"))
+    # fix paths
+    fix_paths(
+        conf,
+        check_fn=lambda path: experiment_folder.joinpath(path).exists(),
+        fix_fn=lambda path: str(experiment_folder.joinpath(path)),
+    )
     # return
     return conf
 
@@ -62,7 +71,7 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     )
 
 
-def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
+def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> DictConfig:
     """
     Load a dataset conf from a checkpoint path only, inferring it from the dumped hydra conf
 
@@ -74,4 +83,4 @@ def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> Dict:
 
     """
     conf = load_training_conf_from_checkpoint(checkpoint_path)
-    return dict(conf.prediction.dataset)
+    return conf.prediction.dataset

@@ -3,7 +3,7 @@ project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}
 
-transformer_model: "bert-large-cased"
+transformer_model: "microsoft/deberta-large"
 
 hydra:
   # customize working dir
@@ -20,9 +20,11 @@ hydra:
 
 # defaults
 defaults:
-  - callbacks: conll2003
-  - data: token-hf
+  - callbacks: consec
+  - data: consec
   - device: cuda
-  - model: conll2003-bert
-  - prediction: token-hf
-  - training: conll2003-bert
+  - model: consec
+  - prediction: consec
+  - training: consec
+  - logging: default
+  - _self_

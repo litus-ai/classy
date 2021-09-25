@@ -36,7 +36,9 @@ Its key features include:
 * **modular**: if you have special needs, whether simple (e.g. support a different input format) or advanced (e.g. use a different optimizer),
   classy is extremely modular and offers straightforward hooks to cover every aspect of your desired use case
 
-## Installation
+## Quick Start Guide
+
+### Installation
 
 <ReactTermynal>
   <span data-ty="input">pip install classy-ml</span>
@@ -44,7 +46,7 @@ Its key features include:
   <span data-ty>Successfully installed classy-ml</span>
 </ReactTermynal>
 
-## Example Walkthrough
+### Example Walkthrough
 
 You have the following data at disposal:
 
@@ -81,10 +83,10 @@ dump_data_on_tsv(corpus, output_file)
 This is the only part where some coding is required. However, note that it need not be Python code 
 (if you are an *AWK* fan, feel free to use it).
 
-**Step 2**: Train a model
+**Step 2**: Train a model, named *sequence-example*
 
 <ReactTermynal>
-  <span data-ty="input">classy train sequence data/output.tsv</span>
+  <span data-ty="input">classy train sequence data/output.tsv -n sequence-example</span>
   <span data-ty="progress"></span>
   <span data-ty>Training completed</span>
 </ReactTermynal>
@@ -98,10 +100,10 @@ organizing data, that classy expects you to do.
 
 :::
 
-**Step 3.a**: Present a demo of a model
+**Step 3.a**: Present a demo of *sequence-example*
 
 <ReactTermynal>
-  <span data-ty="input">classy demo experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
+  <span data-ty="input">classy demo sequence-example</span>
   <span data-ty data-ty-start-delay="2000">Demo up and running at http://0.0.0.0:8000</span>
 </ReactTermynal>
 
@@ -111,10 +113,10 @@ Now you can check out out the demo!
 
 ![Classy Demo](/img/intro/demo.png)
 
-**Step 3.b**: Expose via REST API
+**Step 3.b**: Expose *sequence-example* via REST API
 
 <ReactTermynal>
-  <span data-ty="input">classy serve experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
+  <span data-ty="input">classy serve sequence-example</span>
   <span data-ty data-ty-start-delay="2000">REST API up and running at http://0.0.0.0:8000</span>
   <span data-ty>Checkout the OpenAPI docs at http://0.0.0.0:8000/docs</span>
   <span data-ty="input">curl -X 'POST' 'http://localhost:8000/' -H 'accept: application/json' -H 'Content-Type: application/json' -d '[{'{'}"sequence": "I wish I had never bought these terrible headphones!"{'}'}]'</span>
@@ -127,41 +129,16 @@ We also automatically generate the OpenAPI documentation page!
 
 ![Classy Serve Docs](/img/intro/serve-docs.png)
 
-**Step 3.c**: Bash-interactive predict
-
-<ReactTermynal>
-  <span data-ty="input">classy predict interactive experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
-  <span data-ty="input" data-ty-prompt="Enter source text: ">I wish I had never bought these terrible headphones!</span>
-  <span data-ty data-ty-start-delay="2000">  # prediction: negative</span>
-  <span data-ty data-ty-prompt="Enter source text: "></span>
-</ReactTermynal>
-
-<p />
-
-**Step 3.d**: Predict every review stored in a target file
+**Step 3.c**: Use *sequence-example* every review stored in a target file
 
 <ReactTermynal>
   <span data-ty="input">cat target.tsv | head -1</span>
   <span data-ty>I wish I had never bought these terrible headphones!</span>
-  <span data-ty="input">classy predict file experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt target.tsv -o target.out.tsv</span>
+  <span data-ty="input">classy predict file sequence-example target.tsv -o target.out.tsv</span>
   <span data-ty="progress"></span>
   <span data-ty>Prediction complete</span>
   <span data-ty="input">cat target.out.tsv | head -1</span>
   <span data-ty>I wish I had never bought these terrible headphones!    negative</span>
-</ReactTermynal>
-
-<p />
-
-**Step 3.e**: Evaluate your model
-
-<ReactTermynal>
-  <span data-ty="input">classy evaluate experiments/sequence-bert/2021-09-08/12-11-57/checkpoints/best.ckpt</span>
-  <span data-ty="progress"></span>
-  <span data-ty># accuracy: 0.9</span>
-  <span data-ty># classification metrics:</span>
-  <span data-ty>...</span>
-  <span data-ty>    # f1: 0.9</span>
-  <span data-ty>...</span>
 </ReactTermynal>
 
 <p />

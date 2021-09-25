@@ -13,7 +13,6 @@ from sklearn.metrics import (
 from sklearn.utils.multiclass import unique_labels
 
 from classy.data.data_drivers import get_data_driver, SEQUENCE, SENTENCE_PAIR, TOKEN, QA
-from classy.scripts.model.predict import predict as backend_predict
 from classy.utils.commons import flatten
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 
@@ -88,7 +87,7 @@ def evaluate(
 
     # predict
     predicted_samples = list(
-        backend_predict(
+        model.predict(
             model=model,
             samples=data_driver.read_from_path(input_path),
             dataset_conf=dataset_conf,

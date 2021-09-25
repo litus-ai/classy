@@ -1,0 +1,16 @@
+# @package _global_
+
+# global params
+transformer_model: distilbert-base-cased
+
+# MODEL PARAMS
+model:
+  optim_conf:
+    _target_: classy.optim.factories.AdafactorWithWarmupFactory
+    lr: 1e-5
+    warmup_steps: 5000
+    total_steps: ${training.pl_trainer.max_steps}
+    weight_decay: 0.01
+    no_decay_params:
+      - bias
+      - LayerNorm.weight

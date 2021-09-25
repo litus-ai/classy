@@ -1,9 +1,5 @@
-import os
 from argparse import ArgumentParser
 from pathlib import Path
-
-from classy.scripts.cli.utils import get_device
-from classy.utils.lightning import load_training_conf_from_checkpoint
 
 
 def populate_parser(parser: ArgumentParser):
@@ -30,6 +26,7 @@ def parse_args():
 
 
 def automatically_infer_test_path(model_path: str) -> str:
+    from classy.utils.lightning import load_training_conf_from_checkpoint
 
     checkpoint_path = Path(model_path)
     exp_split_data_folder = checkpoint_path.parent.parent.joinpath("data")
@@ -54,6 +51,7 @@ def automatically_infer_test_path(model_path: str) -> str:
 def main(args):
     # import here to avoid importing torch before it's actually needed
     from classy.scripts.model.evaluate import evaluate
+    from classy.scripts.cli.utils import get_device
 
     # input_path: if provided, use default one
     # otherwise, try to infer its positions

@@ -7,6 +7,7 @@ def get_commands():
     from classy.scripts.cli.evaluate import get_parser as evaluate_parser, main as evaluate_main
     from classy.scripts.cli.serve import get_parser as serve_parser, main as serve_main
     from classy.scripts.cli.demo import get_parser as demo_parser, main as demo_main
+    from classy.scripts.cli.describe import get_parser as describe_parser, main as describe_main
 
     return dict(
         train=dict(
@@ -29,6 +30,7 @@ def get_commands():
             parser=demo_parser,
             main=demo_main,
         ),
+        describe=dict(parser=describe_parser, main=describe_main),
     )
 
 

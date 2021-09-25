@@ -1,9 +1,10 @@
+import itertools
 import subprocess
 
 import numpy as np
 import socket
 
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple
 
 from classy.utils.log import get_project_logger
 
@@ -32,6 +33,20 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
+
+
+def grouper(iterable, n):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk
+
+
+def split_by_first(text: str, split: str) -> Tuple[str, str]:
+    split_idx = text.index(split)
+    return text[:split_idx], text[split_idx + len(split) :]
 
 
 def add_noise_to_value(value: int, noise_param: float):

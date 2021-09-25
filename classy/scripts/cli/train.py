@@ -16,7 +16,8 @@ def populate_parser(parser: ArgumentParser):
     # TODO: add help?
     parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
     parser.add_argument("dataset", type=Path)
-    parser.add_argument("-m", "--model-name", default="bert")
+    parser.add_argument("--profile", type=str, default=None)
+    parser.add_argument("--transformer-model", type=str, default=None)
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
@@ -43,13 +44,20 @@ def parse_args():
 
 def _main_mock(cfg):
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
+    import hydra
+    from classy.scripts.model.train import fix_paths, train
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+    )
     train(cfg)
 
 
 def _main_resume(model_dir: str):
+
+    import hydra
 
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
@@ -62,7 +70,7 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
+    from classy.scripts.model.train import fix_paths, train
 
     os.chdir(model_dir)
 
@@ -70,7 +78,11 @@ def _main_resume(model_dir: str):
     cfg = load_training_conf_from_checkpoint(last_ckpt_path, post_trainer_init=True)
     cfg.training.resume_from = last_ckpt_path
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+    )
     train(cfg)
 
 
@@ -85,9 +97,12 @@ def main(args):
     if args.root is not None:
         config_name = args.root
     else:
-        config_name = f"{args.task}-{args.model_name}"
+        config_name = args.task
 
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
+
+    if args.profile is not None:
+        cmd.append(f"+profiles={args.profile}")
 
     # choose device
     device = get_device(args.device)
@@ -129,6 +144,9 @@ def main(args):
             project, experiment = args.wandb.split("@")
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
+
+    if args.transformer_model is not None:
+        cmd.append(f"transformer_model={args.transformer_model}")
 
     # append all user-provided configuration overrides
     cmd += args.config

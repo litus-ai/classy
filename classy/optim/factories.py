@@ -1,8 +1,12 @@
+from abc import ABC
 from typing import List, Optional
 
 import hydra
 import torch
+import transformers
 from omegaconf import DictConfig
+from torch.optim import Adagrad
+from transformers import AdamW
 
 from classy.optim.optimizers.radam import RAdam
 
@@ -39,15 +43,12 @@ class TorchFactory(Factory):
         return hydra.utils.instantiate(self.optimizer, params=module.parameters())
 
 
-class RAdamWithDecayFactory(Factory):
-    """Factory for RAdam optimizer."""
-
-    def __init__(self, lr: float, weight_decay: float, no_decay_params: Optional[List[str]]):
-        self.lr = lr
+class WeightDecayOptimizer(Factory, ABC):
+    def __init__(self, weight_decay: float, no_decay_params: Optional[List[str]]):
         self.weight_decay = weight_decay
         self.no_decay_params = no_decay_params
 
-    def __call__(self, module: torch.nn.Module):
+    def group_params(self, module: torch.nn.Module) -> list:
 
         if self.no_decay_params is not None:
 
@@ -68,6 +69,89 @@ class RAdamWithDecayFactory(Factory):
 
             optimizer_grouped_parameters = [{"params": module.parameters(), "weight_decay": self.weight_decay}]
 
-        optimizer = RAdam(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
+        return optimizer_grouped_parameters
 
+
+class AdagradWithWarmupFactory(WeightDecayOptimizer):
+    """
+    Factory for Adagrad optimizer with warmup learning rate scheduler
+    reference paper for Adagrad: https://jmlr.org/papers/v12/duchi11a.html
+    """
+
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = Adagrad(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
+        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+
+
+class AdafactorWithWarmupFactory(WeightDecayOptimizer):
+    """
+    Factory for AdaFactor optimizer with warmup learning rate scheduler
+    reference paper for Adafactor: https://arxiv.org/abs/1804.04235
+    """
+
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = transformers.Adafactor(
+            optimizer_grouped_parameters,
+            lr=self.lr,
+            weight_decay=self.weight_decay,
+            warmup_init=False,
+            relative_step=False,
+            scale_parameter=False,
+        )
+        return optimizer
+
+
+class AdamWWithWarmupFactory(WeightDecayOptimizer):
+    """
+    Factory for AdamW optimizer with warmup learning rate scheduler
+    reference paper for AdamW: https://arxiv.org/abs/1711.05101
+    """
+
+    def __init__(
+        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = AdamW(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
+        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
+        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+
+
+class RAdamFactory(WeightDecayOptimizer):
+    """
+    Factory for RAdam optimizer
+    reference paper for RAdam: https://arxiv.org/abs/1908.03265
+    """
+
+    def __init__(self, lr: float, weight_decay: float, no_decay_params: Optional[List[str]]):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = RAdam(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
         return optimizer
