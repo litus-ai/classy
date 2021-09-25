@@ -4,7 +4,7 @@ import subprocess
 import numpy as np
 import socket
 
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple
 
 from classy.utils.log import get_project_logger
 
@@ -42,6 +42,11 @@ def grouper(iterable, n):
         if not chunk:
             return
         yield chunk
+
+
+def split_by_first(text: str, split: str) -> Tuple[str, str]:
+    split_idx = text.index(split)
+    return text[:split_idx], text[split_idx + len(split) :]
 
 
 def add_noise_to_value(value: int, noise_param: float):

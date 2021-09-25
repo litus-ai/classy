@@ -1,5 +1,6 @@
-from typing import List, Union, Optional, Iterator, Generator, Tuple, Dict, Any
+import functools
 import json
+from typing import List, Union, Optional, Iterator, Generator, Tuple, Dict, Any
 
 from classy.utils.log import get_project_logger
 
@@ -147,7 +148,7 @@ class QASample(ClassyStruct):
 class DataDriver:
     def read_from_path(
         self, path: str
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample], None, None]:
         def r():
             with open(path) as f:
                 for line in f:
@@ -157,12 +158,12 @@ class DataDriver:
 
     def read(
         self, lines: Iterator[str]
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample], None, None]:
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample], None, None]:
         raise NotImplementedError
 
     def save(
         self,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample]],
         path: str,
     ):
         raise NotImplementedError
@@ -393,6 +394,7 @@ READERS_DICT = {
 }
 
 
+@functools.lru_cache(maxsize=1_000)
 def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
     reader_identifier = (task_type, file_extension)
     if reader_identifier not in READERS_DICT:

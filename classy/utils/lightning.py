@@ -25,7 +25,7 @@ def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: 
     fix_paths(
         conf,
         check_fn=lambda path: experiment_folder.joinpath(path).exists(),
-        fix_fn=lambda path: str(experiment_folder.joinpath(path))
+        fix_fn=lambda path: str(experiment_folder.joinpath(path)),
     )
     # return
     return conf

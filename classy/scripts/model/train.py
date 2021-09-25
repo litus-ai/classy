@@ -85,7 +85,7 @@ def train(conf: omegaconf.DictConfig) -> None:
         conf=conf,
         working_folder=hydra.utils.get_original_cwd(),
         experiment_folder=os.getcwd(),
-        data_module=pl_data_module
+        data_module=pl_data_module,
     )
 
     # saving update conf
@@ -107,7 +107,7 @@ def main(conf: omegaconf.DictConfig):
     fix_paths(
         conf,
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path)
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
     train(conf)
 

@@ -62,7 +62,9 @@ class ClassyDataModule(pl.LightningDataModule):
     def get_examples(self, n: int) -> Tuple[str, List]:
         source = self.test_path or self.validation_path
         assert source is not None
-        return 'test' if self.test_path is not None else 'validation', list(itertools.islice(self.data_driver.read_from_path(source), n))
+        return "test" if self.test_path is not None else "validation", list(
+            itertools.islice(self.data_driver.read_from_path(source), n)
+        )
 
     def prepare_data(self) -> None:
 

@@ -50,7 +50,7 @@ def _main_mock(cfg):
     fix_paths(
         cfg,
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path)
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
     train(cfg)
 
@@ -81,7 +81,7 @@ def _main_resume(model_dir: str):
     fix_paths(
         cfg,
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path)
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
     train(cfg)
 

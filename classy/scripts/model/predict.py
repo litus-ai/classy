@@ -2,7 +2,7 @@ import argparse
 
 import torch
 
-from classy.data.data_drivers import get_data_driver, TSV
+from classy.data.data_drivers import get_data_driver
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 
 
@@ -16,13 +16,11 @@ def interactive_main(
     model.freeze()
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    data_driver = get_data_driver(model.task, TSV)
 
     while True:
-        source = input("Enter source text: ").strip()
         _, prediction = next(
             model.predict(
-                data_driver.read([source]),
+                [model.read_input_from_bash()],
                 dataset_conf=dataset_conf,
             )
         )
