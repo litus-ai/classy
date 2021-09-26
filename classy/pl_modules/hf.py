@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, List, Iterator, Tuple, Union, Dict
+from typing import Optional, List, Iterator, Tuple, Union
 
 import omegaconf
 import torch
