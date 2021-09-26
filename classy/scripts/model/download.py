@@ -146,7 +146,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--force-download",
         action="store_true",
-        help="It will download the model even if u already have the model in the cache",
+        help="It will download the model even if you already have it in the "
+        "cache. Usually required if you interrupted the previous download.",
     )
     return parser.parse_args()
 
