@@ -17,7 +17,7 @@ def populate_parser(parser: ArgumentParser):
     interactive_parser.add_argument("-d", "--device", default="gpu")
 
     file_parser = subcmd.add_parser("file")
-    file_parser.add_argument("model_path").completer = autocomplete_model_path
+    file_parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
     file_parser.add_argument("file_path").completer = FilesCompleter()
     file_parser.add_argument("-d", "--device", default="gpu")
     file_parser.add_argument("-o", "--output-path", required=True).completer = FilesCompleter()
