@@ -1,9 +1,9 @@
+import argparse
 import json
 import logging
 import tempfile
 import zipfile
 
-from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -15,15 +15,6 @@ from classy.scripts.model.download import get_md5, CLASSY_DATE_FORMAT
 
 
 logger = logging.getLogger(__name__)
-
-
-def parse_args():
-    parser = ArgumentParser()
-
-    parser.add_argument("model_name")
-    parser.add_argument("--organization")
-
-    return parser.parse_args()
 
 
 def strip_checkpoint(
@@ -82,7 +73,9 @@ def create_info_file(tmpdir: Path):
         json.dump(dict(md5=md5, upload_date=date), f, indent=2)
 
 
-def upload(model_name, organization: str = None, commit: Optional[str] = None):
+def upload(
+    model_name, organization: Optional[str] = None, repo_name: Optional[str] = None, commit: Optional[str] = None
+):
     token = huggingface_hub.HfFolder.get_token()
     if token is None:
         print("No HuggingFace token found. You need to execute `huggingface-cli login` first!")
@@ -100,7 +93,7 @@ def upload(model_name, organization: str = None, commit: Optional[str] = None):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         api = huggingface_hub.hf_api.HfApi()
-        repo_url = api.create_repo(token=token, name=model_name, organization=organization, exist_ok=True)
+        repo_url = api.create_repo(token=token, name=repo_name or model_name, organization=organization, exist_ok=True)
         repo = huggingface_hub.Repository(str(tmpdir), clone_from=repo_url, use_auth_token=token)
 
         tmp_path = Path(tmpdir)
@@ -110,10 +103,22 @@ def upload(model_name, organization: str = None, commit: Optional[str] = None):
         # this method automatically puts large files (>10MB) into git lfs
         repo.push_to_hub(commit_message=commit or "Automatic push from classy")
 
-        input("type anything to exit")
-        exit()
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model_name", help="The model you want to upload")
+    parser.add_argument(
+        "--organization", help="[optional] the name of the organization where you want to upload the model"
+    )
+    parser.add_argument("--name", help="Optional name to use when uploading to the HuggingFace repository")
+    parser.add_argument("--commit", help="Commit message to use when pushing to the HuggingFace Hub")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    upload(args.model_name, args.organization, args.name, args.commit)
 
 
 if __name__ == "__main__":
-    MODEL_NAME = "test-dir"
-    upload(MODEL_NAME)
+    main()
