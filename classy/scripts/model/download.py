@@ -146,12 +146,6 @@ def download(model_name: str, force_download: bool = False):
         now = datetime.now().strftime(CLASSY_DATE_FORMAT.replace(" ", "/"))
         model_cache_path = ensure_dir(CLASSY_MODELS_CACHE_PATH / model_qualifier / now)
 
-        # create model dir if empty and transfer the model info in the final repository
-        ensure_dir(model_cache_path)
-        # cannot use .rename() here as it might break with cross-link devices
-        # see https://stackoverflow.com/questions/42392600
-        shutil.move(tmp_info_path, model_cache_path / "info.json")
-
         # downloading the actual model
         model_url = CLASSY_HF_MODEL_URL.format(user_name=user_name, model_name=model_name)
         tmp_model_path = tmp_path / "model.zip"
@@ -165,6 +159,12 @@ def download(model_name: str, force_download: bool = False):
                 "Removing the model and returning..."
             )
             return
+
+        # create model dir if empty and transfer the model info in the final repository
+        ensure_dir(model_cache_path)
+        # cannot use .rename() here as it might break with cross-link devices
+        # see https://stackoverflow.com/questions/42392600
+        shutil.move(tmp_info_path, model_cache_path / "info.json")
 
         unzip(tmp_model_path, model_cache_path)
 
