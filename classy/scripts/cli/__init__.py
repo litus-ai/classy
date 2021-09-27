@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 
+import argcomplete
+
 
 def get_commands():
     from classy.scripts.cli.train import get_parser as train_parser, main as train_main
@@ -41,9 +43,11 @@ def parse_args(commands: dict):
 
     parser = ArgumentParser()
 
-    subcmds = parser.add_subparsers(dest="action")
+    subcmds = parser.add_subparsers(dest="action", required=True)
     for action_name, action_data in commands.items():
         action_data["parser"](subcmds)
+
+    argcomplete.autocomplete(parser, default_completer=None, always_complete_options="long")
 
     return parser.parse_args()
 
