@@ -6,7 +6,7 @@ with open("requirements.txt") as f:
 setup(
     name="classy",
     version="0.1.0",
-    description="A simple command line tool to train and test your classification models",
+    description="A powerful tool to train and use your classification models.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     classifiers=[

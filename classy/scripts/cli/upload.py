@@ -3,9 +3,8 @@ from argparse import ArgumentParser
 
 def populate_parser(parser: ArgumentParser):
     parser.add_argument("model_name", help="The model you want to upload")
-    parser.add_argument(
-        "--organization", help="[optional] the name of the organization where you want to upload the model"
-    )
+    parser.add_argument("--organization", help="the name of the organization where you want to upload the model")
+    parser.add_argument("--name", help="Optional name to use when uploading to the HuggingFace repository")
     parser.add_argument("--commit", help="Commit message to use when pushing to the HuggingFace Hub")
 
 
@@ -29,7 +28,7 @@ def parse_args():
 def main(args):
     from classy.scripts.model.upload import upload
 
-    upload(args.model_name, args.organization, args.commit)
+    upload(args.model_name, args.organization, args.name, args.commit)
 
 
 if __name__ == "__main__":
