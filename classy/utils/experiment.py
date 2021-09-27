@@ -3,6 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Union, Iterator
 
+from classy.utils.file import CLASSY_MODELS_CACHE_PATH
+
 
 class Experiment:
     def __init__(self, directory: Path):
@@ -18,7 +20,7 @@ class Experiment:
 
     @property
     def last_run(self) -> "Run":
-        return max(self.iter_runs(), key=lambda r: r.date)
+        return max(self.iter_runs(), key=lambda r: r.date, default=None)
 
     @property
     def has_checkpoint(self):
@@ -62,8 +64,12 @@ class Experiment:
                 yield Experiment(exp_dir)
 
     @classmethod
-    def list_available_experiments(cls, exps_dir: Optional[Union[str, Path]] = None) -> List:
+    def list_available_experiments(cls, exps_dir: Optional[Union[str, Path]] = None) -> List[str]:
         return list(ex.name for ex in cls.iter_experiments(exps_dir) if ex.has_checkpoint)
+
+    @classmethod
+    def list_downloaded_experiments(cls) -> List[str]:
+        return cls.list_available_experiments(CLASSY_MODELS_CACHE_PATH)
 
     def iter_runs(self) -> Iterator["Run"]:
         for config_file in self.directory.rglob(".hydra/config.yaml"):

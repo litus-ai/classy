@@ -1,10 +1,8 @@
 from argparse import ArgumentParser
 
-from classy.scripts.model.download import download
-
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_name", help="The model you want to download")
+    parser.add_argument("model_name", help="The model you want to download (use user@model for a specific model)")
     parser.add_argument(
         "--force-download",
         action="store_true",
@@ -16,7 +14,7 @@ def populate_parser(parser: ArgumentParser):
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
         name="download",
-        description="download a pretrained model from classy Hugging Face model hub section",
+        description="download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub",
         help="TODO",
     )
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
@@ -31,6 +29,8 @@ def parse_args():
 
 
 def main(args):
+    from classy.scripts.model.download import download
+
     download(args.model_name, args.force_download)
 
 

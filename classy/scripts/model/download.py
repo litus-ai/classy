@@ -1,62 +1,56 @@
 import argparse
-import hashlib
 import json
-import zipfile
+import logging
+import shutil
+import tempfile
+
+from datetime import datetime
 from pathlib import Path
 
-import os
-
 import requests
-from datasets import tqdm
 
-import logging
+from classy.utils.file import (
+    CLASSY_HF_INFO_URL,
+    CLASSY_DATE_FORMAT,
+    CLASSY_MODELS_CACHE_PATH,
+    CLASSY_HF_MODEL_URL,
+    get_md5,
+    ensure_dir,
+)
+from classy.utils.experiment import Experiment
+
 
 logger = logging.getLogger(__name__)
 
 
-CLASSY_HF_MODEL_URL = "https://huggingface.co/edobobo/{model_name}/resolve/main/{model_name}.zip"
-CLASSY_HF_INFO_URL = "https://huggingface.co/edobobo/{model_name}/raw/main/{model_name}.info.json"
-CLASSY_MODELS_CACHE_PATH = "{home_dir}/.cache/sunglasses_ai/classy/{model_name}"
-
-
-def ensure_dir(path):
-    """
-    Create dir in case it does not exist.
-    """
-    Path(path).mkdir(parents=True, exist_ok=True)
-
-
-def get_md5(path):
-    """
-    Get the MD5 value of a path.
-    """
-    with open(path, "rb") as fin:
-        data = fin.read()
-    return hashlib.md5(data).hexdigest()
-
-
-def assert_file_exists(path, md5=None):
-    assert os.path.exists(path), "Could not find file at %s" % path
+def assert_file_exists(path: Path, md5=None):
+    assert path.exists(), f"Could not find file {path}"
     if md5:
         file_md5 = get_md5(path)
         assert file_md5 == md5, "md5 for %s is %s, expected %s" % (path, file_md5, md5)
 
 
-def unzip(path, filename):
+def unzip(zip_path: Path, target: Path):
+    import zipfile
+
     """
-    Fully unzip a file `filename` that's in a directory `dir`.
+    Unzip the contents of `zip_path` into `target`.
     """
-    logger.debug(f"Unzip: {path}/{filename}...")
-    with zipfile.ZipFile(os.path.join(path, filename)) as f:
-        f.extractall(path)
+    logger.debug(f"Unzipping {zip_path} to {target}")
+    with zipfile.ZipFile(str(zip_path)) as f:
+        f.extractall(target)
 
 
-def download_resource(resource_url: str, output_path: str) -> int:
+def download_resource(resource_url: str, output_path: Path) -> int:
     """
     Download a resource from a specific url into an output_path
     """
+    import requests
+    from tqdm.auto import tqdm
+
     req = requests.get(resource_url, stream=True)
-    with open(output_path, "wb") as f:
+
+    with output_path.open("wb") as f:
         file_size = int(req.headers.get("content-length"))
         default_chunk_size = 131072
         desc = "Downloading " + resource_url
@@ -80,69 +74,104 @@ def request_file(url, path):
     assert_file_exists(path)
 
 
-def download(model_name: str, force_download: bool):
+def download(model_name: str, force_download: bool = False):
+
+    if "@" in model_name:
+        user_name, model_name = model_name.split("@")
+    else:
+        user_name = "sunglasses-ai"
+
+    model_qualifier = f"{user_name}@{model_name}"
 
     # download model information
-    model_info_url = CLASSY_HF_INFO_URL.format(model_name=model_name)
-    tmp_info_path = f"/tmp/{model_name}.info.json"
-    logger.info("Attempting to download remote model information")
+    model_info_url = CLASSY_HF_INFO_URL.format(user_name=user_name, model_name=model_name)
 
-    try:
-        request_file(model_info_url, tmp_info_path)
-    except requests.exceptions.HTTPError:
-        logger.error(f"{model_name} cannot be found in the Hugging Face model hub classy section")
-        return
+    # no need to remove any file under the tmp directory as it is automatically removed upon exiting this block
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
 
-    # load model information
-    with open(tmp_info_path) as f:
-        model_info_dict = json.load(f)
+        tmp_info_path = tmp_path / "info.json"
+        logger.info("Attempting to download remote model information")
 
-    # check if a model with the same name is in the cache
-    model_cache_path = CLASSY_MODELS_CACHE_PATH.format(home_dir=os.getenv("HOME"), model_name=model_name)
-    if os.path.exists(model_cache_path) and not force_download:
-        logger.info("Found a model in the cache with the same name, checking their equivalence")
-        with open(model_cache_path + f"/{model_name}.info.json") as f:
-            cached_model_info_dict = json.load(f)
-        if model_info_dict["md5"] == cached_model_info_dict["md5"]:
-            logger.info("The models have the same md5, thus they should be equal. Returning...")
-            os.remove(tmp_info_path)
+        try:
+            request_file(model_info_url, tmp_info_path)
+        except requests.exceptions.HTTPError:
+            logger.error(f"{model_name} cannot be found in the Hugging Face model hub classy section")
             return
+
+        # load model information
+        with tmp_info_path.open() as f:
+            model_info_dict = json.load(f)
+
+        # we only perform sanity / existence checks if the user has not explicitly request to re-download
+        if not force_download:
+
+            # check if a model with the same name is in the cache
+            # we treat it as an Experiment whose creation date is the actual download date
+            # the creation date is stored in the info file, we compare the two and decide whether the
+            # downloaded model is still valid or if it has to be re-downloaded
+            exp = Experiment.from_name(model_qualifier, exp_dir=CLASSY_MODELS_CACHE_PATH)
+
+            if exp is not None:
+                run = exp.last_run
+                downloaded_date = run.date
+                upload_date = datetime.strptime(model_info_dict["upload_date"], CLASSY_DATE_FORMAT)
+
+                if downloaded_date <= upload_date:
+                    # model needs to be re-downloaded as a new version is on the hub
+                    to_download = True
+                    logger.info("Found an older version of the model in the cache, re-downloading...")
+                else:
+                    # check files' correctness
+                    logger.info("Found a model in the cache with the same name, checking their equivalence")
+
+                    with (run.directory / "info.json").open() as f:
+                        cached_model_info_dict = json.load(f)
+
+                    if model_info_dict["md5"] == cached_model_info_dict["md5"]:
+                        logger.info("The models have the same md5, thus they should be equal. Returning...")
+                        return
+                    else:
+                        to_download = True
+                        logger.info("Found an older version of the model in cache. Downloading the new one")
+            else:
+                to_download = True
+
+            if not to_download:
+                return
         else:
-            logger.info("Found an older version of the model in cache. Downloading the new one")
+            logger.info("Skipping existence / sanity checks as --force-download was provided")
 
-    # create model dir if empty and transfer the model info in the final repository
-    ensure_dir(model_cache_path)
-    os.system(f"mv {tmp_info_path} {model_cache_path}/.")
+        # model directory is cache_dir/model_name/date/time, to follow the experiments' convention
+        now = datetime.now().strftime(CLASSY_DATE_FORMAT.replace(" ", "/"))
+        model_cache_path = ensure_dir(CLASSY_MODELS_CACHE_PATH / model_qualifier / now)
 
-    # downloading the actual model
-    model_url = CLASSY_HF_MODEL_URL.format(model_name=model_name)
-    tmp_model_path = f"/tmp/{model_name}.zip"
-    request_file(model_url, tmp_model_path)
+        # create model dir if empty and transfer the model info in the final repository
+        ensure_dir(model_cache_path)
+        # cannot use .rename() here as it might break with cross-link devices
+        # see https://stackoverflow.com/questions/42392600
+        shutil.move(tmp_info_path, model_cache_path / "info.json")
 
-    # checking if the model md5 is the same declared in its info box
-    downloaded_model_md5 = get_md5(tmp_model_path)
-    if downloaded_model_md5 != model_info_dict["md5"]:
-        logger.error(
-            "The downloaded model has an md5 that is not equal to the one declared in its info box. "
-            "Removing the model and returning..."
-        )
-        os.remove(tmp_model_path)
-        return
+        # downloading the actual model
+        model_url = CLASSY_HF_MODEL_URL.format(user_name=user_name, model_name=model_name)
+        tmp_model_path = tmp_path / "model.zip"
+        request_file(model_url, tmp_model_path)
 
-    # moving the final model in the correct repository and unzipping it
-    model_path = model_cache_path + f"/{model_name}.zip"
-    if os.path.exists(model_path):
-        os.remove(model_path)  # if any
-    os.system(f"mv {tmp_model_path} {model_cache_path}/.")
-    unzip(model_cache_path, f"{model_name}.zip")
+        # checking if the model md5 is the same declared in its info box
+        downloaded_model_md5 = get_md5(tmp_model_path)
+        if downloaded_model_md5 != model_info_dict["md5"]:
+            logger.error(
+                "The downloaded model has an md5 that is not equal to the one declared in its info box. "
+                "Removing the model and returning..."
+            )
+            return
 
-    # finally delete the zip file
-    os.remove(model_path)
+        unzip(tmp_model_path, model_cache_path)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("model_name", help="The model you want to download")
+    parser.add_argument("model_name", help="The model you want to download (use user@model for a specific model)")
     parser.add_argument(
         "--force-download",
         action="store_true",

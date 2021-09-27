@@ -1,0 +1,36 @@
+from argparse import ArgumentParser
+
+
+def populate_parser(parser: ArgumentParser):
+    parser.add_argument("model_name", help="The model you want to upload")
+    parser.add_argument(
+        "--organization", help="[optional] the name of the organization where you want to upload the model"
+    )
+    parser.add_argument("--commit", help="Commit message to use when pushing to the HuggingFace Hub")
+
+
+def get_parser(subparser=None) -> ArgumentParser:
+    parser_kwargs = dict(
+        name="upload",
+        description="upload a pretrained model to your (or an organization's) HuggingFace Hub",
+        help="TODO",
+    )
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
+
+    populate_parser(parser)
+
+    return parser
+
+
+def parse_args():
+    return get_parser().parse_args()
+
+
+def main(args):
+    from classy.scripts.model.upload import upload
+
+    upload(args.model_name, args.organization, args.commit)
+
+
+if __name__ == "__main__":
+    main(parse_args())
