@@ -102,7 +102,9 @@ class ClassyDataModule(pl.LightningDataModule):
                 self.train_path = path_if_exists(os.path.join(self.dataset_path, f"train.{self.file_extension}"))
 
             if self.validation_path is None:
-                self.validation_path = path_if_exists(os.path.join(self.dataset_path, f"validation.{self.file_extension}"))
+                self.validation_path = path_if_exists(
+                    os.path.join(self.dataset_path, f"validation.{self.file_extension}")
+                )
 
             self.test_path = path_if_exists(os.path.join(self.dataset_path, f"test.{self.file_extension}"))
 

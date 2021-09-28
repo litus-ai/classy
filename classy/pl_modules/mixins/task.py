@@ -12,7 +12,8 @@ from classy.data.data_drivers import (
     QASample,
     get_data_driver,
     JSONL,
-    GENERATION, GenerationSample,
+    GENERATION,
+    GenerationSample,
 )
 from classy.pl_modules.mixins.task_ui import (
     TaskUIMixin,

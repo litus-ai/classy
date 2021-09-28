@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: bool = False) -> DictConfig:
     # find hydra config path
     experiment_folder = Path(checkpoint_path).parent.parent
@@ -26,6 +27,7 @@ def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: 
             return experiment_folder.joinpath(path).exists()
         except PermissionError:
             return False
+
     fix_paths(
         conf,
         check_fn=check_fn,

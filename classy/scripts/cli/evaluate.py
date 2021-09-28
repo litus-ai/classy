@@ -71,7 +71,15 @@ def main(args):
             input_path = input("Please, explicitly enter test path: ").strip()
 
     device = get_device(args.device)
-    evaluate(args.model_path, device, args.token_batch_size, input_path, args.output_path, prediction_params=args.prediction_params, metrics=None)
+    evaluate(
+        args.model_path,
+        device,
+        args.token_batch_size,
+        input_path,
+        args.output_path,
+        prediction_params=args.prediction_params,
+        metrics=None,
+    )
 
 
 if __name__ == "__main__":

@@ -92,7 +92,7 @@ def main():
     named_params_workaround = args.named_params_workaround
     if len(named_params_workaround) > 0:
         for i in range(0, len(named_params_workaround), 2):
-            k, v = named_params_workaround[i], named_params_workaround[i+1]
+            k, v = named_params_workaround[i], named_params_workaround[i + 1]
             if k == "cuda_device":
                 v = int(v)
             named_arguments[k] = v
@@ -103,7 +103,12 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
-    parser.add_argument("named_params_workaround", default=[], nargs="*", help="Named argument without --. Ex: prediction_params <path> cuda_device 0")
+    parser.add_argument(
+        "named_params_workaround",
+        default=[],
+        nargs="*",
+        help="Named argument without --. Ex: prediction_params <path> cuda_device 0",
+    )
     return parser.parse_args()
 
 

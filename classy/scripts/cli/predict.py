@@ -50,7 +50,9 @@ def main(args):
     device = get_device(args.device)
 
     if subcmd == "file":
-        file_main(args.model_path, args.file_path, args.output_path, args.prediction_params, device, args.token_batch_size)
+        file_main(
+            args.model_path, args.file_path, args.output_path, args.prediction_params, device, args.token_batch_size
+        )
     elif subcmd == "interactive":
         interactive_main(args.model_path, args.prediction_params, device)
     else:
