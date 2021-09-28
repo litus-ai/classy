@@ -27,7 +27,7 @@ class HFBaseDataset(BaseDataset):
         min_length: int,
         max_length: int,
         for_inference: bool,
-        batching_fields: Optional[List[str]],
+        batching_fields: Optional[List[str]] = None,
     ):
         if "tokenizer" not in self._shared_state:
             self._shared_state["tokenizer"] = AutoTokenizer.from_pretrained(

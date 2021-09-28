@@ -63,7 +63,7 @@ class HFTokenDataset(HFBaseDataset):
             }
             if token_sample.labels is not None:
                 elem_dict["labels"] = torch.tensor(
-                    [self.vocabulary.get_idx(k="labels", elem=self.labels[idx]) for idx in token_sample.target]
+                    [self.vocabulary.get_idx(k="labels", elem=token_sample.labels[idx]) for idx in token_sample.target]
                 )
 
             elem_dict["samples"] = token_sample
