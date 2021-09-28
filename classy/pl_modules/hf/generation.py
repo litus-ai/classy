@@ -140,9 +140,6 @@ class BartGenerativeModule(HFGenerativeModel):
         **kwargs,
     ) -> Iterator[Tuple[GenerationSample, str]]:
         assert len(set(decoder_start.squeeze(-1).tolist())) == 1
-        print(decoder_start)
-        print(self.tokenizer.batch_decode(decoder_start))
-        print(self.tokenizer.batch_decode(decoder_start, skip_special_tokens=True))
         # generate
         bart_out = self.model.generate(
             input_ids=input_ids,
