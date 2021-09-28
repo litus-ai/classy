@@ -12,7 +12,7 @@ from classy.data.data_drivers import (
     QASample,
     get_data_driver,
     JSONL,
-    GENERATION,
+    GENERATION, GenerationSample,
 )
 from classy.pl_modules.mixins.task_ui import (
     TaskUIMixin,
@@ -63,7 +63,7 @@ class TokensTask(TokenTaskUIMixin, TaskMixin):
 class GenerationTask(GenerationTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(GENERATION, JSONL)
 
-    def read_input_from_bash(self) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample]:
+    def read_input_from_bash(self) -> GenerationSample:
         source_sequence = input("Enter source sequence text: ").strip()
         source_language = input("Enter source language (leave empty to set it to None): ").strip() or None
         target_language = input("Enter target language (leave empty to set it to None): ").strip() or None
