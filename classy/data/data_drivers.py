@@ -107,13 +107,13 @@ class TokensSample(ClassyStruct):
 
 class QASample(ClassyStruct):
     def __init__(
-        self, context: str, question: str, char_start: Optional[int] = None, char_end: Optional[int] = None, **kwargs
+        self, context: str, question: str, answer_start: Optional[int] = None, answer_end: Optional[int] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.context = context
         self.question = question
-        self.char_start = char_start
-        self.char_end = char_end
+        self.char_start = answer_start
+        self.char_end = answer_end
 
     def get_current_classification(self) -> Optional[Tuple[int, int]]:
         return self.char_start, self.char_end

@@ -128,9 +128,11 @@ class HFQADataset(HFBaseDataset):
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(0),
                 "attention_mask": tokenization_output["attention_mask"].squeeze(0),
-                "token_type_ids": tokenization_output["token_type_ids"].squeeze(0),
                 "word2chars": tokenization_output["offset_mapping"].squeeze(0),
             }
+
+            if "token_type_ids" in tokenization_output:
+                elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze(0)
 
             if qa_sample.char_start is not None and qa_sample.char_end is not None:
                 elem_dict["start_position"] = tokenization_output.char_to_token(
