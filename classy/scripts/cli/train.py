@@ -1,4 +1,3 @@
-import logging
 import os
 from argparse import ArgumentParser
 from pathlib import Path
@@ -23,6 +22,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
     parser.add_argument("--no-shuffle", action="store_true")
     parser.add_argument("--fp16", action="store_true")
+    parser.add_argument("--vocabulary-dir", default=None)
+    parser.add_argument("--big-dataset", action="store_true")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -68,6 +69,7 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
+    from classy.utils.lightning import load_training_conf_from_checkpoint
     from classy.scripts.model.train import fix_paths, train
 
     os.chdir(model_dir)
@@ -99,6 +101,7 @@ def main(args):
 
     cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
 
+    # override all the fields modified by the profile
     if args.profile is not None:
         cmd.append(f"+profiles={args.profile}")
 
@@ -143,8 +146,27 @@ def main(args):
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
 
+    # change the underlying transformer model
     if args.transformer_model is not None:
         cmd.append(f"transformer_model={args.transformer_model}")
+
+    # precomputed vocabulary from the user
+    if args.vocabulary_dir is not None:
+        cmd.append(f"+data.vocabulary_dir={args.vocabulary_dir}")
+
+    # bid-dataset option
+    if args.big_dataset:
+        logging.info(
+            "The user selected the --big-dataset option. "
+            "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
+            "2) evaluate the model performance every 2 thousand steps"
+            "3) If the dataset provided is a file path when splitting the whole dataset in train, validation and test"
+            "we will partition with the following ratio: 0.90 / 0.05 / 0.05"
+        )
+        cmd.append("data.datamodule.shuffle_dataset=False")
+        cmd.append("training.pl_trainer.val_check_interval=2000")  # TODO: 2K steps seems quite arbitrary
+        cmd.append("data.datamodule.validation_split_size=0.05")
+        cmd.append("data.datamodule.test_split_size=0.05")
 
     # append all user-provided configuration overrides
     cmd += args.config
@@ -165,10 +187,3 @@ def test(cmd):
 
 if __name__ == "__main__":
     main(parse_args())
-    # test("train.py sentence-pair data/glue/mrpc")
-    # test("train.py token data/mrpc -m small -n mrpc-small")
-    # test(
-    #     "train.py token data/mrpc -m small "
-    #     "-c training.pl_trainer.val_check_interval=1.0 data.pl_module.batch_size=16"
-    # )
-    # test("train.py sentence data/s")

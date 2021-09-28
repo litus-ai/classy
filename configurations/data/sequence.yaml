@@ -26,5 +26,5 @@ datamodule:
     for_inference: True
   validation_split_size: 0.1
   test_split_size: 0.1
-  max_nontrain_split_size: 500
+  max_nontrain_split_size: 10000
   shuffle_dataset: True

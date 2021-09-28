@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
 
-from classy.scripts.cli.utils import get_device
+from argcomplete import FilesCompleter
+
+from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
 
 
 def populate_parser(parser: ArgumentParser):
@@ -9,16 +11,18 @@ def populate_parser(parser: ArgumentParser):
 
     subcmd = parser.add_subparsers(dest="subcmd", required=True)
     interactive_parser = subcmd.add_parser("interactive")
-    interactive_parser.add_argument("model_path")
+    interactive_parser.add_argument(
+        "model_path", type=checkpoint_path_from_user_input
+    ).completer = autocomplete_model_path
     interactive_parser.add_argument("-d", "--device", default="gpu")
     interactive_parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
     file_parser = subcmd.add_parser("file")
-    file_parser.add_argument("model_path")
-    file_parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
-    file_parser.add_argument("file_path")
+    file_parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
+    file_parser.add_argument("file_path").completer = FilesCompleter()
     file_parser.add_argument("-d", "--device", default="gpu")
-    file_parser.add_argument("-o", "--output-path", required=True)
+    file_parser.add_argument("-o", "--output-path", required=True).completer = FilesCompleter()
+    file_parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
     file_parser.add_argument("--token-batch-size", type=int, default=1024)
 
 

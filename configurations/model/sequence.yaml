@@ -1,7 +1,7 @@
 _target_: 'classy.pl_modules.hf.classification.HFSequencePLModule'
 transformer_model: ${transformer_model}
 optim_conf:
-  _target_: classy.optim.factories.RAdamWithDecayFactory
+  _target_: classy.optim.factories.RAdamFactory
   lr: 1e-5
   weight_decay: 0.01
   no_decay_params:

@@ -1,12 +1,16 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
+from argcomplete import FilesCompleter
+
+from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
+
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_path")
-    parser.add_argument("file_path", nargs="?", default=None)
+    parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
+    parser.add_argument("file_path", nargs="?", default=None).completer = FilesCompleter()
     parser.add_argument("-d", "--device", default="gpu")
-    parser.add_argument("-o", "--output-path", default=None, required=False)
+    parser.add_argument("-o", "--output-path", default=None, required=False).completer = FilesCompleter()
     parser.add_argument("--token-batch-size", type=int, default=128)
     parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
@@ -52,7 +56,6 @@ def automatically_infer_test_path(model_path: str) -> str:
 def main(args):
     # import here to avoid importing torch before it's actually needed
     from classy.scripts.model.evaluate import evaluate
-    from classy.scripts.cli.utils import get_device
 
     # input_path: if provided, use default one
     # otherwise, try to infer its positions
