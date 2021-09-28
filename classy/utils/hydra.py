@@ -1,8 +1,6 @@
-import os
 from typing import Callable
 
 import omegaconf
-import hydra
 
 
 def fix_paths(conf, check_fn: Callable[[str], bool], fix_fn: Callable[[str], str]):

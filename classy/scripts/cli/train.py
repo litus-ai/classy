@@ -3,8 +3,9 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from classy.scripts.cli.utils import get_device
+from classy.utils.log import get_project_logger
 
-logger = logging.getLogger(__name__)
+logger = get_project_logger(__name__)
 
 
 def populate_parser(parser: ArgumentParser):
@@ -70,7 +71,8 @@ def _main_resume(model_dir: str):
 
     # import here to avoid importing torch before it's actually needed
     from classy.utils.lightning import load_training_conf_from_checkpoint
-    from classy.scripts.model.train import fix_paths, train
+    from classy.utils.hydra import fix_paths
+    from classy.scripts.model.train import train
 
     os.chdir(model_dir)
 
