@@ -32,7 +32,8 @@ class SavingMixin:
         def fix_with_copy_side_effect(path):
             input_path = Path(path)
             assert input_path.exists()
-            output_path = experiment_folder / "resources" / input_path.name
+            output_path = experiment_folder / "resources" / input_path.relative_to(working_folder)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(input_path, output_path)
             return str(output_path.relative_to(experiment_folder))
 

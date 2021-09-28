@@ -8,6 +8,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")
     parser.add_argument("-o", "--output-path", default=None, required=False)
     parser.add_argument("--token-batch-size", type=int, default=128)
+    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -67,7 +68,7 @@ def main(args):
             input_path = input("Please, explicitly enter test path: ").strip()
 
     device = get_device(args.device)
-    evaluate(args.model_path, device, args.token_batch_size, input_path, args.output_path, metrics=None)
+    evaluate(args.model_path, device, args.token_batch_size, input_path, args.output_path, prediction_params=args.prediction_params, metrics=None)
 
 
 if __name__ == "__main__":

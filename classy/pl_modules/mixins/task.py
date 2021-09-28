@@ -12,9 +12,16 @@ from classy.data.data_drivers import (
     QASample,
     get_data_driver,
     JSONL,
+    GENERATION,
 )
-from classy.pl_modules.mixins.task_ui import TaskUIMixin, SequenceTaskUIMixin, TokenTaskUIMixin, \
-    SentencePairTaskUIMixin, QATaskUIMixin
+from classy.pl_modules.mixins.task_ui import (
+    TaskUIMixin,
+    SequenceTaskUIMixin,
+    TokenTaskUIMixin,
+    SentencePairTaskUIMixin,
+    QATaskUIMixin,
+    GenerationTaskUIMixin,
+)
 
 
 class TaskMixin(TaskUIMixin):
@@ -51,6 +58,23 @@ class TokensTask(TokenTaskUIMixin, TaskMixin):
     @property
     def task(self) -> str:
         return TOKEN
+
+
+class GenerationTask(GenerationTaskUIMixin, TaskMixin):
+    __data_driver = get_data_driver(GENERATION, JSONL)
+
+    def read_input_from_bash(self) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample]:
+        source_sequence = input("Enter source sequence text: ").strip()
+        source_language = input("Enter source language (leave empty to set it to None): ").strip() or None
+        target_language = input("Enter target language (leave empty to set it to None): ").strip() or None
+        sample = json.dumps(
+            dict(source_sequence=source_sequence, source_language=source_language, target_language=target_language)
+        )
+        return next(self.__data_driver.read([sample]))
+
+    @property
+    def task(self) -> str:
+        return GENERATION
 
 
 class SentencePairTask(SentencePairTaskUIMixin, TaskMixin):

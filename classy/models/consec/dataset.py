@@ -1,22 +1,15 @@
 from dataclasses import dataclass
-from typing import Callable, Iterator, Union, Optional, NamedTuple, Tuple, List, Dict, Any
-
-from classy.data.data_drivers import TokensSample, SequenceSample, SentencePairSample, QASample
-from classy.data.dataset.base import BaseDataset, batchify, batchify_matrices
-from classy.data.dataset.hf import HFBaseDataset
-from classy.models.consec.disambiguation_corpus import DisambiguationInstance, DisambiguationCorpus
-from classy.utils.vocabulary import Vocabulary
-
-
-from dataclasses import dataclass
 from typing import Callable, Iterator, List, NamedTuple, Dict, Any, Optional, Tuple, Iterable, Union
 
 import numpy as np
 import torch
 
-from classy.models.consec.tokenizer import ConsecTokenizer
+from classy.data.data_drivers import TokensSample
+from classy.data.dataset.base import BaseDataset, batchify, batchify_matrices
 from classy.models.consec.dependency_finder import DependencyFinder
+from classy.models.consec.disambiguation_corpus import DisambiguationInstance, DisambiguationCorpus
 from classy.models.consec.sense_inventories import SenseInventory
+from classy.models.consec.tokenizer import ConsecTokenizer
 from classy.utils.commons import flatten
 
 

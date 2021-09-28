@@ -8,6 +8,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-p", "--port", type=int, default=8000)
     parser.add_argument("-d", "--device", default="gpu")
     parser.add_argument("--token-batch-size", type=int, default=128)
+    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -30,7 +31,7 @@ def main(args):
     from classy.scripts.model.serve import serve
 
     device = get_device(args.device)
-    serve(args.model_path, args.port, device, args.token_batch_size)
+    serve(args.model_path, args.port, device, args.token_batch_size, prediction_params=args.prediction_params)
 
 
 if __name__ == "__main__":

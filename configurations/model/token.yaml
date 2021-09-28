@@ -1,4 +1,4 @@
-_target_: 'classy.pl_modules.hf.HFTokensPLModule'
+_target_: 'classy.pl_modules.hf.classification.HFTokensPLModule'
 transformer_model: ${transformer_model}
 use_last_n_layers: 1
 fine_tune: False

@@ -1,4 +1,4 @@
-_target_: 'classy.pl_modules.hf.HFQAPLModule'
+_target_: 'classy.pl_modules.hf.classification.HFQAPLModule'
 transformer_model: ${transformer_model}
 optim_conf:
   _target_: classy.optim.factories.RAdamWithDecayFactory

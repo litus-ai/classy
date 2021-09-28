@@ -3,27 +3,27 @@ datamodule:
   task: ${task}
   dataset_path: null  # set via kwargs
   train_dataset:
-    _target_: 'classy.data.dataset.hf.classification.HFSentencePairDataset.from_file'
+    _target_: 'classy.data.dataset.hf.generation.HFGenerationDataset.from_file'
     transformer_model: ${transformer_model}
-    min_length: 5
+    min_length: -1
     max_length: 500
-    tokens_per_batch: 800
+    tokens_per_batch: 1000
     max_batch_size: 10
     section_size: 10000
     prebatch: True
     materialize: False
     for_inference: False
   validation_dataset:
-    _target_: 'classy.data.dataset.hf.classification.HFSentencePairDataset.from_file'
+    _target_: 'classy.data.dataset.hf.generation.HFGenerationDataset.from_file'
     transformer_model: ${transformer_model}
-    min_length: 5
+    min_length: -1
     max_length: 500
-    tokens_per_batch: 800
+    tokens_per_batch: 1000
     max_batch_size: 10
     section_size: 10000
     prebatch: True
     materialize: True
-    for_inference: True
+    for_inference: False
   validation_split_size: 0.1
   test_split_size: 0.1
   max_nontrain_split_size: 500

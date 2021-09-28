@@ -6,7 +6,14 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
-from classy.data.data_drivers import DataDriver, SentencePairSample, SequenceSample, TokensSample
+from classy.data.data_drivers import (
+    DataDriver,
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    QASample,
+    GenerationSample,
+)
 from classy.utils.commons import chunks, flatten, add_noise_to_value
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -34,7 +41,9 @@ class BaseDataset(IterableDataset):
         return True
 
     @staticmethod
-    def fit_vocabulary(samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]) -> Vocabulary:
+    def fit_vocabulary(
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
+    ) -> Vocabulary:
         raise NotImplementedError
 
     @classmethod
@@ -57,7 +66,7 @@ class BaseDataset(IterableDataset):
     @classmethod
     def from_samples(
         cls,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         vocabulary: Vocabulary,
         **kwargs,
     ):
@@ -65,7 +74,9 @@ class BaseDataset(IterableDataset):
 
     def __init__(
         self,
-        samples_iterator: Callable[[], Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]],
+        samples_iterator: Callable[
+            [], Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
+        ],
         vocabulary: Vocabulary,
         batching_fields: List[str],
         tokens_per_batch: int,
@@ -194,7 +205,7 @@ class BaseDataset(IterableDataset):
             future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
 
             if (
-                future_tokens_per_batch >= self.tokens_per_batch
+                len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch
             ):  # todo: add min batch size so as to support batching by size
                 yield output_batch()
                 current_batch = []

@@ -145,10 +145,48 @@ class QASample(ClassyStruct):
         return "\n".join(parts)
 
 
+class GenerationSample(ClassyStruct):
+    def __init__(
+        self,
+        source_sequence: str,
+        source_language: Optional[str] = None,
+        target_sequence: Optional[str] = None,
+        target_language: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.source_sequence = source_sequence
+        self.source_language = source_language
+        self.target_sequence = target_sequence
+        self.target_language = target_language
+
+    def get_current_classification(self) -> Optional[str]:
+        return self.target_sequence
+
+    def update_classification(self, classification_result: str):
+        self.target_sequence = classification_result
+
+    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+        def maybe_prepend_language(text: str, lng: Optional[str]) -> str:
+            return f"[{lng}] {text}" if lng is not None else text
+
+        parts = [f"# input sequence: {maybe_prepend_language(self.source_sequence, self.source_language)}"]
+
+        if self.target_sequence is not None:
+            parts.append(f"\t# gold sequence: {maybe_prepend_language(self.target_sequence, self.target_language)}")
+
+        if classification_result is not None:
+            parts.append(
+                f"\t# predicted sequence: {maybe_prepend_language(classification_result, self.target_language)}"
+            )
+
+        return "\n".join(parts)
+
+
 class DataDriver:
     def read_from_path(
         self, path: str
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample], None, None]:
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], None, None]:
         def r():
             with open(path) as f:
                 for line in f:
@@ -158,12 +196,12 @@ class DataDriver:
 
     def read(
         self, lines: Iterator[str]
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample], None, None]:
+    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], None, None]:
         raise NotImplementedError
 
     def save(
         self,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample]],
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         path: str,
     ):
         raise NotImplementedError
@@ -198,6 +236,14 @@ class QADataDriver(DataDriver):
         raise NotImplementedError
 
     def save(self, samples: Iterator[QASample], path: str):
+        raise NotImplementedError
+
+
+class GenerationDataDriver(DataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+        raise NotImplementedError
+
+    def save(self, samples: Iterator[GenerationSample], path: str):
         raise NotImplementedError
 
 
@@ -372,11 +418,61 @@ class JSONLQADataDriver(QADataDriver):
                 )
 
 
+class TSVGenerationDataDriver(GenerationDataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+        previous_line_parts = None
+        for i, line in enumerate(lines):
+            parts = line.split("\t")
+            # sanity check
+            assert len(parts) in [
+                1,
+                2,
+            ], f"TSVGenerationDataDriver expects 1 (sequence) or 2 (input sequence, output sequence) fields, but {len(parts)} were found at line {i}: {line}"
+            # consistency check
+            if previous_line_parts is not None:
+                assert len(parts) == len(
+                    previous_line_parts
+                ), f"TSVGenerationDataDriver expects all lines to contain the same number of fields, {len(parts)} fields at line {i} != {len(previous_line_parts)} fields at line {i-1}"
+            previous_line_parts = parts
+            yield GenerationSample(source_sequence=parts[0], target_sequence=parts[1] if len(parts) == 2 else None)
+
+    def save(self, samples: Iterator[GenerationSample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                assert (
+                    sample.source_language is None and sample.target_language is None
+                ), f"TSVGenerationDataDriver does not support language specification"
+                f.write(f"{sample.source_sequence}\t{sample.target_sequence}\n")
+
+
+class JSONLGenerationDataDriver(GenerationDataDriver):
+    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+        for line in lines:
+            yield GenerationSample(**json.loads(line))
+
+    def save(self, samples: Iterator[GenerationSample], path: str):
+        with open(path, "w") as f:
+            for sample in samples:
+                f.write(
+                    json.dumps(
+                        {
+                            "source_sequence": sample.source_sequence,
+                            "source_language": sample.source_language,
+                            "target_sequence": sample.target_sequence,
+                            "target_language": sample.target_language,
+                            **sample.get_additional_attributes(),
+                        }
+                    )
+                    + "\n"
+                )
+
+
 # TASK TYPES
 SEQUENCE = "sequence"
 SENTENCE_PAIR = "sentence-pair"
 TOKEN = "token"
 QA = "qa"
+GENERATION = "generation"
 
 # FILE EXTENSIONS
 TSV = "tsv"
@@ -391,6 +487,8 @@ READERS_DICT = {
     (TOKEN, TSV): TSVTokensDataDriver,
     (QA, TSV): TSVQADataDriver,
     (QA, JSONL): JSONLQADataDriver,
+    (GENERATION, TSV): TSVGenerationDataDriver,
+    (GENERATION, JSONL): JSONLGenerationDataDriver,
 }
 
 

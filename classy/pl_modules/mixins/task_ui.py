@@ -11,7 +11,9 @@ from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    get_data_driver, QASample,
+    get_data_driver,
+    QASample,
+    GenerationSample,
 )
 from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.utils.streamlit import get_md_200_random_color_generator
@@ -22,11 +24,17 @@ class TaskUIMixin:
         raise NotImplementedError
 
     def read_input(
-        self, inference_message: str, inferred_examples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample]]
-    ) -> Optional[Union[SentencePairSample, SequenceSample, TokensSample, QASample]]:
+        self,
+        inference_message: str,
+        inferred_examples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+    ) -> Optional[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]:
         raise NotImplementedError
 
-    def render(self, predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample, QASample], time: float):
+    def render(
+        self,
+        predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
+        time: float,
+    ):
         raise NotImplementedError
 
 
@@ -190,11 +198,14 @@ class QATaskUIMixin(TaskUIMixin):
         # tuple can't be used for selection boxes, let's use incipts
         option2example = {}
         for ie in inferred_examples:
-            option2example[f"({ie.question[: self.truncate_k]}, {ie.context[: self.truncate_k]})"] = (ie.question, ie.context)
+            option2example[f"({ie.question[: self.truncate_k]}, {ie.context[: self.truncate_k]})"] = (
+                ie.question,
+                ie.context,
+            )
         # build selection box
         selection_message = (
-                inference_message.rstrip(".")
-                + f". Examples are in the format (<question>, <context>); for space constraints, only the first {self.truncate_k} characters of both are shown."
+            inference_message.rstrip(".")
+            + f". Examples are in the format (<question>, <context>); for space constraints, only the first {self.truncate_k} characters of both are shown."
         )
         selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
         # build input area
@@ -226,5 +237,56 @@ class QATaskUIMixin(TaskUIMixin):
                     "</div>",
                 ]
             ),
+            unsafe_allow_html=True,
+        )
+
+
+class GenerationTaskUIMixin(TaskUIMixin):
+    def render_task_in_sidebar(self):
+        st.sidebar.header("Task")
+        st.sidebar.markdown(
+            f"""
+                        * **task**: QA
+                        * **input**: source sequence and, optionally (depending on the model), source and target language
+                    """
+        )
+
+    def read_input(
+        self,
+        inference_message: str,
+        inferred_examples: List[GenerationSample],
+    ) -> Optional[GenerationSample]:
+        # tuple can't be used for selection boxes, let's use incipts
+        option2example = {}
+        for ie in inferred_examples:
+            option2example[f"{ie.source_sequence}"] = (
+                ie.source_sequence,
+                ie.source_language if ie.source_language is not None else "",
+                ie.target_language if ie.target_language is not None else "",
+            )
+        # actual reading
+        selected_option = st.selectbox(inference_message, options=list(option2example.keys()), index=0)
+        source_sequence = st.text_area("Source sequence", option2example[selected_option][0])
+        source_language = st.text_input("Source language (empty to set it to None)", option2example[selected_option][1])
+        target_language = st.text_input("Target language (empty to set it to None)", option2example[selected_option][2])
+        if st.button("Classify", key="classify"):
+            return GenerationSample(
+                source_sequence=source_sequence,
+                source_language=source_language.strip() or None,
+                target_language=target_language.strip() or None,
+            )
+        return None
+
+    def render(self, predicted_sample: GenerationSample, time: float):
+        st.markdown(
+            f"""
+                    <div>
+                        <div class="stAlert">
+                            <p>Model generated: <br>{predicted_sample.target_sequence}</p>
+                        </div>
+                        <p></p>
+                        <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
+                    </div>
+                    """,
             unsafe_allow_html=True,
         )

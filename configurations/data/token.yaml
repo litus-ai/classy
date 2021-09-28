@@ -3,7 +3,7 @@ datamodule:
   task: ${task}
   dataset_path: null  # set via kwargs
   train_dataset:
-    _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
+    _target_: 'classy.data.dataset.hf.classification.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
     min_length: -1
     max_length: 500
@@ -14,7 +14,7 @@ datamodule:
     materialize: False
     for_inference: False
   validation_dataset:
-    _target_: 'classy.data.dataset.hf.HFTokenDataset.from_file'
+    _target_: 'classy.data.dataset.hf.classification.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
     min_length: -1
     max_length: 500

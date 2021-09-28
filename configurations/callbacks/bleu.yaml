@@ -1,0 +1,17 @@
+callbacks:
+  - _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
+    prediction_confs:
+      - name: "validation"
+        path: null  # todo terrible hardcoded path
+        token_batch_size: 800
+        prediction_param_conf_path: "configurations/prediction-params/generation-beam.yaml"
+        limit: 1000
+        enabled_prediction_callbacks:
+          - "file_dumper"
+          - "sacrebleu"
+    prediction_callbacks:
+      file_dumper:
+        _target_: "classy.pl_callbacks.prediction.FileDumperPredictionCallback"
+      sacrebleu:
+        _target_: "classy.pl_callbacks.prediction.SacreBleuGenerationCallback"
+    prediction_dataset_conf: ${prediction.dataset}

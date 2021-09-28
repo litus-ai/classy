@@ -2,10 +2,11 @@ import argparse
 import itertools
 import time
 from pathlib import Path
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict, Optional
 
 import streamlit as st
 import torch
+from omegaconf import OmegaConf
 
 from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver
 from classy.scripts.cli.evaluate import automatically_infer_test_path
@@ -37,12 +38,15 @@ def auto_infer_examples(
         )
 
 
-def demo(model_checkpoint_path: str, cuda_device: int):
+def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Optional[str] = None):
     @st.cache(allow_output_mutation=True)
     def load_resources():
         model = load_classy_module_from_checkpoint(model_checkpoint_path)
         model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
         model.freeze()
+
+        if prediction_params is not None:
+            model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
         dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
         inference_message, inferred_examples = auto_infer_examples(model.task, model_checkpoint_path)
@@ -83,13 +87,23 @@ def demo(model_checkpoint_path: str, cuda_device: int):
 
 def main():
     args = parse_args()
-    demo(model_checkpoint_path=args.model_checkpoint, cuda_device=args.cuda_device)
+    # todo proper solution with argparse named arguments
+    named_arguments = {"cuda_device": -1}
+    named_params_workaround = args.named_params_workaround
+    if len(named_params_workaround) > 0:
+        for i in range(0, len(named_params_workaround), 2):
+            k, v = named_params_workaround[i], named_params_workaround[i+1]
+            if k == "cuda_device":
+                v = int(v)
+            named_arguments[k] = v
+    # actual main
+    demo(model_checkpoint_path=args.model_checkpoint, **named_arguments)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
-    parser.add_argument("cuda_device", type=int, default=-1, nargs="?", help="Cuda device")
+    parser.add_argument("named_params_workaround", default=[], nargs="*", help="Named argument without --. Ex: prediction_params <path> cuda_device 0")
     return parser.parse_args()
 
 

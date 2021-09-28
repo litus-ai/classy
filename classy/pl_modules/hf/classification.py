@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, List, Iterator, Tuple, Union, Dict, NamedTuple
+from typing import Optional, List, Iterator, Tuple, Union
 
 import omegaconf
 import torch
@@ -8,22 +8,14 @@ from torch import nn
 from transformers import AutoConfig, AutoModel, AutoModelForSequenceClassification, AutoModelForQuestionAnswering
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
-from classy.pl_modules.base import ClassyPLModule
-from classy.utils.vocabulary import Vocabulary
-
+from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
 from classy.pl_modules.mixins.task import (
     TokensTask,
     SequenceTask,
     SentencePairTask,
     QATask,
 )
-
-
-class ClassificationOutput(NamedTuple):
-    logits: torch.Tensor
-    probabilities: torch.Tensor
-    predictions: torch.Tensor
-    loss: Optional[torch.Tensor] = None
+from classy.utils.vocabulary import Vocabulary
 
 
 # subclassed and mixed with both SequenceTask and SentencePairTask, as the underlying logic is identical (see below)
