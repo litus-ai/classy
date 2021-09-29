@@ -1,0 +1,30 @@
+task: token
+project_name: classy
+exp_name: ???
+exp_folder: ./experiments/${exp_name}
+
+transformer_model: "microsoft/deberta-large"
+
+hydra:
+  # customize working dir
+  run:
+    dir: ./experiments/${exp_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  # customize logging
+  verbose: [ classy ]
+  job_logging:
+    formatters:
+      simple:
+        format: '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+    root:
+      level: WARN
+
+# defaults
+defaults:
+  - callbacks: consec
+  - data: consec
+  - device: cuda
+  - model: consec
+  - prediction: consec
+  - training: consec
+  - logging: default
+  - _self_
