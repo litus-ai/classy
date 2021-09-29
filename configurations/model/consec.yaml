@@ -1,6 +1,6 @@
-_target_: 'classy.models.consec.module.ConsecPLModule'
+_target_: 'examples.consec.module.ConsecPLModule'
 sense_extractor:
-  _target_: classy.models.consec.sense_extractors.DebertaPositionalExtractor
+  _target_: examples.consec.sense_extractors.DebertaPositionalExtractor
   transformer_model: ${transformer_model}
   dropout: 0.0
   use_definitions_mask: True
@@ -12,5 +12,5 @@ optim_conf:
     - bias
     - LayerNorm.weight
 predictor:
-  _target_: classy.models.consec.prediction.GreedyDepPredictor
+  _target_: examples.consec.prediction.GreedyDepPredictor
   dependency_finder: ${data.dependency_finder}

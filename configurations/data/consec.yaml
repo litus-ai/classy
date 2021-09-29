@@ -4,11 +4,11 @@ use_definition_start: True
 
 # sense inventory
 sense_inventory:
-  _target_: classy.models.consec.sense_inventories.WordNetSenseInventory
+  _target_: examples.consec.sense_inventories.WordNetSenseInventory
   wn_candidates_path: data/wsd/wordnet.txt
 
 dependency_finder:
-  _target_: classy.models.consec.dependency_finder.PPMIPolysemyDependencyFinder
+  _target_: examples.consec.dependency_finder.PPMIPolysemyDependencyFinder
   max_dependencies: 9
   sense_inventory: ${data.sense_inventory}
   single_counter_path: data/pmi/lemma_counter.txt
@@ -19,7 +19,7 @@ dependency_finder:
 
 # tokenizer
 tokenizer:
-  _target_: classy.models.consec.tokenizer.DeBERTaTokenizer
+  _target_: examples.consec.tokenizer.DeBERTaTokenizer
   transformer_model: ${transformer_model}
   add_prefix_space: True
   target_marker: ["<d>", "</d>"]
@@ -36,7 +36,7 @@ datamodule:
   task: ${task}
   dataset_path: null  # set via kwargs
   train_dataset:
-    _target_: "classy.models.consec.dataset.ConsecDataset.from_file"
+    _target_: "examples.consec.dataset.ConsecDataset.from_file"
     tokenizer: ${data.tokenizer}
     sense_inventory: ${data.sense_inventory}
     dependency_finder: ${data.dependency_finder}
@@ -57,7 +57,7 @@ datamodule:
     materialize: False
     for_inference: False
   validation_dataset:
-    _target_: "classy.models.consec.dataset.ConsecDataset.from_file"
+    _target_: "examples.consec.dataset.ConsecDataset.from_file"
     tokenizer: ${data.tokenizer}
     sense_inventory: ${data.sense_inventory}
     dependency_finder: ${data.dependency_finder}

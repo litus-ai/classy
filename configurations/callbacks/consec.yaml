@@ -12,7 +12,7 @@ callbacks:
       file_dumper:
         _target_: "classy.pl_callbacks.prediction.FileDumperPredictionCallback"
       raganato:
-        _target_: "classy.models.consec.framework_evaluation.RaganatoPredictionCallback"
+        _target_: "examples.consec.framework_evaluation.RaganatoPredictionCallback"
         gold_key_path: "data/wsd/WSD_Evaluation_Framework/Evaluation_Datasets/semeval2007/semeval2007.gold.key.txt"  # todo terrible hardcoded path
         scorer_folder: "data/wsd/WSD_Evaluation_Framework/Evaluation_Datasets/"  # todo terrible hardcoded path
     prediction_dataset_conf: ${prediction.dataset}

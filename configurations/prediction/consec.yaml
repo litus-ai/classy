@@ -1,5 +1,5 @@
 dataset:
-  _target_: "classy.models.consec.dataset.ConsecDataset.from_samples"
+  _target_: "examples.consec.dataset.ConsecDataset.from_samples"
   tokenizer: ${data.tokenizer}
   sense_inventory: ${data.sense_inventory}
   dependency_finder: ${data.dependency_finder}
