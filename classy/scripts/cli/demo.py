@@ -7,6 +7,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
     parser.add_argument("-p", "--port", type=int, default=8000)
     parser.add_argument("-d", "--device", default="gpu")
+    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -35,7 +36,9 @@ def main(args):
     script_params = [args.model_path]
     if device != -1:
         # todo ugly workaround for straemlit which interprets -1 as a streamlit param)
-        script_params.append(str(device))
+        script_params += ["cuda_device", str(device)]
+    if args.prediction_params is not None:
+        script_params += ["prediction_params", args.prediction_params]
 
     sys.argv = [
         "streamlit",

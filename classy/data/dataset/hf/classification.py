@@ -1,47 +1,14 @@
-from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List
+from typing import Optional, Iterable, Dict, Any, Tuple, Iterator, List
 
 import torch
-from transformers import AutoTokenizer, BatchEncoding
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
-from classy.data.dataset.base import BaseDataset, batchify
+from classy.data.dataset.base import batchify
+from classy.data.dataset.hf.base import HFBaseDataset
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
 logger = get_project_logger(__name__)
-
-
-class HFBaseDataset(BaseDataset):
-    def __init__(
-        self,
-        samples_iterator: Callable[[], Iterator[SequenceSample]],
-        vocabulary: Vocabulary,
-        transformer_model: str,
-        tokens_per_batch: int,
-        max_batch_size: Optional[int],
-        section_size: int,
-        prebatch: bool,
-        materialize: bool,
-        min_length: int,
-        max_length: int,
-        for_inference: bool,
-    ):
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True, add_prefix_space=True)
-        super().__init__(
-            samples_iterator=samples_iterator,
-            vocabulary=vocabulary,
-            batching_fields=["input_ids"],
-            tokens_per_batch=tokens_per_batch,
-            max_batch_size=max_batch_size,
-            fields_batchers=None,
-            section_size=section_size,
-            prebatch=prebatch,
-            materialize=materialize,
-            min_length=min_length,
-            max_length=max_length if max_length != -1 else self.tokenizer.model_max_length,
-            for_inference=for_inference,
-        )
-        self._init_fields_batcher()
 
 
 class HFSequenceDataset(HFBaseDataset):
@@ -96,8 +63,9 @@ class HFTokenDataset(HFBaseDataset):
             }
             if token_sample.labels is not None:
                 elem_dict["labels"] = torch.tensor(
-                    [self.vocabulary.get_idx(k="labels", elem=label) for label in token_sample.labels]
+                    [self.vocabulary.get_idx(k="labels", elem=token_sample.labels[idx]) for idx in token_sample.target]
                 )
+
             elem_dict["samples"] = token_sample
             yield elem_dict
 
@@ -160,9 +128,11 @@ class HFQADataset(HFBaseDataset):
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(0),
                 "attention_mask": tokenization_output["attention_mask"].squeeze(0),
-                "token_type_ids": tokenization_output["token_type_ids"].squeeze(0),
                 "word2chars": tokenization_output["offset_mapping"].squeeze(0),
             }
+
+            if "token_type_ids" in tokenization_output:
+                elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze(0)
 
             if qa_sample.char_start is not None and qa_sample.char_end is not None:
                 elem_dict["start_position"] = tokenization_output.char_to_token(

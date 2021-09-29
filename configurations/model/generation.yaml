@@ -1,0 +1,20 @@
+_target_: 'classy.pl_modules.hf.generation.HFGenerationPLModule'
+transformer_model: ${transformer_model}
+decoding_skip_special_tokens: True
+decoding_clean_up_tokenization_spaces: False
+#optim_conf:
+#  _target_: classy.optim.factories.RAdamFactory
+#  lr: 1e-5
+#  weight_decay: 0.01
+#  no_decay_params:
+#    - bias
+#    - LayerNorm.weight
+optim_conf:
+  _target_: classy.optim.factories.AdafactorWithWarmupFactory
+  lr: 1e-5
+  warmup_steps: 5000
+  total_steps: ${training.pl_trainer.max_steps}
+  weight_decay: 0.01
+  no_decay_params:
+    - bias
+    - LayerNorm.weight

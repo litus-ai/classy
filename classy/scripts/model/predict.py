@@ -1,52 +1,15 @@
 import argparse
-from typing import List, Tuple, Generator, Dict, Union, Iterator
 
-import hydra.utils
 import torch
-from omegaconf import DictConfig
-from pytorch_lightning.utilities import move_data_to_device
-from torch.cuda.amp import autocast
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+from omegaconf import OmegaConf
 
-from classy.data.data_drivers import get_data_driver, TSV, SentencePairSample, SequenceSample, TokensSample
-from classy.pl_modules.base import ClassyPLModule
+from classy.data.data_drivers import get_data_driver
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
-
-
-def predict(
-    model: ClassyPLModule,
-    samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
-    dataset_conf: Union[Dict, DictConfig],
-    token_batch_size: int = 1024,
-    progress_bar: bool = False,
-) -> Generator[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]], None, None]:
-
-    # instantiate dataset
-    dataset_conf["tokens_per_batch"] = token_batch_size
-    dataset = hydra.utils.instantiate(dataset_conf, samples=samples, vocabulary=model.vocabulary)
-
-    # instantiate dataloader
-    dataloader = DataLoader(dataset, batch_size=None, num_workers=0)
-
-    iterator = dataloader
-    if progress_bar:
-        iterator = tqdm(iterator, desc="Predicting")
-
-    for batch in iterator:
-
-        # predict
-        with autocast(enabled=True):  # todo: always enabled?
-            with torch.no_grad():
-                batch = move_data_to_device(batch, model.device)
-                batch_out = model.predict(**batch)
-
-                for sample, prediction in batch_out:
-                    yield sample, prediction
 
 
 def interactive_main(
     model_checkpoint_path: str,
+    prediction_params: str,
     cuda_device: int,
 ):
 
@@ -54,15 +17,18 @@ def interactive_main(
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
 
+    if prediction_params is not None:
+        model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
+
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    data_driver = get_data_driver(model.task, TSV)
+
+    # mock call to load resources
+    next(model.predict(samples=[], dataset_conf=dataset_conf), None)
 
     while True:
-        source = input("Enter source text: ").strip()
         _, prediction = next(
-            predict(
-                model,
-                data_driver.read([source]),
+            model.predict(
+                [model.read_input_from_bash()],
                 dataset_conf=dataset_conf,
             )
         )
@@ -73,6 +39,7 @@ def file_main(
     model_checkpoint_path: str,
     input_path: str,
     output_path: str,
+    prediction_params: str,
     cuda_device: int,
     token_batch_size: int,
 ):
@@ -91,8 +58,7 @@ def file_main(
     data_driver = get_data_driver(model.task, input_extension)
 
     def it():
-        for source, prediction in predict(
-            model,
+        for source, prediction in model.predict(
             data_driver.read_from_path(input_path),
             token_batch_size=token_batch_size,
             dataset_conf=dataset_conf,
@@ -109,6 +75,7 @@ def main():
     if args.t:
         interactive_main(
             args.model_checkpoint,
+            prediction_params=args.prediction_params,
             cuda_device=args.cuda_device,
         )
     else:
@@ -116,6 +83,7 @@ def main():
             args.model_checkpoint,
             args.f,
             args.o,
+            prediction_params=args.prediction_params,
             cuda_device=args.cuda_device,
             token_batch_size=args.token_batch_size,
         )
@@ -124,6 +92,7 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
+    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
     parser.add_argument("--cuda-device", type=int, default=-1, help="Cuda device")
     # interactive params
     parser.add_argument("-t", action="store_true", help="Interactive mode")

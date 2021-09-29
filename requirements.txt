@@ -12,6 +12,13 @@ fastapi==0.68.1
 uvicorn[standard]==0.15.0
 streamlit==0.88.0
 st-annotated-text==2.0.0
+# optional(?)
+sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
+wandb==0.12.2  # required for logging
+nltk==3.4.5  # required by esc
+networkx==2.5  # required by esc
+rouge-score==0.0.4  # required by rouge callback
+sacrebleu==1.4.12  # required by sacrebleu callback
 # black
 black==21.8b0
 argcomplete==1.12.3

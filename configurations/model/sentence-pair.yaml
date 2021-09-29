@@ -1,4 +1,4 @@
-_target_: 'classy.pl_modules.hf.HFSentencePairPLModule'
+_target_: 'classy.pl_modules.hf.classification.HFSentencePairPLModule'
 transformer_model: ${transformer_model}
 optim_conf:
   _target_: classy.optim.factories.RAdamFactory

@@ -15,12 +15,14 @@ def populate_parser(parser: ArgumentParser):
         "model_path", type=checkpoint_path_from_user_input
     ).completer = autocomplete_model_path
     interactive_parser.add_argument("-d", "--device", default="gpu")
+    interactive_parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
 
     file_parser = subcmd.add_parser("file")
     file_parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
     file_parser.add_argument("file_path").completer = FilesCompleter()
     file_parser.add_argument("-d", "--device", default="gpu")
     file_parser.add_argument("-o", "--output-path", required=True).completer = FilesCompleter()
+    file_parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
     file_parser.add_argument("--token-batch-size", type=int, default=1024)
 
 
@@ -48,9 +50,11 @@ def main(args):
     device = get_device(args.device)
 
     if subcmd == "file":
-        file_main(args.model_path, args.file_path, args.output_path, device, args.token_batch_size)
+        file_main(
+            args.model_path, args.file_path, args.output_path, args.prediction_params, device, args.token_batch_size
+        )
     elif subcmd == "interactive":
-        interactive_main(args.model_path, device)
+        interactive_main(args.model_path, args.prediction_params, device)
     else:
         raise NotImplementedError
 

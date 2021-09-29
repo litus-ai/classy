@@ -1,23 +1,15 @@
 import collections
+import torch
 
-from typing import NamedTuple, Optional, Union, List, Iterator, Tuple, Dict
+from typing import Optional, NamedTuple, Any, Dict
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
-import torch
 import torchmetrics
 
-from classy.data.data_drivers import (
-    SentencePairSample,
-    SequenceSample,
-    TokensSample,
-    QASample,
-    SEQUENCE,
-    TOKEN,
-    SENTENCE_PAIR,
-    QA,
-)
+from classy.pl_modules.mixins.prediction import PredictionMixin
+from classy.pl_modules.mixins.saving import SavingMixin
 from classy.utils.vocabulary import Vocabulary
 
 
@@ -28,63 +20,17 @@ class ClassificationOutput(NamedTuple):
     loss: Optional[torch.Tensor] = None
 
 
-class ClassyPLModule(pl.LightningModule):
+class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
     def __init__(self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
-        self.custom_metric_on_validation_end = collections.defaultdict(lambda: torchmetrics.AverageMeter())
 
-    @property
-    def task(self) -> str:
-        raise NotImplementedError
+    def load_prediction_params(self, prediction_params: Dict):
+        pass
 
-    def predict(
-        self, *args, **kwargs
-    ) -> List[
-        Iterator[
-            Tuple[
-                Union[SentencePairSample, SequenceSample, TokensSample, QASample],
-                Union[str, List[str], Tuple[int, int]],
-            ]
-        ]
-    ]:
+    def forward(self, *args, **kwargs) -> ClassificationOutput:
         raise NotImplementedError
 
     def configure_optimizers(self):
         return hydra.utils.instantiate(self._optim_conf, _recursive_=False)(module=self)
-
-    def log_custom_metric_on_validation_end(self, k, v):
-        metric = self.custom_metric_on_validation_end[k]
-        metric.reset()
-        metric(v)
-
-
-class TaskMixin:
-    @property
-    def task(self) -> str:
-        raise NotImplementedError
-
-
-class SequenceTask(TaskMixin):
-    @property
-    def task(self) -> str:
-        return SEQUENCE
-
-
-class TokensTask(TaskMixin):
-    @property
-    def task(self) -> str:
-        return TOKEN
-
-
-class SentencePairTask(TaskMixin):
-    @property
-    def task(self) -> str:
-        return SENTENCE_PAIR
-
-
-class QATask(TaskMixin):
-    @property
-    def task(self) -> str:
-        return QA

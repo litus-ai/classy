@@ -1,0 +1,17 @@
+callbacks:
+  - _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
+    prediction_confs:
+      - name: "cnn-dm"
+        path: null
+        token_batch_size: 800
+        prediction_param_conf_path: "configurations/prediction-params/generation-beam.yaml"
+        limit: 1000
+        enabled_prediction_callbacks:
+          - "file_dumper"
+          - "rouge"
+    prediction_callbacks:
+      file_dumper:
+        _target_: "classy.pl_callbacks.prediction.FileDumperPredictionCallback"
+      rouge:
+        _target_: "classy.pl_callbacks.prediction.SummarizationRougeGenerationCallback"
+    prediction_dataset_conf: ${prediction.dataset}

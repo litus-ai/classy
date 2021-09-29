@@ -1,8 +1,8 @@
 callbacks:
   - _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
     prediction_confs:
-      - name: "conll2003-val"
-        path: "data/conll2003/validation.tsv"  # todo terrible hardcoded path
+      - name: "seqeval"
+        path: null
         token_batch_size: 300
         limit: -1
         enabled_prediction_callbacks:

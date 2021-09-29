@@ -1,19 +1,17 @@
 import os
-
 from argparse import ArgumentParser
 from pathlib import Path
 
 from classy.scripts.cli.utils import get_device
+from classy.utils.log import get_project_logger
 
-import logging
-
-logger = logging.getLogger(__name__)
+logger = get_project_logger(__name__)
 
 
 def populate_parser(parser: ArgumentParser):
 
     # TODO: add help?
-    parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa"))
+    parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa", "generation"))
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--profile", type=str, default=None)
     parser.add_argument("--transformer-model", type=str, default=None)
@@ -45,13 +43,21 @@ def parse_args():
 
 def _main_mock(cfg):
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
+    import hydra
+    from classy.scripts.model.train import fix_paths, train
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+    )
     train(cfg)
 
 
 def _main_resume(model_dir: str):
+
+    import hydra
+    from classy.utils.lightning import load_training_conf_from_checkpoint
 
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
@@ -64,8 +70,9 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
-    from classy.scripts.model.train import fix, train
     from classy.utils.lightning import load_training_conf_from_checkpoint
+    from classy.utils.hydra import fix_paths
+    from classy.scripts.model.train import train
 
     os.chdir(model_dir)
 
@@ -73,7 +80,11 @@ def _main_resume(model_dir: str):
     cfg = load_training_conf_from_checkpoint(last_ckpt_path, post_trainer_init=True)
     cfg.training.resume_from = last_ckpt_path
 
-    fix(cfg)
+    fix_paths(
+        cfg,
+        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+    )
     train(cfg)
 
 

@@ -1,19 +1,24 @@
 import itertools
 from pathlib import Path
-from typing import Iterator, Tuple, Union, List, Dict, Any
+from typing import Tuple, Union, List, Dict, Any
 
 import hydra
+import nltk
 import pytorch_lightning as pl
 import torchmetrics
 from datasets import load_metric
-from hydra._internal import instantiate
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, TSV, TOKEN
+from classy.data.data_drivers import (
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    get_data_driver,
+    TOKEN,
+    GenerationSample,
+)
 from classy.pl_modules.base import ClassyPLModule
-from classy.scripts.model.predict import predict
 from classy.utils.log import get_project_logger
-
 
 logger = get_project_logger(__name__)
 
@@ -85,6 +90,71 @@ class SeqEvalPredictionCallback(PredictionCallback):
         )
 
 
+class SummarizationRougeGenerationCallback(PredictionCallback):
+    def __init__(self):
+        self.rouge = load_metric("rouge")
+
+    def __call__(
+        self,
+        name: str,
+        predicted_samples: List[Tuple[GenerationSample, str]],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
+    ):
+
+        assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
+
+        gold_summaries = [sample.target_sequence for sample, _ in predicted_samples]
+        pred_summaries = [prediction for _, prediction in predicted_samples]
+
+        # process summaries
+        # todo maybe improve with something like ptb/stanza/some real sentence tokenizer
+        gold_summaries = ["\n".join(nltk.sent_tokenize(gs.replace(". ", "\n").rstrip())) for gs in gold_summaries]
+        pred_summaries = ["\n".join(nltk.sent_tokenize(ps.replace(". ", "\n").rstrip())) for ps in pred_summaries]
+
+        results = self.rouge.compute(predictions=pred_summaries, references=gold_summaries)
+        scores = []
+
+        for k, v in results.items():
+            # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
+            for metric in trainer._results.result_metrics:
+                if metric.meta.name == f"val_{name}_{k}":
+                    metric.reset()
+            model.log(f"{name}_{k}", v.mid.fmeasure, prog_bar=True, on_step=False, on_epoch=True)
+            scores.append(f"{name}_{k}: {v.mid.fmeasure:.4f}")
+
+        logger.info(f"SummarizationRougeGenerationCallback with name {name} completed with scores ({','.join(scores)})")
+
+
+class SacreBleuGenerationCallback(PredictionCallback):
+    def __init__(self):
+        self.bleu = load_metric("sacrebleu")
+
+    def __call__(
+        self,
+        name: str,
+        predicted_samples: List[Tuple[GenerationSample, str]],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
+    ):
+
+        assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
+
+        references = [sample.target_sequence for sample, _ in predicted_samples]
+        predictions = [prediction for _, prediction in predicted_samples]
+
+        results = self.bleu.compute(predictions=predictions, references=[[r] for r in references])
+        score = results["score"]
+
+        # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
+        for metric in trainer._results.result_metrics:
+            if metric.meta.name == f"{name}_bleu":
+                metric.reset()
+        model.log(f"{name}_bleu", score, prog_bar=True, on_step=False, on_epoch=True)
+
+        logger.info(f"SacreBleuGenerationCallback with name {name} completed with score: {score:.2f}")
+
+
 class PredictionPLCallback(pl.Callback):
     def __init__(
         self,
@@ -101,6 +171,7 @@ class PredictionPLCallback(pl.Callback):
                     prediction_conf["name"],
                     prediction_conf["path"],
                     prediction_conf["token_batch_size"],
+                    prediction_conf.get("prediction_param_conf_path", None),
                     prediction_conf["limit"],
                     prediction_conf["enabled_prediction_callbacks"],
                 )
@@ -110,9 +181,19 @@ class PredictionPLCallback(pl.Callback):
 
         logger.info("Executing prediction callback")
 
-        for (name, path, token_batch_size, limit, enabled_prediction_callbacks) in self.prediction_confs:
+        for (
+            name,
+            path,
+            token_batch_size,
+            prediction_param_conf_path,
+            limit,
+            enabled_prediction_callbacks,
+        ) in self.prediction_confs:
 
             logger.info(f"Prediction callback processing configuration {name} with path={path}")
+
+            if prediction_param_conf_path is not None:
+                model.load_prediction_params(dict(OmegaConf.load(prediction_param_conf_path)))
 
             extension = path.split(".")[-1]
             data_driver = get_data_driver(model.task, extension)
@@ -127,8 +208,7 @@ class PredictionPLCallback(pl.Callback):
                     lines_it = itertools.islice(lines_it, limit)
 
                 predicted_samples = list(
-                    predict(
-                        model,
+                    model.predict(
                         data_driver.read(lines_it),
                         dataset_conf=self.prediction_dataset_conf,
                         token_batch_size=token_batch_size,

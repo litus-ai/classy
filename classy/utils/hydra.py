@@ -1,21 +1,20 @@
-import os
+from typing import Callable
 
 import omegaconf
-import hydra
 
 
-def fix(conf):
+def fix_paths(conf, check_fn: Callable[[str], bool], fix_fn: Callable[[str], str]):
     if type(conf) == list or type(conf) == omegaconf.listconfig.ListConfig:
         for i in range(len(conf)):
-            conf[i] = fix(conf[i])
+            conf[i] = fix_paths(conf[i], check_fn=check_fn, fix_fn=fix_fn)
         return conf
     elif type(conf) == dict or type(conf) == omegaconf.dictconfig.DictConfig:
         for k, v in conf.items():
-            conf[k] = fix(v)
+            conf[k] = fix_paths(v, check_fn=check_fn, fix_fn=fix_fn)
         return conf
     elif type(conf) == str:
-        if "/" in conf and os.path.exists(hydra.utils.to_absolute_path(conf[: conf.rindex("/")])):
-            return hydra.utils.to_absolute_path(conf)
+        if "/" in conf and check_fn(conf):
+            return fix_fn(conf)
         else:
             return conf
     elif type(conf) in [float, int, bool]:

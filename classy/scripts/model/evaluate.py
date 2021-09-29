@@ -3,6 +3,7 @@ from typing import Optional, List, Callable, Union, Tuple, Dict
 
 import matplotlib.pyplot as plt
 import torch
+from omegaconf import OmegaConf
 from sklearn.metrics import (
     accuracy_score,
     precision_recall_fscore_support,
@@ -13,7 +14,6 @@ from sklearn.metrics import (
 from sklearn.utils.multiclass import unique_labels
 
 from classy.data.data_drivers import get_data_driver, SEQUENCE, SENTENCE_PAIR, TOKEN, QA
-from classy.scripts.model.predict import predict as backend_predict
 from classy.utils.commons import flatten
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 
@@ -69,6 +69,7 @@ def evaluate(
     token_batch_size: int,
     input_path: str,
     output_path: Optional[str] = None,
+    prediction_params: Optional[str] = None,
     metrics: Optional[Dict[str, Callable[[List[Union[Tuple[str, str], Tuple[List[str], List[str]]]]], None]]] = None,
 ):
 
@@ -76,6 +77,9 @@ def evaluate(
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
+
+    if prediction_params is not None:
+        model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
     # load dataset conf and driver
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
@@ -88,7 +92,7 @@ def evaluate(
 
     # predict
     predicted_samples = list(
-        backend_predict(
+        model.predict(
             model=model,
             samples=data_driver.read_from_path(input_path),
             dataset_conf=dataset_conf,
@@ -117,6 +121,7 @@ def main():
         token_batch_size=args.token_batch_size,
         input_path=args.f,
         output_path=args.o,
+        prediction_params=args.prediction_params,
         metrics=None,
     )
 
@@ -125,6 +130,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # prediction args
     parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
+    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
     parser.add_argument("--cuda-device", type=int, default=-1, help="Cuda device")
     parser.add_argument("--token-batch-size", type=int, default=128, help="Token batch size")
     # evaluation args

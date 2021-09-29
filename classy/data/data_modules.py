@@ -1,6 +1,7 @@
-import logging
+import itertools
 import os
-from typing import Optional, Union, List, Dict
+from pathlib import Path
+from typing import Optional, Union, List, Dict, Tuple
 
 import hydra.utils
 import omegaconf
@@ -15,6 +16,10 @@ from classy.utils.vocabulary import Vocabulary
 
 
 logger = get_project_logger(__name__)
+
+
+def path_if_exists(path: str) -> Optional[str]:
+    return path if Path(path).exists() else None
 
 
 class ClassyDataModule(pl.LightningDataModule):
@@ -54,7 +59,7 @@ class ClassyDataModule(pl.LightningDataModule):
         # If the data directory exists this run is being resumed from a previous one.
         # If the previous run stored some data we have to load them instead of recomputing
         # the splits or the shuffling.
-        if os.path.exists("data/"):
+        if Path("data/").exists():
             files_in_dir = os.listdir("data/")
 
             # check if the previous run stored a train file
@@ -72,12 +77,19 @@ class ClassyDataModule(pl.LightningDataModule):
             if len(possible_test_paths) == 1:
                 self.test_path = possible_test_paths[0]
 
+    def get_examples(self, n: int) -> Tuple[str, List]:
+        source = self.test_path or self.validation_path
+        assert source is not None
+        return "test" if self.test_path is not None else "validation", list(
+            itertools.islice(self.data_driver.read_from_path(source), n)
+        )
+
     def prepare_data(self) -> None:
 
         # TODO: we should improve the flow of this code
         if self.train_path is not None and self.validation_path is not None and self.test_path is not None:
             logger.info("Using train dev and test splits produced by the run being resumed")
-        elif os.path.isdir(self.dataset_path):  # the user provided a directory containing the datasets
+        elif Path(self.dataset_path).is_dir():  # the user provided a directory containing the datasets
             dir_train_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
 
             assert len(dir_train_files) == 1, "Found more than one file with 'train' in their name"  # todo: expand
@@ -87,19 +99,21 @@ class ClassyDataModule(pl.LightningDataModule):
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
             if self.train_path is None:  # does not belong to the train shuffling of a resume run
-                self.train_path = os.path.join(self.dataset_path, f"train.{self.file_extension}")
+                self.train_path = path_if_exists(os.path.join(self.dataset_path, f"train.{self.file_extension}"))
 
             if self.validation_path is None:
-                self.validation_path = os.path.join(self.dataset_path, f"validation.{self.file_extension}")
+                self.validation_path = path_if_exists(
+                    os.path.join(self.dataset_path, f"validation.{self.file_extension}")
+                )
 
-            self.test_path = os.path.join(self.dataset_path, f"test.{self.file_extension}")
+            self.test_path = path_if_exists(os.path.join(self.dataset_path, f"test.{self.file_extension}"))
 
-            assert os.path.exists(self.train_path), f"Cannot find the training file '{self.train_path}'"
+            assert self.train_path is not None, f"Cannot find the training file '{self.train_path}'"
 
             must_shuffle_dataset = (
                 self.shuffle_dataset
-                and not os.path.exists(f"data/train.shuffled.{self.file_extension}")
-                and not os.path.exists(f"data/dataset.shuffled.{self.file_extension}")
+                and not Path(f"data/train.shuffled.{self.file_extension}").exists()
+                and not Path(f"data/dataset.shuffled.{self.file_extension}").exists()
             )
 
             if must_shuffle_dataset:
@@ -114,7 +128,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 shuffle_and_store_dataset(self.train_path, self.data_driver, output_path=shuffled_dataset_path)
                 self.train_path = shuffled_dataset_path
 
-            if not os.path.exists(self.validation_path):
+            if self.validation_path is None:
                 logger.info(
                     f"Validation dataset not found: splitting the training dataset "
                     f"(split_size: {1 - self.validation_split_size} / {self.validation_split_size})"
@@ -141,7 +155,7 @@ class ClassyDataModule(pl.LightningDataModule):
             self.file_extension = self.dataset_path.split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
-            if self.shuffle_dataset and not os.path.exists(f"data/dataset.shuffled.{self.file_extension}"):
+            if self.shuffle_dataset and not Path(f"data/dataset.shuffled.{self.file_extension}").exists():
                 # create data folder
                 create_data_dir()
                 # shuffle training dataset
@@ -177,11 +191,11 @@ class ClassyDataModule(pl.LightningDataModule):
             )
 
         # todo: can we improve it?
-        if os.path.exists("vocabulary/"):
+        if Path("vocabulary/").exists():
             logger.info("Loading vocabulary from previous run")
             self.vocabulary = Vocabulary.from_folder("vocabulary/")
         elif self.external_vocabulary_path is not None:
-            logging.info("Loading vocabulary from external passed directory")
+            logger.info("Loading vocabulary from external passed directory")
             self.vocabulary = Vocabulary.from_folder(self.external_vocabulary_path)
             self.vocabulary.save("vocabulary")
         else:
