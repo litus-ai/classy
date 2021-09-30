@@ -8,13 +8,12 @@ supported_tasks:
   - token
 
 # global params
-transformer_model: bert-base-cased
+transformer_model: roberta-base
 
 # trainer
 pl_trainer:
   _target_: pytorch_lightning.Trainer
   accumulate_grad_batches: 1
-  gradient_clip_val: 10.0
   val_check_interval: 1.0
   max_steps: 100_000
 
