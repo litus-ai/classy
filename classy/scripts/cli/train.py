@@ -108,7 +108,7 @@ def main(args):
     else:
         config_name = args.task
 
-    cmd = ["classy-train", "-cn", config_name, "-cd", str(Path.cwd() / "configurations")]
+    cmd = ["classy-train", "-cn", config_name]  # , "-cd", str(Path.cwd() / "configurations")]
 
     # override all the fields modified by the profile
     if args.profile is not None:
@@ -186,7 +186,7 @@ def main(args):
     # we are basically mocking the normal python script invocation by setting the argv to those we want
     # unfortunately there is no better way to do this at this moment in time :(
     sys.argv = cmd
-    hydra.main(config_path=None)(_main_mock)()
+    hydra.main(config_path="../../../configurations")(_main_mock)()
 
 
 def test(cmd):
