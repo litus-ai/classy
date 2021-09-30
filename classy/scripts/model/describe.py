@@ -18,7 +18,7 @@ from classy.data.data_drivers import (
     SEQUENCE,
     SENTENCE_PAIR,
     TOKEN,
-    QA,
+    QA, GENERATION,
 )
 
 # colors
@@ -60,6 +60,17 @@ class UIMetric:
         st.markdown(self.description())
         self.write_body()
         st.markdown("---")  # metrics separator
+
+
+class InfoBoxUIMetric(UIMetric):
+    def __init__(self, message: str):
+        self.message = message
+
+    def is_writable(self) -> bool:
+        return True
+
+    def write_metric(self) -> None:
+        st.info(self.message)
 
 
 class InputLenUIMetric(UIMetric):
@@ -505,7 +516,52 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                 )
             )
             ui_metrics.append(AnswerPositionUIMetric())
-
+    elif task == GENERATION:
+        # source len in chars
+        ui_metrics.append(
+            LambdaWrapperUIMetric(
+                InputLenUIMetric(
+                    title="Source sequence Characters",
+                    description="Average, Min and Max source sequences length in terms of characters (Top). "
+                                "Quartiles on a boxplot (Bottom)",
+                ),
+                lambda sample: sample.source_sequence,
+            )
+        )
+        # target len in chars
+        ui_metrics.append(
+            LambdaWrapperUIMetric(
+                InputLenUIMetric(
+                    title="Target sequence Characters",
+                    description="Average, Min and Max target sequences length in terms of characters (Top). "
+                                "Quartiles on a boxplot (Bottom)",
+                ),
+                lambda sample: sample.target_sequence,
+            )
+        )
+        if tokenize is not None:
+            # source sentence len in tokens
+            ui_metrics.append(
+                LambdaWrapperUIMetric(
+                    InputLenUIMetric(
+                        title="Source sequence Tokens",
+                        description="Average, Min and Max source sequences length in terms of tokens (Top). "
+                                    "Quartiles on a boxplot (Bottom)",
+                    ),
+                    lambda sample: tokenizer.tokenize(sample.source_sequence) if sample.source_sequence is not None else None,
+                )
+            )
+            # target sentence len in tokens
+            ui_metrics.append(
+                LambdaWrapperUIMetric(
+                    InputLenUIMetric(
+                        title="Target sequence Tokens",
+                        description="Average, Min and Max target sequences length in terms of tokens (Top). "
+                                    "Quartiles on a boxplot (Bottom)",
+                    ),
+                    lambda sample: tokenizer.tokenize(sample.target_sequence) if sample.target_sequence is not None else None,
+                )
+            )
     else:
         print(f"ERROR: task {task} is not supported")
         raise NotImplementedError
@@ -516,19 +572,98 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
     return ui_metrics
 
 
-def update_metrics(ui_metrics: Iterable[UIMetric], task: str, dataset_path: str) -> None:
-    data_driver = get_data_driver(task, dataset_path.split(".")[-1])
-    dataset_samples = data_driver.read_from_path(dataset_path)
-    for dataset_sample in dataset_samples:
-        for ui_metric in ui_metrics:
-            ui_metric.update_metric(dataset_sample)
+class UIMetricsManager:
+    """
+    Manager that takes care of instantiating the metrics, updating the metrics on the dataset samples and write them
+    """
 
+    # the maximum amount of dataset samples processed by the ui_metrics, subsequent ones will not be taken into
+    # consideration for the analysis
+    MAXIMUM_NUMBER_OF_SAMPLES = 1_000_000
 
-def write_metrics(ui_metrics: Iterable[UIMetric]) -> None:
-    for ui_metric in ui_metrics:
-        if not ui_metric.is_writable():
-            continue
-        ui_metric.write_metric()
+    # the maximum number of instances that will be displayed on the plots. If the dataset contains
+    # more than "MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES" samples, then, "MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES" samples will
+    # be sampled from the processed instances
+    MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES = 50_000
+
+    # the number of samples that a dataset must have to be considered a "big dataset"
+    BIG_DATASET_SAMPLES_NUM = 100_000
+
+    def __init__(self, task: str, dataset_path: str, tokenize: str):
+        self.task = task
+        self.dataset_path = dataset_path
+        self.ui_metrics = get_ui_metrics(self.task, tokenize)
+        self.max_displayable_samples_flag = False
+        self.big_dataset_flag = False
+        self.max_samples_num_flag = False
+
+    def __iter_samples(self, data_driver, dataset_path) -> Iterable:
+        dataset_store = []
+        dataset_samples = data_driver.read_from_path(dataset_path)
+        for sample_num, sample in enumerate(dataset_samples, 1):
+            # Flags update
+            if sample_num == self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES:
+                self.max_displayable_samples_flag = True
+            if sample_num == self.BIG_DATASET_SAMPLES_NUM:
+                self.big_dataset_flag = True
+            if sample_num > self.MAXIMUM_NUMBER_OF_SAMPLES:
+                self.max_samples_num_flag = True
+                break
+
+            # sampling if necessary
+            if len(dataset_store) < self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES:
+                dataset_store.append(sample)
+            else:
+                if np.random.uniform(0, 1) < (1 / sample_num):
+                    dataset_store[np.random.randint(0, len(dataset_store))] = sample
+
+        return dataset_store
+
+    def update_metrics(self, task: str, dataset_path: str) -> None:
+        self.task = task
+        self.dataset_path = dataset_path
+
+        data_driver = get_data_driver(task, dataset_path.split(".")[-1])
+        for dataset_sample in self.__iter_samples(data_driver, dataset_path):
+            for ui_metric in self.ui_metrics:
+                ui_metric.update_metric(dataset_sample)
+
+    def write_metrics(self) -> None:
+
+        if self.max_displayable_samples_flag:
+            self.ui_metrics.insert(
+                0,
+                InfoBoxUIMetric(
+                    f"The amount of dataset samples is too big to be displayed on "
+                    f"plots (> {self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES}), we have sampled"
+                    f" {self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES} samples from your dataset to perform"
+                    f"all the analyses."
+                )
+            )
+
+        if self.big_dataset_flag:
+            self.ui_metrics.insert(
+                1,
+                InfoBoxUIMetric(
+                    f"The dataset you provided surpasses the {self.BIG_DATASET_SAMPLES_NUM} samples,"
+                    f"if it is your training dataset we suggest you to use the --big-dataset option when "
+                    f"training a model with it. Command: classy train {self.task} {self.dataset_path} --big-dataset"
+                ),
+            )
+
+        if self.max_samples_num_flag:
+            self.ui_metrics.insert(
+                2,
+                InfoBoxUIMetric(
+                    f"The dataset you provided is too big (> {self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES} samples). "
+                    f"To perform the sampling we only took into consideration the first 1 million samples."
+                ),
+            )
+
+        for ui_metric in self.ui_metrics:
+            if not ui_metric.is_writable():
+                continue
+            ui_metric.write_metric()
 
 
 def init_layout(task: str, dataset_path: str, metrics: Iterable[UIMetric]):
@@ -565,10 +700,10 @@ def describe(task: str, dataset_path: str, tokenize: Optional[str]) -> None:
     Returns:
         None
     """
-    ui_metrics = get_ui_metrics(task, tokenize)
-    update_metrics(ui_metrics, task, dataset_path)
-    init_layout(task, dataset_path, ui_metrics)
-    write_metrics(ui_metrics)
+    ui_metrics_manager = UIMetricsManager(task, dataset_path, tokenize)
+    ui_metrics_manager.update_metrics(task, dataset_path)
+    init_layout(task, dataset_path, ui_metrics_manager.ui_metrics)
+    ui_metrics_manager.write_metrics()
 
 
 def parse_args():

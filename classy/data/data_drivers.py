@@ -107,7 +107,12 @@ class TokensSample(ClassyStruct):
 
 class QASample(ClassyStruct):
     def __init__(
-        self, context: str, question: str, answer_start: Optional[int] = None, answer_end: Optional[int] = None, **kwargs
+        self,
+        context: str,
+        question: str,
+        answer_start: Optional[int] = None,
+        answer_end: Optional[int] = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.context = context
