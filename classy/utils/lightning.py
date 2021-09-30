@@ -20,11 +20,16 @@ def load_training_conf_from_checkpoint(checkpoint_path: str, post_trainer_init: 
     experiment_folder = Path(checkpoint_path).parent.parent
     # load hydra config
     conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
-    conf = OmegaConf.load(f"{experiment_folder}/.hydra/{conf_file}".lstrip("/"))
+    conf = OmegaConf.load(f"{experiment_folder}/.hydra/{conf_file}")
+
     # fix paths
     def check_fn(path):
         try:
-            return experiment_folder.joinpath(path).exists()
+            # check whether the path exists as is (absolute / relative)
+            # or if the path is relative to the experiment folder
+            # if it does not, it will be fixed by prepending the experiment folder
+            # TODO: check that the joined path actually exists and raise an exception when it doesn't
+            return Path(path).exists() or experiment_folder.joinpath(path).exists()
         except PermissionError:
             return False
 
