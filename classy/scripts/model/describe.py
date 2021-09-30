@@ -18,7 +18,8 @@ from classy.data.data_drivers import (
     SEQUENCE,
     SENTENCE_PAIR,
     TOKEN,
-    QA, GENERATION,
+    QA,
+    GENERATION,
 )
 
 # colors
@@ -523,7 +524,7 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                 InputLenUIMetric(
                     title="Source sequence Characters",
                     description="Average, Min and Max source sequences length in terms of characters (Top). "
-                                "Quartiles on a boxplot (Bottom)",
+                    "Quartiles on a boxplot (Bottom)",
                 ),
                 lambda sample: sample.source_sequence,
             )
@@ -534,7 +535,7 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                 InputLenUIMetric(
                     title="Target sequence Characters",
                     description="Average, Min and Max target sequences length in terms of characters (Top). "
-                                "Quartiles on a boxplot (Bottom)",
+                    "Quartiles on a boxplot (Bottom)",
                 ),
                 lambda sample: sample.target_sequence,
             )
@@ -546,9 +547,11 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                     InputLenUIMetric(
                         title="Source sequence Tokens",
                         description="Average, Min and Max source sequences length in terms of tokens (Top). "
-                                    "Quartiles on a boxplot (Bottom)",
+                        "Quartiles on a boxplot (Bottom)",
                     ),
-                    lambda sample: tokenizer.tokenize(sample.source_sequence) if sample.source_sequence is not None else None,
+                    lambda sample: tokenizer.tokenize(sample.source_sequence)
+                    if sample.source_sequence is not None
+                    else None,
                 )
             )
             # target sentence len in tokens
@@ -557,9 +560,11 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                     InputLenUIMetric(
                         title="Target sequence Tokens",
                         description="Average, Min and Max target sequences length in terms of tokens (Top). "
-                                    "Quartiles on a boxplot (Bottom)",
+                        "Quartiles on a boxplot (Bottom)",
                     ),
-                    lambda sample: tokenizer.tokenize(sample.target_sequence) if sample.target_sequence is not None else None,
+                    lambda sample: tokenizer.tokenize(sample.target_sequence)
+                    if sample.target_sequence is not None
+                    else None,
                 )
             )
     else:
@@ -638,7 +643,7 @@ class UIMetricsManager:
                     f"plots (> {self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES}), we have sampled"
                     f" {self.MAXIMUM_NUMBER_OF_DISPLAYED_SAMPLES} samples from your dataset to perform"
                     f"all the analyses."
-                )
+                ),
             )
 
         if self.big_dataset_flag:
