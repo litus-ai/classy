@@ -19,6 +19,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
+    parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
     parser.add_argument("--no-shuffle", action="store_true")
@@ -132,6 +133,9 @@ def main(args):
     if args.no_shuffle:
         cmd.append("data.datamodule.shuffle_dataset=False")
 
+    if args.epochs:
+        cmd.append(f"+training.pl_trainer.max_epochs={args.epochs}")
+
     # wandb logging
     if args.wandb is not None:
         cmd.append(f"logging.wandb.use_wandb=True")
@@ -158,7 +162,7 @@ def main(args):
 
     # bid-dataset option
     if args.big_dataset:
-        logging.info(
+        logger.info(
             "The user selected the --big-dataset option. "
             "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
             "2) evaluate the model performance every 2 thousand steps"
