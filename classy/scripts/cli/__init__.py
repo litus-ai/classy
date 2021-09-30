@@ -10,6 +10,8 @@ def get_commands():
     from classy.scripts.cli.serve import get_parser as serve_parser, main as serve_main
     from classy.scripts.cli.demo import get_parser as demo_parser, main as demo_main
     from classy.scripts.cli.describe import get_parser as describe_parser, main as describe_main
+    from classy.scripts.cli.download import get_parser as download_parser, main as download_main
+    from classy.scripts.cli.upload import get_parser as upload_parser, main as upload_main
 
     return dict(
         train=dict(
@@ -35,6 +37,14 @@ def get_commands():
         describe=dict(
             parser=describe_parser,
             main=describe_main,
+        ),
+        download=dict(
+            parser=download_parser,
+            main=download_main,
+        ),
+        upload=dict(
+            parser=upload_parser,
+            main=upload_main,
         ),
     )
 

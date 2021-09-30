@@ -5,6 +5,7 @@ from typing import Optional
 
 from argcomplete.completers import FilesCompleter
 from classy.utils.experiment import Experiment, Run
+from classy.utils.file import CLASSY_MODELS_CACHE_PATH
 
 
 def get_device(device):
@@ -61,15 +62,36 @@ def autocomplete_model_path(prefix: str, **kwargs):
         else:
             return []
     else:
-        exps = Experiment.list_available_experiments()
-        # TODO: list and add available downloaded models (without the path option! those only have one ckpt)
+        exps = Experiment.list_available_experiments() + Experiment.list_downloaded_experiments()
+        
         # give the user the option to continue with a specific path of the experiment
         if os.path.exists("experiments") and os.path.isdir("experiments"):
             exps.append("experiments/")
-        return exps  # + [name + "/" for name in exps]
+        return exps
 
 
-def checkpoint_path_from_user_input(model_path: str) -> Optional[str]:
+def checkpoint_path_from_user_input(model_path: str) -> str:
+    path = try_get_checkpoint_path_from_user_input(model_path)
+    if path is None:
+        print(f"Unable to convert {model_path} to its actual checkpoint, exiting.")
+        exit(1)
+
+    return path
+
+
+def try_get_checkpoint_path_from_user_input(model_path: str) -> Optional[str]:
+
+    # downloaded model!
+    if "@" in model_path:
+        exp = Experiment.from_name(model_path, CLASSY_MODELS_CACHE_PATH)
+
+        if exp is None:
+            print(f"No pretrained model called {model_path} was found! Available pretrained models:")
+            print(f"[{', '.join(Experiment.list_downloaded_experiments())}]")
+            return None
+
+        return str(exp.default_checkpoint)
+
     model_path = model_path.rstrip("/")
     model_name = model_path[len("experiments/") :] if model_path.startswith("experiments/") else model_path
 
