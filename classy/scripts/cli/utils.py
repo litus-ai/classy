@@ -63,7 +63,7 @@ def autocomplete_model_path(prefix: str, **kwargs):
             return []
     else:
         exps = Experiment.list_available_experiments() + Experiment.list_downloaded_experiments()
-        # TODO: list and add available downloaded models (without the path option! those only have one ckpt)
+        
         # give the user the option to continue with a specific path of the experiment
         if os.path.exists("experiments") and os.path.isdir("experiments"):
             exps.append("experiments/")
