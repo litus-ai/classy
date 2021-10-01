@@ -20,7 +20,7 @@ class HFSequenceDataset(HFBaseDataset):
         self.fields_batcher = {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
-            "labels": lambda lst: torch.tensor(lst, dtype=torch.long),
+            "labels": lambda lst: torch.tensor(lst, dtype=torch.long).squeeze(-1),
             "samples": None,
         }
 
@@ -118,6 +118,7 @@ class HFQADataset(HFBaseDataset):
         raise NotImplementedError
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
+
         for qa_sample in self.samples_iterator():
             qa_sample: QASample
 
@@ -141,6 +142,9 @@ class HFQADataset(HFBaseDataset):
                 elem_dict["end_position"] = tokenization_output.char_to_token(
                     0, qa_sample.char_end - 1, sequence_index=0
                 )
+                if elem_dict["start_position"] is None or elem_dict["end_position"] is None:
+                    print("Perbacco")
+                    continue
 
             elem_dict["samples"] = qa_sample
 
