@@ -5,6 +5,9 @@ exp_folder: ./experiments/${exp_name}
 
 transformer_model: "bert-base-cased"
 
+callbacks_monitor: 'val_accuracy'
+callbacks_mode: 'max'
+
 hydra:
   # customize working dir
   run:

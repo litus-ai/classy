@@ -14,7 +14,6 @@ transformer_model: bert-large-cased
 pl_trainer:
   _target_: pytorch_lightning.Trainer
   accumulate_grad_batches: 1
-  gradient_clip_val: 10.0
   val_check_interval: 1.0
   max_steps: 100_000
 
@@ -22,7 +21,7 @@ pl_trainer:
 model:
   optim_conf:
     _target_: classy.optim.factories.AdamWWithWarmupFactory
-    lr: 2e-5
+    lr: 3e-5
     warmup_steps: 5000
     total_steps: ${training.pl_trainer.max_steps}
     weight_decay: 0.01

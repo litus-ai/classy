@@ -44,7 +44,7 @@ def train(conf: omegaconf.DictConfig) -> None:
     if conf.training.model_checkpoint_callback is not None:
         model_checkpoint = hydra.utils.instantiate(
             conf.training.model_checkpoint_callback,
-            filename="{epoch:02d}-{" + conf.training.callbacks_monitor + ":.2f}",
+            filename="{epoch:02d}-{" + conf.callbacks_monitor + ":.2f}",
         )
         callbacks_store.append(model_checkpoint)
 

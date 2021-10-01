@@ -52,13 +52,20 @@ def _main_mock(cfg):
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
         fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
+
+    if "supported_tasks" in cfg and cfg.task not in cfg.supported_tasks:
+        logger.error(
+            f"The profile you selected does not support the input task. "
+            f"The following tasks are the ones supported: {', '.join(cfg.supported_tasks)}"
+        )
+        exit(1)
+
     train(cfg)
 
 
 def _main_resume(model_dir: str):
 
     import hydra
-    from classy.utils.lightning import load_training_conf_from_checkpoint
 
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")

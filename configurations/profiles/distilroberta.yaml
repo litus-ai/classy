@@ -8,7 +8,7 @@ supported_tasks:
   - token
 
 # global params
-transformer_model: bert-base-cased
+transformer_model: distilroberta
 
 # trainer
 pl_trainer:
@@ -21,7 +21,7 @@ pl_trainer:
 model:
   optim_conf:
     _target_: classy.optim.factories.AdamWWithWarmupFactory
-    lr: 3e-5
+    lr: 2e-5
     warmup_steps: 5000
     total_steps: ${training.pl_trainer.max_steps}
     weight_decay: 0.01

@@ -3,7 +3,10 @@ project_name: classy
 exp_name: ???
 exp_folder: ./experiments/${exp_name}
 
-transformer_model: "bert-large-cased"
+transformer_model: "bert-base-cased"
+
+callbacks_monitor: 'val_micro-f1-score'
+callbacks_mode: 'max'
 
 hydra:
   # customize working dir

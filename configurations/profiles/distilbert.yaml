@@ -8,7 +8,7 @@ supported_tasks:
   - token
 
 # global params
-transformer_model: bert-base-cased
+transformer_model: distilbert-base-cased
 
 # trainer
 pl_trainer:
