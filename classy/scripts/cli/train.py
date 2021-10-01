@@ -56,9 +56,6 @@ def _main_mock(cfg):
 
 def _main_resume(model_dir: str):
 
-    import hydra
-    from classy.utils.lightning import load_training_conf_from_checkpoint
-
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
         exit(1)
@@ -68,6 +65,8 @@ def _main_resume(model_dir: str):
             "The directory must contain the last checkpoint stored in the previous run (checkpoints/last.ckpt)."
         )
         exit(1)
+
+    import hydra
 
     # import here to avoid importing torch before it's actually needed
     from classy.utils.lightning import load_training_conf_from_checkpoint
@@ -89,9 +88,6 @@ def _main_resume(model_dir: str):
 
 
 def main(args):
-    import hydra
-    import sys
-
     if args.resume_from is not None:
         _main_resume(args.resume_from)
         return
@@ -172,6 +168,19 @@ def main(args):
 
     # append all user-provided configuration overrides
     cmd += args.config
+
+    # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
+    # it was imported in task_ui.py and was double-logging stuff...
+    # this is the best workaround at this time, but we should investigate and / or (re-)open an issue
+    # https://github.com/streamlit/streamlit/issues/1248
+    import streamlit
+    import logging
+
+    # at this point, streamlit's is the only handler added, so we can safely reset the handlers
+    logging.getLogger().handlers = []
+
+    import hydra
+    import sys
 
     # we are basically mocking the normal python script invocation by setting the argv to those we want
     # unfortunately there is no better way to do this at this moment in time :(
