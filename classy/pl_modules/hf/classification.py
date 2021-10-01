@@ -71,11 +71,11 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.micro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.macro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.accuracy_metric(classification_output.predictions, batch["labels"])
+        self.p_metric(classification_output.predictions, batch["labels"])
+        self.r_metric(classification_output.predictions, batch["labels"])
+        self.micro_f1_metric(classification_output.predictions, batch["labels"])
+        self.macro_f1_metric(classification_output.predictions, batch["labels"])
 
         self.log("val_loss", classification_output.loss)
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
@@ -87,11 +87,11 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
     def test_step(self, batch: dict, batch_idx: int) -> None:
         classification_output = self.forward(**batch)
 
-        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.p_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.r_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.micro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.macro_f1_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+        self.accuracy_metric(classification_output.predictions, batch["labels"])
+        self.p_metric(classification_output.predictions, batch["labels"])
+        self.r_metric(classification_output.predictions, batch["labels"])
+        self.micro_f1_metric(classification_output.predictions, batch["labels"])
+        self.macro_f1_metric(classification_output.predictions, batch["labels"])
 
         self.log("test_accuracy", self.accuracy_metric)
         self.log("test_precision", self.p_metric)
