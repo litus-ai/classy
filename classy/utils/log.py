@@ -1,5 +1,7 @@
 import logging
 
+_loggers = {}
+
 
 def get_project_logger(module_name: str) -> logging.Logger:
-    return logging.getLogger(f"classy.{module_name}")
+    return _loggers.setdefault(module_name, logging.getLogger(module_name))
