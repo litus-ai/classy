@@ -123,27 +123,30 @@ class HFQADataset(HFBaseDataset):
             qa_sample: QASample
 
             tokenization_output = self.tokenizer(
-                qa_sample.context, qa_sample.question, return_tensors="pt", return_offsets_mapping=True
+                qa_sample.context, qa_sample.question, return_tensors="pt",
             )
 
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(0),
                 "attention_mask": tokenization_output["attention_mask"].squeeze(0),
-                "word2chars": tokenization_output["offset_mapping"].squeeze(0),
             }
 
             if "token_type_ids" in tokenization_output:
                 elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze(0)
 
+            sequence_ids = tokenization_output.sequence_ids()
+
+            elem_dict["token2chars"] = list()
+            for token_idx, seq_id in enumerate(sequence_ids):
+                if seq_id is not None:
+                    char_start, char_end = tokenization_output.token_to_chars(token_idx)
+                    elem_dict["token2chars"].append((char_start, char_end))
+
             if qa_sample.char_start is not None and qa_sample.char_end is not None:
-                elem_dict["start_position"] = tokenization_output.char_to_token(
-                    0, qa_sample.char_start, sequence_index=0
-                )
-                elem_dict["end_position"] = tokenization_output.char_to_token(
-                    0, qa_sample.char_end - 1, sequence_index=0
-                )
+                elem_dict["start_position"] = tokenization_output.char_to_token(qa_sample.char_start, sequence_index=0)
+                elem_dict["end_position"] = tokenization_output.char_to_token(qa_sample.char_end - 1, sequence_index=0)
                 if elem_dict["start_position"] is None or elem_dict["end_position"] is None:
-                    print("Perbacco")
+                    print(qa_sample.question, qa_sample.context[qa_sample.char_start:qa_sample.char_end])
                     continue
 
             elem_dict["samples"] = qa_sample
@@ -155,7 +158,7 @@ class HFQADataset(HFBaseDataset):
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "token_type_ids": lambda lst: batchify(lst, padding_value=0),
-            "word2chars": None,
+            "token2chars": None,
             "start_position": lambda lst: torch.tensor(lst, dtype=torch.long),
             "end_position": lambda lst: torch.tensor(lst, dtype=torch.long),
             "samples": None,

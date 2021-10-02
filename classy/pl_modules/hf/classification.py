@@ -342,7 +342,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
-        word2chars: List[torch.Tensor],
+        token2chars: List[torch.Tensor],
         samples: List[QASample],
         token_type_ids: Optional[torch.Tensor] = None,
         *args,
@@ -354,6 +354,6 @@ class HFQAPLModule(QATask, ClassyPLModule):
             sample = samples[i]
             start_position = predictions[0][i]
             end_position = predictions[1][i]
-            start_char = word2chars[i][start_position][0].item() if start_position < len(word2chars[i]) else -1
-            end_char = word2chars[i][end_position][-1].item() if end_position < len(word2chars[i]) else -1
+            start_char = token2chars[i][start_position][0] if start_position < len(token2chars[i]) else -1
+            end_char = token2chars[i][end_position][-1] if end_position < len(token2chars[i]) else -1
             yield sample, (start_char, end_char)
