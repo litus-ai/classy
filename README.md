@@ -2,7 +2,7 @@
     <br>
     <img alt="classy logo" src="TODO" width="400"/>
     <p>
-    A Pytorch-based library for fast prototyping and sharing of deep neural network models. 
+    A PyTorch-based library for fast prototyping and sharing of deep neural network models. 
     </p>
     <hr/>
 </div>
@@ -22,19 +22,19 @@
     </a>
 -->
     <a href="">
-        <img alt="Python" src="https://img.shields.io/badge/-Python 3.7--3.9-blue?style=for-the-badge&logo=python&logoColor=white">
+        <img alt="Python" src="https://img.shields.io/badge/Python 3.7--3.9-blue?style=for-the-badge&logo=python&logoColor=white">
     </a>
     <a href="https://pypi.org/project/classy-ml/">
         <img alt="PyPI" src="https://img.shields.io/pypi/v/classy-ml?style=for-the-badge&logo=pypi">
     </a>
     <a href="https://pytorch.org/get-started/locally/">
-        <img alt="PyTorch" src="https://img.shields.io/badge/-PyTorch 1.8+-ee4c2c?style=for-the-badge&logo=pytorch&logoColor=white">
+        <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch 1.8+-ee4c2c?style=for-the-badge&logo=pytorch&logoColor=white">
     </a>
     <a href="https://pytorchlightning.ai/">
-        <img alt="Lightning" src="https://img.shields.io/badge/-Lightning 1.3+-792ee5?style=for-the-badge&logo=pytorchlightning&logoColor=white">
+        <img alt="Lightning" src="https://img.shields.io/badge/Lightning 1.4.5-792ee5?style=for-the-badge&logo=pytorchlightning&logoColor=white">
     </a>
     <a href="https://hydra.cc/">
-        <img alt="Config: hydra" src="https://img.shields.io/badge/config-hydra 1.1-89b8cd?style=for-the-badge&labelColor=gray">
+        <img alt="Config: hydra" src="https://img.shields.io/badge/config-hydra 1.1.1-89b8cd?style=for-the-badge&labelColor=gray">
     </a>
     <a href="https://black.readthedocs.io/en/stable/">
         <img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-black.svg?style=for-the-badge&labelColor=gray">
@@ -59,16 +59,15 @@
 - [⚡ Installation](#installation)
     - [Installing via pip](#installing-via-pip)
     - [Installing from source](#installing-from-source)
-- [✨ Running Classy](#running-classy)
-- [⌨ Commands](#commands)
+- [⌨ Running Classy](#running-classy)
     - [`classy train`](#classy-train)
     - [`classy predict`](#classy-predict)
     - [`classy evaluate`](#classy-evaluate)
     - [`classy serve`](#classy-serve)
     - [`classy demo`](#classy-demo)
     - [`classy describe`](#classy-describe)
-    - [`classy download`](#classy-download)
     - [`classy upload`](#classy-upload)
+    - [`classy download`](#classy-download)
     - [Enable `classy` shell completion](#enabling-shell-completion)
 - [🤔 Issues](#issues)
 - [❤️ Contributions](#contributions)
@@ -147,16 +146,46 @@ pip install -e .
 This will make `classy` available in your environment, but using the sources of the cloned repository.
 
 ## Running `classy`
+Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](http://TODO). Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
 
-## Commands
 ### `classy train`
+In its simplest form, `classy train` lets you train a transformer-based neural network for one of the tasks supported by `classy` (see TODO).
+
+```yaml
+classy train sentence-pair path/to/dataset/folder-or-file -n my-model
+```
+The command above will train a model to predict a label given a pair of sentences as input (e.g., Natural Language Inference or NLI) and save it under `experiments/my-model`. This same model can be further used by all other `classy` commands which require a `classy` model (`predict`, `evaluate`, `serve`, `demo`, `upload`).
+
 ### `classy predict`
+`classy predict` actually has two subcommands: `interactive` and `file`. 
+
+The first loads the model in memory and lets you try it out through the shell directly, so that you can test the model you trained and see what it predicts given some input. It is particularly useful when your machine cannot open a port for [`classy demo`](#classy-demo).
+
+The second, instead, works on a file and produces an output where, for each input, it associates the corresponding predicted label. It is very useful when doing pre-processing or when you need to evaluate your model (although we offer [`classy evaluate`](#classy-evaluate) for that).
+
 ### `classy evaluate`
+`classy evaluate` lets you evaluate your model on standard metrics for the task your model was trained upon. Simply run `classy evaluate my-model path/to/file -o path/to/output/file` and it will dump the evaluation at `path/to/output/file`
+
 ### `classy serve`
+`classy serve <model>` loads the model in memory and spawns a REST API you can use to query your model with any REST client.
+
 ### `classy demo`
+`classy demo <model>` spawns a [Streamlit](https://streamlit.io) interface which lets you quickly show and query your model.
+
 ### `classy describe`
-### `classy download`
+`classy describe <task> --dataset path/to/dataset` runs some common metrics on a file formatted for the specific task. Great tool to run **before** training your model!
+
 ### `classy upload`
+`classy upload <model>` lets you upload your `classy`-trained model on the [HuggingFace Hub](https://huggingface.co) and lets other users download / use it. (NOTE: you need a HuggingFace Hub account in order to upload to their hub)
+
+Models uploaded via `classy upload` will be available for download by other classy users by simply executing `classy download username@model`.
+
+### `classy download`
+`classy download <model>` downloads a previously uploaded `classy`-trained model from the [HuggingFace Hub](https://huggingface.co) and stores it on your machine so that it is usable with any other `classy` command which requires a trained model (`predict`, `evaluate`, `serve`, `demo`, `upload`). 
+
+You can find [SunglassesAI](http://sunglasses.ai)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai). 
+
+Models uploaded via `classy upload` are available by doing `classy download username@model`.
 
 ### Enabling Shell Completion
 To install shell completion, **activate your conda environment** and then execute
