@@ -69,7 +69,7 @@
     - [`classy describe`](#classy-describe)
     - [`classy download`](#classy-download)
     - [`classy upload`](#classy-upload)
-    - [Enable shell completion](#enabling-shell-completion)
+    - [Enable `classy` shell completion](#enabling-shell-completion)
 - [🤔 Issues](#issues)
 - [❤️ Contributions](#contributions)
 - [🤓 Team](#team)
@@ -81,8 +81,15 @@ TODO
 ## Installation
 We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning.
 
-`classy` requires Python 3.7 or later, [PyTorch](https://pytorch.org/) and [PyTorch Lightning](https://pytorchlightning.ai/).
+`classy` requires Python 3.7 or later, and is built on [PyTorch Lightning](https://pytorchlightning.ai/).
 It's recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/).
+
+Or, simply put: 
+```yaml
+conda install pytorch cudatoolkit=CUDA_VERSION -c pytorch
+```
+Don't know what `CUDA_VERSION` you have?
+[Check this link](https://stackoverflow.com/a/68499241/1908499).
 
 The preferred way to install `classy` is via `pip`. Just run `pip install classy-ml`.
 
@@ -93,7 +100,7 @@ The preferred way to install `classy` is via `pip`. Just run `pip install classy
 #### Setting up a virtual environment
 
 [Conda](https://conda.io/) can be used set up a virtual environment with the
-version of Python required for AllenNLP.  If you already have a Python 3
+version of Python required for `classy`.  If you already have a Python 3
 environment you want to use, you can skip to the 'installing via pip' section.
 
 1.  [Download and install Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
@@ -159,8 +166,20 @@ classy --install-autocomplete
 
 From now on, whenever you activate your conda environment with `classy` installed, you are going to have autocompletion when pressing `[TAB]`!
 
+## Issues
+You are more than welcome to file issues with either feature requests, bug reports, or general questions. If you already found a solution to your problem, don't hesitate to share it. Suggestions for new best practices and tricks are always welcome!
+
+## Contributions
+We warmly welcome contributions from the community. If it is your first time as a contributor, we recommend you start by reading our CONTRIBUTING.md guide.
+
+Small contributions can be made directly in a pull request. For contributing major features, we recommend you first create a issue proposing a design, so that it can be discussed before you risk wasting time.
+
+Pull requests (PRs) must have one approving review and no requested changes before they are merged. 
+As `classy` is primarily driven by SunglassesAI, we reserve the right to reject or revert contributions that we don't think are good additions or might not fit into our roadmap.
+
+
 ## Team
-`classy` is an open-source project developed by [https://sunglasses.ai/](SunglassesAI), a company with the mission to [...]. If you want to know who contributed to this codebase, see our contributors page.
+`classy` is an open-source project developed by [SunglassesAI](https://sunglasses.ai/), a company with the mission to [...]. If you want to know who contributed to this codebase, see our contributors page.
 
 
 
