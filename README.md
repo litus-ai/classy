@@ -14,9 +14,6 @@
     <a href="https://github.com/sunglasses-ai/classy/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/sunglasses-ai/classy.svg?color=blue&cachedrop">
     </a>
-    <a href="https://codecov.io/gh/sunglasses-ai/classy">
-        <img alt="Codecov" src="https://codecov.io/gh/sunglasses-ai/classy/branch/main/graph/badge.svg">
-    </a>
     <a href="https://optuna.org">
         <img alt="Optuna" src="https://img.shields.io/badge/Optuna-integrated-blue">
     </a>
@@ -38,6 +35,9 @@
     </a>
     <a href="https://black.readthedocs.io/en/stable/">
         <img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-black.svg?style=for-the-badge&labelColor=gray">
+    </a>
+    <a href="https://codecov.io/gh/sunglasses-ai/classy">
+        <img alt="Codecov" src="https://img.shields.io/codecov/c/github/sunglasses-ai/classy/main?label=cov&logo=codecov&style=for-the-badge&token=S0PMBCTG73">
     </a>
     <br/>
 </p>
