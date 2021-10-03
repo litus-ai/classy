@@ -124,7 +124,7 @@ There are five tasks currently supported by classy:
                 <Card.Header>Text Extraction</Card.Header>
                 <Card.Body className="d-flex flex-column">
                     <Card.Text style={{textAlign: "center"}}>Given a context (e.g. a document) and some query about this document (e.g. a question), extract the consecutive span in the context that best addresses the query (e.g. an answer).</Card.Text>
-                    <ButtonWithBackdrop title="Example: English-to-Italian Machine Translation">
+                    <ButtonWithBackdrop title="Example: Question Answering">
                         <Row style={{alignItems: "center"}}>
                             <Col sm={5} style={{textAlign: "center"}}>
                                 <p><b>Context:</b></p>

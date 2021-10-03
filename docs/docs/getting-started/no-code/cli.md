@@ -203,3 +203,21 @@ Now you can check out out the demo at *http://0.0.0.0:8000*!
 
 ![Classy Demo](/img/intro/demo.png)
 
+## Additional Commands
+
+Besides these commands, classy CLI also offers you:
+* `classy describe`, a data-analysis tool with general and task-specific stats over your dataset
+* `classy download`, to download pre-trained models 
+* `classy upload`, to upload your trained models 
+
+### Describe
+
+TODO
+
+### Download
+
+TODO
+
+### Upload
+
+TODO

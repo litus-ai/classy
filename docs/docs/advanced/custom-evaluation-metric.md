@@ -4,9 +4,9 @@ title: Custom Evaluation Metric
 ---
 
 Adding a custom metric to be logged, and perhaps even monitored for early stopping, is easy with classy. There are 3 ways to go about it:
-* hooking inside *ClassyPLModule*
-* using classy *PredictionCallback*-s
-* using Pytorch Lightning *Callback*-s
+* Hooking inside *ClassyPLModule*
+* Using classy *PredictionCallback*-s
+* Using Pytorch Lightning *Callback*-s
 
 
 ## Hooking inside *ClassyPLModule*
