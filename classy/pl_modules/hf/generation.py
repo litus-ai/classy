@@ -4,8 +4,7 @@ from typing import Optional, Iterator, Tuple, Dict
 import omegaconf
 import torch
 from torch import nn
-from transformers import BartForConditionalGeneration, GPT2LMHeadModel, AutoTokenizer, AutoModelForSeq2SeqLM
-from transformers.models.auto.tokenization_auto import BartTokenizerFast, GPT2TokenizerFast
+from transformers import GPT2LMHeadModel, AutoTokenizer, AutoModelForSeq2SeqLM
 
 from classy.data.data_drivers import GenerationSample
 from classy.pl_modules.base import ClassyPLModule, ClassificationOutput

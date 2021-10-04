@@ -56,9 +56,6 @@ def _main_mock(cfg):
 
 def _main_resume(model_dir: str):
 
-    import hydra
-    from classy.utils.lightning import load_training_conf_from_checkpoint
-
     if not os.path.isdir(model_dir):
         logger.error(f"The previous run directory provided: '{model_dir}' does not exist.")
         exit(1)
@@ -70,22 +67,23 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
+    import hydra
+    import sys
+    from omegaconf import OmegaConf
+
     from classy.utils.lightning import load_training_conf_from_checkpoint
-    from classy.utils.hydra import fix_paths
-    from classy.scripts.model.train import train
 
-    os.chdir(model_dir)
+    model_dir = Path(model_dir)
 
-    last_ckpt_path = "checkpoints/last.ckpt"
-    cfg = load_training_conf_from_checkpoint(last_ckpt_path, post_trainer_init=True)
-    cfg.training.resume_from = last_ckpt_path
+    last_ckpt_path = model_dir / "checkpoints/last.ckpt"
+    cfg = load_training_conf_from_checkpoint(str(last_ckpt_path), post_trainer_init=True)
+    cfg.training.resume_from = str(last_ckpt_path)
 
-    fix_paths(
-        cfg,
-        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
-    )
-    train(cfg)
+    resuming_config_path = model_dir / '.hydra/resuming-config.yaml'
+    OmegaConf.save(cfg, resuming_config_path)
+
+    sys.argv = ["classy-train", "-cn", resuming_config_path.stem, "-cd", str(resuming_config_path.parent)]
+    hydra.main(config_path=None)(_main_mock)()
 
 
 def main(args):
@@ -158,7 +156,7 @@ def main(args):
 
     # bid-dataset option
     if args.big_dataset:
-        logging.info(
+        logger.info(
             "The user selected the --big-dataset option. "
             "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
             "2) evaluate the model performance every 2 thousand steps"
