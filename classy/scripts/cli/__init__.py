@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from pathlib import Path
 
 import argcomplete
 
@@ -53,7 +54,15 @@ def parse_args(commands: dict):
 
     parser = ArgumentParser()
 
-    subcmds = parser.add_subparsers(dest="action", required=True)
+    grp = parser.add_mutually_exclusive_group()
+
+    grp.add_argument(
+        "--install-autocomplete",
+        action="store_true",
+        help="Installs classy's autocomplete (currently works with bash and zsh only)",
+    )
+
+    subcmds = parser.add_subparsers(dest="action", required=False)
     for action_name, action_data in commands.items():
         action_data["parser"](subcmds)
 
@@ -62,9 +71,46 @@ def parse_args(commands: dict):
     return parser.parse_args()
 
 
+def install_autocomplete():
+    import os
+
+    prefix = os.getenv("CONDA_PREFIX")
+    if prefix is None:
+        print("CONDA_PREFIX unset. Are you sure you are executing this within a conda environment?")
+        return
+
+    path = Path(prefix)
+    script_path = path / "etc/conda/activate.d/classy-complete.sh"
+    if script_path.exists():
+        print("Autocomplete already installed! Exiting...")
+        return
+
+    script_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # TODO: improve to make it work with other shells!
+    # currently works with bash and zsh (if bashcompinit is enabled!)
+    # see https://github.com/kislyuk/argcomplete#activating-global-completion for more info
+    with script_path.open("w") as f:
+        s = 'eval "$(register-python-argcomplete classy)"'
+        print(s, file=f)
+
+    print("Autocompletion installed, enjoy classy! :)")
+
+
 def main():
     commands = get_commands()
     args = parse_args(commands)
+
+    if args.install_autocomplete:
+        install_autocomplete()
+        return
+
+    if args.action is None:
+        print(
+            "No action has been provided. Execute `classy --install-autocomplete` "
+            "to install classy's shell completion or `classy -h` for help"
+        )
+        exit(1)
 
     commands[args.action]["main"](args)
 
