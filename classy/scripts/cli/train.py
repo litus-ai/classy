@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from classy.scripts.cli.utils import get_device
+from classy.utils.hydra_patch import ConfigBlame
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
@@ -15,9 +16,10 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--profile", type=str, default=None)
     parser.add_argument("--transformer-model", type=str, default=None)
-    parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", default=None)
+    parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", required=True)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
+    parser.add_argument("-cd", "--config-dir", default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--resume-from", type=str)
@@ -26,6 +28,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--vocabulary-dir", default=None)
     parser.add_argument("--big-dataset", action="store_true")
+    parser.add_argument("--print", action="store_true")
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -38,8 +41,25 @@ def get_parser(subparser=None) -> ArgumentParser:
     return parser
 
 
+class ClassyBlame(ConfigBlame):
+    def __init__(self, arg: str):  # noqa
+        self.arg = arg
+
+    def __str__(self):
+        return f"[classy train [...] {self.arg}]"
+
+
 def parse_args():
     return get_parser().parse_args()
+
+
+def _main_print_config(blames):
+    from classy.utils.rich_config import print_config
+
+    def _print_config(cfg):
+        print_config(cfg, blames)
+
+    return _print_config
 
 
 def _main_mock(cfg):
@@ -107,7 +127,12 @@ def main(args):
     else:
         config_name = args.task
 
-    cmd = ["classy-train", "-cn", config_name]  # , "-cd", str(Path.cwd() / "configurations")]
+    blames = []
+
+    cmd = ["classy-train", "-cn", config_name]  # , "-cd", str(Path.cwd() / "conf")]
+
+    if args.config_dir is not None:
+        cmd += ["-cd", args.config_dir]
 
     # override all the fields modified by the profile
     if args.profile is not None:
@@ -127,9 +152,7 @@ def main(args):
             return
         cmd.append(f"device=cpu")
 
-    # create default experiment name if not provided
-    exp_name = args.exp_name or f"{args.task}-{args.model_name}"
-    cmd.append(f"exp_name={exp_name}")
+    cmd.append(f"exp_name={args.exp_name}")
 
     # add dataset path
     cmd.append(f"data.datamodule.dataset_path={args.dataset}")
@@ -137,6 +160,7 @@ def main(args):
     # turn off shuffling if requested
     if args.no_shuffle:
         cmd.append("data.datamodule.shuffle_dataset=False")
+        blames.append((["data.datamodule.shuffle_dataset", ClassyBlame("--no-shuffle")]))
 
     if args.epochs:
         cmd.append(f"+training.pl_trainer.max_epochs={args.epochs}")
@@ -144,26 +168,38 @@ def main(args):
     # wandb logging
     if args.wandb is not None:
         cmd.append(f"logging.wandb.use_wandb=True")
+        configs = ["logging.wandb.use_wandb"]
+
         if args.wandb == "anonymous":
             cmd.append(f"logging.wandb.anonymous=allow")
+            configs.append("logging.wandb.anonymous")
+            to_blame = ClassyBlame("--wandb anonymous")
         else:
-            assert "@" in args.wandb, (
-                "If you specify a value for '--wandb' it must contain both the name of the "
-                "project and the name of the specific experiment in the following format: "
-                "'<project-name>@<experiment-name>'"
-            )
+            if "@" not in args.wandb:
+                print(
+                    "If you specify a value for '--wandb' it must contain both the name of the "
+                    "project and the name of the specific experiment in the following format: "
+                    "'<project-name>@<experiment-name>'"
+                )
+                exit(1)
 
             project, experiment = args.wandb.split("@")
             cmd.append(f"logging.wandb.project_name={project}")
             cmd.append(f"logging.wandb.experiment_name={experiment}")
+            configs.extend(("logging.wandb.project_name", "logging.wandb.experiment_name"))
+            to_blame = ClassyBlame(f"--wandb {args.wandb}")
+
+        blames.append((configs, to_blame))
 
     # change the underlying transformer model
     if args.transformer_model is not None:
         cmd.append(f"transformer_model={args.transformer_model}")
+        blames.append((["transformer_model", ClassyBlame(f"--transformer-model {args.transformer_model}")]))
 
     # precomputed vocabulary from the user
     if args.vocabulary_dir is not None:
         cmd.append(f"+data.vocabulary_dir={args.vocabulary_dir}")
+        blames.append((["data.vocabulary_dir"], ClassyBlame(f"--vocabulary-dir {args.vocabulary_dir}")))
 
     # bid-dataset option
     if args.big_dataset:
@@ -178,6 +214,17 @@ def main(args):
         cmd.append("training.pl_trainer.val_check_interval=2000")  # TODO: 2K steps seems quite arbitrary
         cmd.append("data.datamodule.validation_split_size=0.05")
         cmd.append("data.datamodule.test_split_size=0.05")
+        blames.append(
+            (
+                [
+                    "data.datamodule.shuffle_dataset",
+                    "training.pl_trainer.val_check_interval",
+                    "data.datamodule.validation_split_size",
+                    "data.datamodule.test_split_size",
+                ],
+                ClassyBlame("--big-dataset"),
+            )
+        )
 
     # append all user-provided configuration overrides
     cmd += args.config
@@ -198,15 +245,9 @@ def main(args):
     # we are basically mocking the normal python script invocation by setting the argv to those we want
     # unfortunately there is no better way to do this at this moment in time :(
     sys.argv = cmd
-    hydra.main(config_path="../../../configurations")(_main_mock)()
-
-
-def test(cmd):
-    import sys
-
-    sys.argv = cmd.split(" ")
-    print(cmd, end=" -> \n\t")
-    main(parse_args())
+    # hydra.main(config_path="../../../configurations")(_main_mock)()
+    target_fn = _main_print_config(blames) if args.print else _main_mock
+    hydra.main(config_path=None)(target_fn)()
 
 
 if __name__ == "__main__":
