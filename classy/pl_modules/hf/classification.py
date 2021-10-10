@@ -343,17 +343,30 @@ class HFQAPLModule(QATask, ClassyPLModule):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
         token2chars: List[torch.Tensor],
+        context_mask: torch.Tensor,
         samples: List[QASample],
         token_type_ids: Optional[torch.Tensor] = None,
         *args,
         **kwargs,
     ) -> Iterator[Tuple[QASample, Tuple[int, int]]]:
         classification_output = self.forward(input_ids, attention_mask, token_type_ids)
-        predictions = classification_output.predictions.to("cpu")
+
+        # todo make logits take 5 and max answer length 100 a prediction param
+
+        # search for best answer and yield
+        start_indexes, end_indexes = classification_output.logits.argsort(dim=-1, descending=True)[:, :, :5].tolist()
         for i in range(len(samples)):
-            sample = samples[i]
-            start_position = predictions[0][i]
-            end_position = predictions[1][i]
-            start_char = token2chars[i][start_position][0] if start_position < len(token2chars[i]) else -1
-            end_char = token2chars[i][end_position][-1] if end_position < len(token2chars[i]) else -1
-            yield sample, (start_char, end_char)
+            found = False
+            for start_index, end_index in zip(start_indexes[i], end_indexes[i]):
+                if not context_mask[i, start_index].item() or not context_mask[i, end_index].item():
+                    continue
+                if end_index < start_index or end_index - start_index + 1 > 100:
+                    continue
+                found = True
+                # map token idx to char offset
+                start_index, end_index = token2chars[i][start_index][0].item(), token2chars[i][end_index][1].item()
+                # yield
+                yield samples[i], (start_index, end_index)
+                break
+            if not found:
+                yield samples[i], (-1, -1)
