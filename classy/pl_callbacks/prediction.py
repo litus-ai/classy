@@ -38,7 +38,7 @@ class PredictionCallback:
 class FileDumperPredictionCallback(PredictionCallback):
     def __init__(self):
         self.folder = Path("file-dumped-prediction-callback")  # hydra takes care of dedicated path in the exp folder
-        self.folder.mkdir()
+        self.folder.mkdir(exist_ok=True)
 
     def __call__(
         self,
@@ -119,7 +119,7 @@ class SummarizationRougeGenerationCallback(PredictionCallback):
         for k, v in results.items():
             # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
             for metric in trainer._results.result_metrics:
-                if metric.meta.name == f"val_{name}_{k}":
+                if metric.meta.name == f"{name}_{k}":
                     metric.reset()
             model.log(f"{name}_{k}", v.mid.fmeasure, prog_bar=True, on_step=False, on_epoch=True)
             scores.append(f"{name}_{k}: {v.mid.fmeasure:.4f}")

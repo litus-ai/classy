@@ -236,7 +236,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
-        labels[-100] = self.vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
+        labels[labels == -100] = self.vocabulary.get_idx(k="labels", elem=Vocabulary.PAD)
 
         self.accuracy_metric(classification_output.predictions, labels)
         self.p_metric(classification_output.predictions, labels)

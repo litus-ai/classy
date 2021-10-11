@@ -20,5 +20,7 @@ else
     conda install -y pytorch=$torch_version torchvision cudatoolkit=$cuda_version -c pytorch -c conda-forge
 fi
 
-# install python requirements
-pip install -r requirements.txt
+# install classy
+pip install -e .
+
+
