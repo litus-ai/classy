@@ -39,15 +39,17 @@ def file_main(
     model_checkpoint_path: str,
     input_path: str,
     output_path: str,
-    prediction_params: str,
+    prediction_params: str,  # todo: u sure?
     cuda_device: int,
     token_batch_size: int,
 ):
 
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
-    model.eval()
     model.freeze()
+
+    if prediction_params is not None:
+        model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
     input_extension, output_extension = input_path.split(".")[-1], output_path.split(".")[-1]
