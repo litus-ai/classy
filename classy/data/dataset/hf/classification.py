@@ -143,7 +143,6 @@ class HFQADataset(HFBaseDataset):
                 elem_dict["start_position"] = tokenization_output.char_to_token(qa_sample.char_start, sequence_index=1)
                 elem_dict["end_position"] = tokenization_output.char_to_token(qa_sample.char_end - 1, sequence_index=1)
                 if elem_dict["start_position"] is None or elem_dict["end_position"] is None:
-                    print(qa_sample.question, qa_sample.context[qa_sample.char_start : qa_sample.char_end])
                     continue
 
             elem_dict["samples"] = qa_sample
