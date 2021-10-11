@@ -50,8 +50,8 @@ def train(conf: omegaconf.DictConfig) -> None:
 
     # model callbacks
     for callback in conf.callbacks.callbacks:
-        if 'validation_path' in callback and callback['validation_path'] is None:
-            callback['validation_path'] = pl_data_module.validation_path
+        if "validation_path" in callback and callback["validation_path"] is None:
+            callback["validation_path"] = pl_data_module.validation_path
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
     # logging

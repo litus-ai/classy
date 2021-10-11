@@ -15,7 +15,8 @@ from classy.data.data_drivers import (
     TokensSample,
     get_data_driver,
     TOKEN,
-    GenerationSample, QASample,
+    GenerationSample,
+    QASample,
 )
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.log import get_project_logger
@@ -157,7 +158,7 @@ class SacreBleuGenerationCallback(PredictionCallback):
 
 class SQuADV1Callback(PredictionCallback):
     def __init__(self):
-        self.squad = load_metric('squad')
+        self.squad = load_metric("squad")
 
     def __call__(
         self,
@@ -167,7 +168,10 @@ class SQuADV1Callback(PredictionCallback):
         trainer: pl.Trainer,
     ):
 
-        pred = [{"id": sample.squad_id, "prediction_text": sample.context[start: end]} for sample, (start, end) in predicted_samples]
+        pred = [
+            {"id": sample.squad_id, "prediction_text": sample.context[start:end]}
+            for sample, (start, end) in predicted_samples
+        ]
         gold = [{"id": sample.squad_id, "answers": sample.full_answers} for sample, _ in predicted_samples]
 
         results = self.squad.compute(predictions=pred, references=gold)
