@@ -79,7 +79,7 @@ def _main_resume(model_dir: str):
     cfg = load_training_conf_from_checkpoint(str(last_ckpt_path), post_trainer_init=True)
     cfg.training.resume_from = str(last_ckpt_path)
 
-    resuming_config_path = model_dir / '.hydra/resuming-config.yaml'
+    resuming_config_path = model_dir / ".hydra/resuming-config.yaml"
     OmegaConf.save(cfg, resuming_config_path)
 
     sys.argv = ["classy-train", "-cn", resuming_config_path.stem, "-cd", str(resuming_config_path.parent)]

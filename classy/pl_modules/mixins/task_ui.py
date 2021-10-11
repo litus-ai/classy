@@ -1,6 +1,7 @@
 import collections
 import html
 import itertools
+import json
 import re
 from typing import Union, List, Optional, Tuple
 
@@ -14,6 +15,12 @@ from classy.data.data_drivers import (
     get_data_driver,
     QASample,
     GenerationSample,
+    SEQUENCE,
+    JSONL,
+    SENTENCE_PAIR,
+    TOKEN,
+    GENERATION,
+    QA,
 )
 from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.utils.streamlit import get_md_200_random_color_generator
@@ -40,6 +47,7 @@ class TaskUIMixin:
 
 class SentencePairTaskUIMixin(TaskUIMixin):
 
+    __data_driver = get_data_driver(SENTENCE_PAIR, JSONL)
     truncate_k = 40
 
     def render_task_in_sidebar(self):
@@ -70,7 +78,8 @@ class SentencePairTaskUIMixin(TaskUIMixin):
         sentence1 = st.text_area("First input sequence", option2example[selected_option][0])
         sentence2 = st.text_area("Second input sequence", option2example[selected_option][1])
         if st.button("Classify", key="classify"):
-            return SentencePairSample(sentence1=sentence1, sentence2=sentence2)
+            sample = json.dumps({"sentence1": sentence1, "sentence2": sentence2})
+            return next(self.__data_driver.read([sample]))
         return None
 
     def render(self, predicted_sample: SentencePairSample, time: float):
@@ -89,6 +98,8 @@ class SentencePairTaskUIMixin(TaskUIMixin):
 
 
 class SequenceTaskUIMixin(TaskUIMixin):
+    __data_driver = get_data_driver(SEQUENCE, JSONL)
+
     def render_task_in_sidebar(self):
         st.sidebar.header("Task")
         st.sidebar.markdown(
@@ -102,7 +113,8 @@ class SequenceTaskUIMixin(TaskUIMixin):
         placeholder = st.selectbox(inference_message, options=[ie.sequence for ie in inferred_examples], index=0)
         input_text = st.text_area("Input sequence to classify", placeholder)
         if st.button("Classify", key="classify"):
-            return SequenceSample(sequence=input_text)
+            sample = json.dumps({"sequence": input_text})
+            return next(self.__data_driver.read([sample]))
         return None
 
     def render(self, predicted_sample: SequenceSample, time: float):
@@ -121,7 +133,7 @@ class SequenceTaskUIMixin(TaskUIMixin):
 
 
 class TokenTaskUIMixin(TaskUIMixin):
-
+    __data_driver = get_data_driver(TOKEN, JSONL)
     color_generator = get_md_200_random_color_generator()
     color_mapping = collections.defaultdict(lambda: TokenTaskUIMixin.color_generator())
 
@@ -140,7 +152,8 @@ class TokenTaskUIMixin(TaskUIMixin):
         )
         input_text = st.text_area("Space-separeted list of tokens to classify", placeholder)
         if st.button("Classify", key="classify"):
-            return TokensSample(tokens=input_text.split(" "))
+            sample = json.dumps({"tokens": input_text.split(" ")})
+            return next(self.__data_driver.read([sample]))
         return None
 
     def render(self, predicted_sample: TokensSample, time: float):
@@ -182,7 +195,7 @@ class TokenTaskUIMixin(TaskUIMixin):
 
 
 class QATaskUIMixin(TaskUIMixin):
-
+    __data_driver = get_data_driver(QA, JSONL)
     truncate_k = 40
 
     def render_task_in_sidebar(self):
@@ -212,7 +225,8 @@ class QATaskUIMixin(TaskUIMixin):
         question = st.text_area("Question", option2example[selected_option][0])
         context = st.text_area("Context", option2example[selected_option][1])
         if st.button("Classify", key="classify"):
-            return QASample(context=context, question=question)
+            sample = json.dumps({"question": question, "context": context})
+            return next(self.__data_driver.read([sample]))
         return None
 
     def render(self, predicted_sample: QASample, time: float):
@@ -242,6 +256,8 @@ class QATaskUIMixin(TaskUIMixin):
 
 
 class GenerationTaskUIMixin(TaskUIMixin):
+    __data_driver = get_data_driver(GENERATION, JSONL)
+
     def render_task_in_sidebar(self):
         st.sidebar.header("Task")
         st.sidebar.markdown(
@@ -267,14 +283,21 @@ class GenerationTaskUIMixin(TaskUIMixin):
         # actual reading
         selected_option = st.selectbox(inference_message, options=list(option2example.keys()), index=0)
         source_sequence = st.text_area("Source sequence", option2example[selected_option][0])
-        source_language = st.text_input("Source language (empty to set it to None)", option2example[selected_option][1])
-        target_language = st.text_input("Target language (empty to set it to None)", option2example[selected_option][2])
+        source_language = st.text_input(
+            "Source language (empty to set it to None)", option2example[selected_option][1]
+        ).strip()
+        target_language = st.text_input(
+            "Target language (empty to set it to None)", option2example[selected_option][2]
+        ).strip()
         if st.button("Classify", key="classify"):
-            return GenerationSample(
-                source_sequence=source_sequence,
-                source_language=source_language.strip() or None,
-                target_language=target_language.strip() or None,
+            sample = json.dumps(
+                dict(
+                    source_sequence=source_sequence,
+                    source_language=source_language or None,
+                    target_language=target_language or None,
+                )
             )
+            return next(self.__data_driver.read([sample]))
         return None
 
     def render(self, predicted_sample: GenerationSample, time: float):
