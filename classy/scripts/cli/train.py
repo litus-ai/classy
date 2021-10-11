@@ -19,6 +19,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
     parser.add_argument("--root", type=str, default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
+    parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--resume-from", type=str)
     parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
     parser.add_argument("--no-shuffle", action="store_true")
@@ -51,6 +52,14 @@ def _main_mock(cfg):
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
         fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
+
+    if "supported_tasks" in cfg and cfg.task not in cfg.supported_tasks:
+        logger.error(
+            f"The profile you selected does not support the input task. "
+            f"The following tasks are the ones supported: {', '.join(cfg.supported_tasks)}"
+        )
+        exit(1)
+
     train(cfg)
 
 
@@ -129,6 +138,9 @@ def main(args):
     # turn off shuffling if requested
     if args.no_shuffle:
         cmd.append("data.datamodule.shuffle_dataset=False")
+
+    if args.epochs:
+        cmd.append(f"+training.pl_trainer.max_epochs={args.epochs}")
 
     # wandb logging
     if args.wandb is not None:

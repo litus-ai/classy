@@ -2,7 +2,7 @@ callbacks:
   - _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
     prediction_confs:
       - name: "validation"
-        path: null  # todo terrible hardcoded path
+        path: null
         token_batch_size: 800
         prediction_param_conf_path: "configurations/prediction-params/generation-beam.yaml"
         limit: 1000

@@ -8,7 +8,6 @@ from transformers.models.mbart.tokenization_mbart_fast import FAIRSEQ_LANGUAGE_C
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample, GenerationSample
 from classy.data.dataset.base import batchify, BaseDataset
-from classy.data.dataset.hf.base import HFBaseDataset
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 

@@ -16,6 +16,7 @@ from classy.data.data_drivers import (
     get_data_driver,
     TOKEN,
     GenerationSample,
+    QASample,
 )
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.log import get_project_logger
@@ -155,9 +156,41 @@ class SacreBleuGenerationCallback(PredictionCallback):
         logger.info(f"SacreBleuGenerationCallback with name {name} completed with score: {score:.2f}")
 
 
+class SQuADV1Callback(PredictionCallback):
+    def __init__(self):
+        self.squad = load_metric("squad")
+
+    def __call__(
+        self,
+        name: str,
+        predicted_samples: List[Tuple[QASample, str]],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
+    ):
+
+        pred = [
+            {"id": sample.squad_id, "prediction_text": sample.context[start:end]}
+            for sample, (start, end) in predicted_samples
+        ]
+        gold = [{"id": sample.squad_id, "answers": sample.full_answers} for sample, _ in predicted_samples]
+
+        results = self.squad.compute(predictions=pred, references=gold)
+        exact_match, f1 = results["exact_match"], results["f1"]
+
+        # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
+        for metric in trainer._results.result_metrics:
+            if metric.meta.name == f"{name}_exact_match" or metric.meta.name == f"{name}_f1":
+                metric.reset()
+        model.log(f"{name}_exact_match", exact_match, prog_bar=True, on_step=False, on_epoch=True)
+        model.log(f"{name}_f1", f1, prog_bar=True, on_step=False, on_epoch=True)
+
+        logger.info(f"SQuADCallback with name {name} completed with score (exact_match={exact_match:.2f}, f1={f1:.2f})")
+
+
 class PredictionPLCallback(pl.Callback):
     def __init__(
         self,
+        validation_path: str,
         prediction_confs: List[Dict[str, Any]],
         prediction_callbacks: Dict[str, DictConfig],
         prediction_dataset_conf: DictConfig,
@@ -169,7 +202,7 @@ class PredictionPLCallback(pl.Callback):
             self.prediction_confs.append(
                 (
                     prediction_conf["name"],
-                    prediction_conf["path"],
+                    prediction_conf["path"] or validation_path,
                     prediction_conf["token_batch_size"],
                     prediction_conf.get("prediction_param_conf_path", None),
                     prediction_conf["limit"],
