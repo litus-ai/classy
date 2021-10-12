@@ -3,15 +3,6 @@ sidebar_position: 2
 title: Input Formats
 ---
 
-import 'bootstrap/dist/css/bootstrap.css';
-
-import { useState } from 'react'
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Modal from 'react-bootstrap/Modal';
-
 import ReactTermynal from '../../../src/components/termynal';
 
 Once you have realized which task you are dealing with, you have to organize your data. Currently, for each of 
