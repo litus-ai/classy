@@ -4,15 +4,15 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 // With JSDoc @type annotations, IDEs can provide config autocompletion
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 (module.exports = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: 'Classy',
+  tagline: 'The NLP toolkit that does not require you to be a programmer! (Kinda 😅)',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  favicon: 'img/classy_logo-short_transparent.png',
+  organizationName: 'sunglasses.ai', // Usually your GitHub org/user name.
+  projectName: 'classy', // Usually your repo name.
 
   presets: [
     [
@@ -39,76 +39,75 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      navbar: {
-        title: 'My Site',
-        logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg',
+    (
+      {
+        announcementBar: {
+          id: 'announcementBar-2', // Increment on change
+          content: 'v0.1.0: Classy is still in its early stages, help us shape its future by <a href="https://github.com/sunglasses-ai/classy#contributions">contributing</a>!'
         },
-        items: [
-          {
-            type: 'doc',
-            docId: 'intro',
-            position: 'left',
-            label: 'Tutorial',
+        navbar: {
+          title: 'Classy',
+          logo: {
+            alt: 'Classy Logo',
+            src: 'img/CLASSY.svg',
           },
-          {to: 'examples', label: 'Examples', position: 'left'},
-          {
-            href: 'https://github.com/sunglasses-ai/classy.git',
-            label: 'GitHub',
-            position: 'right',
-          },
-        ],
-      },
-      footer: {
-        style: 'dark',
-        links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Tutorial',
-                to: '/docs/intro',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              // {
-              //   label: 'Blog',
-              //   to: '/blog',
-              // },
-              {
-                label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
-              },
-            ],
-          },
-        ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
-      },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-      },
-    }),
+          items: [
+            {
+              type: 'doc',
+              docId: 'intro',
+              position: 'left',
+              label: 'Tutorial',
+            },
+            {
+              href: 'https://github.com/sunglasses-ai/classy.git',
+              label: 'Classy@GitHub',
+              position: 'left',
+            },
+          ],
+        },
+        footer: {
+          links: [
+            {
+              title: 'Links',
+              items: [
+                {
+                  label: 'Tutorial',
+                  to: '/docs/intro',
+                },
+                {
+                  label: 'Getting Started',
+                  to: '/docs/getting-started/installation',
+                }
+              ],
+            },
+            {
+              title: 'Community',
+              items: [
+                {
+                  label: 'Stack Overflow',
+                  href: 'https://stackoverflow.com/questions/tagged/classy',
+                },
+              ],
+            },
+            {
+              title: 'More',
+              items: [
+                // {
+                //   label: 'Blog',
+                //   to: '/blog',
+                // },
+                {
+                  label: 'GitHub',
+                  href: 'https://github.com/facebook/docusaurus',
+                },
+              ],
+            },
+          ],
+          copyright: `Copyright © ${new Date().getFullYear()} sunglasses.ai.`,
+        },
+        prism: {
+          theme: lightCodeTheme,
+          darkTheme: darkCodeTheme,
+        },
+      }),
 });
