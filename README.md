@@ -47,7 +47,7 @@
 <!-- - [💻 Demo (TODO?)](https://TODO/) 
 - [⚙️ Continuous Build (TODO)](https://TODO)-->
 - [↗️ Website](http://151.100.179.12:30000/)
-- [🔦 Guide](http://151.100.179.14:30000/docs/intro)
+- [🔦 Guide](http://151.100.179.12:30000/docs/intro)
 - [📓 Documentation (FILL LINKS)](https://TODO/) ( [latest](https://TODO/latest/) | [stable](https://TODO/stable/) | [commit](https://TODO/main/) )
 - [✋ Contributing Guidelines (TODO)](CONTRIBUTING.md)
 - [🌙 Nightly Releases](https://pypi.org/project/classy-ml/#history)
