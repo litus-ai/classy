@@ -82,6 +82,12 @@ def install_autocomplete():
         print("CONDA_PREFIX unset. Are you sure you are executing this within a conda environment?")
         return
 
+    if "envs" not in prefix:
+        print("CONDA_PREFIX does not appear to be an environment of conda.")
+        print("Are you sure you are executing this within a conda environment (not the base env)?")
+        print(f"   CONDA_PREFIX={prefix}")
+        return
+
     path = Path(prefix)
     script_path = path / "etc/conda/activate.d/classy-complete.sh"
     if script_path.exists():
