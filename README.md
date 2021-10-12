@@ -1,6 +1,6 @@
 <div align="center">
     <br>
-    <img alt="classy logo" src="TODO" width="400"/>
+    <img alt="classy logo" src="img/logo.png" width="400"/>
     <p>
     A PyTorch-based library for fast prototyping and sharing of deep neural network models. 
     </p>
@@ -44,12 +44,12 @@
 
 ## Quick Links
 
-- [↗️ Website (FILL LINK)](https://TODO/)
-- [🔦 Guide (TODO?)](https://TODO/)
-- [💻 Demo (TODO?)](https://TODO/)
+<!-- - [💻 Demo (TODO?)](https://TODO/) 
+- [⚙️ Continuous Build (TODO)](https://TODO)-->
+- [↗️ Website](http://151.100.179.12:30000/)
+- [🔦 Guide](http://151.100.179.14:30000/docs/intro)
 - [📓 Documentation (FILL LINKS)](https://TODO/) ( [latest](https://TODO/latest/) | [stable](https://TODO/stable/) | [commit](https://TODO/main/) )
 - [✋ Contributing Guidelines (TODO)](CONTRIBUTING.md)
-- [⚙️ Continuous Build (TODO)](https://TODO)
 - [🌙 Nightly Releases](https://pypi.org/project/classy-ml/#history)
 
 
