@@ -3,6 +3,8 @@ from pathlib import Path
 
 import argcomplete
 
+from classy.scripts.cli.utils import import_module_and_submodules, maybe_find_directory
+
 
 def get_commands():
     from classy.scripts.cli.train import get_parser as train_parser, main as train_main
@@ -64,7 +66,8 @@ def parse_args(commands: dict):
 
     subcmds = parser.add_subparsers(dest="action", required=False)
     for action_name, action_data in commands.items():
-        action_data["parser"](subcmds)
+        cmd_parser = action_data["parser"](subcmds)
+        cmd_parser.add_argument("-pd", "--package-dir", default=None)
 
     argcomplete.autocomplete(parser, default_completer=None, always_complete_options="long")
 
@@ -111,6 +114,11 @@ def main():
             "to install classy's shell completion or `classy -h` for help"
         )
         exit(1)
+
+    to_import = args.package_dir or maybe_find_directory(("src", "source"))
+
+    if to_import is not None:
+        import_module_and_submodules(to_import)
 
     commands[args.action]["main"](args)
 

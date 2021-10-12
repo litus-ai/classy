@@ -2,7 +2,7 @@ import os
 from argparse import ArgumentParser
 from pathlib import Path
 
-from classy.scripts.cli.utils import get_device
+from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.hydra_patch import ConfigBlame
 from classy.utils.log import get_project_logger
 
@@ -18,7 +18,7 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument("--transformer-model", type=str, default=None)
     parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", required=True)
     parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
-    parser.add_argument("--root", type=str, default=None)
+    parser.add_argument("-cn", "--config-name", default=None)
     parser.add_argument("-cd", "--config-dir", default=None)
     parser.add_argument("-c", "--config", nargs="+", default=[])
     parser.add_argument("--epochs", type=int, default=None)
@@ -122,17 +122,23 @@ def main(args):
         _main_resume(args.resume_from)
         return
 
-    if args.root is not None:
-        config_name = args.root
-    else:
-        config_name = args.task
-
     blames = []
 
-    cmd = ["classy-train", "-cn", config_name]  # , "-cd", str(Path.cwd() / "conf")]
+    cmd = ["classy-train", "-cn", args.config_name or args.task]
 
-    if args.config_dir is not None:
-        cmd += ["-cd", args.config_dir]
+    conf_dir = args.config_dir or maybe_find_directory(
+        [
+            "configuration",
+            "configurations",
+            "config",
+            "configs",
+            "conf",
+            "confs",
+        ]
+    )
+
+    if conf_dir is not None:
+        cmd += ["-cd", conf_dir]
 
     # override all the fields modified by the profile
     if args.profile is not None:
