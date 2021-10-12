@@ -3,15 +3,6 @@ sidebar_position: 3
 title: CLI
 ---
 
-import 'bootstrap/dist/css/bootstrap.css';
-
-import { useState } from 'react'
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Modal from 'react-bootstrap/Modal';
-
 import ReactTermynal from '../../../src/components/termynal';
 
 Once task identification and data organization are complete, your "have-to-code" section is over, and you can use classy
