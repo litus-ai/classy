@@ -48,6 +48,7 @@
 - [⚙️ Continuous Build (TODO)](https://TODO)-->
 - [↗️ Website](http://151.100.179.12:30000/)
 - [🔦 Guide](http://151.100.179.12:30000/docs/intro)
+- [💻 Template and Examples](https://github.com/sunglasses-ai/classy-template)
 - [📓 Documentation (FILL LINKS)](https://TODO/) ( [latest](https://TODO/latest/) | [stable](https://TODO/stable/) | [commit](https://TODO/main/) )
 - [✋ Contributing Guidelines (TODO)](CONTRIBUTING.md)
 - [🌙 Nightly Releases](https://pypi.org/project/classy-ml/#history)
@@ -57,8 +58,6 @@
 
 - [🚀 Getting Started](#getting-started-using-classy)
 - [⚡ Installation](#installation)
-    - [Installing via pip](#installing-via-pip)
-    - [Installing from source](#installing-from-source)
 - [⌨ Running Classy](#running-classy)
     - [`classy train`](#classy-train)
     - [`classy predict`](#classy-predict)
@@ -75,32 +74,25 @@
 
 
 ## Getting Started using classy
-TODO
+If this is your first time meeting `classy`, don't worry! We have plenty of resources to help you learn how it works and what it can do for you.
+
+For starters, have a look at our [amazing website](http://151.100.179.12:30000) and [our documentation](http://151.100.179.12:30000/docs/intro)!
+
+If you want to get your hands dirty right away, have a look at our [base classy template](https://github.com/sunglasses-ai/classy-template). There are a few example branches there that you can look at to get to know `classy`!
 
 ## Installation
-We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning.
 
-`classy` requires Python 3.7 or later, and is built on [PyTorch Lightning](https://pytorchlightning.ai/).
-It's recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/).
+*For a more in-depth installation guide (covering also installing from source and through docker), please visit our [installation page](http://151.100.179.14:30000/docs/getting-started/installation).*
 
-Or, simply put: 
-```yaml
-conda install pytorch cudatoolkit=CUDA_VERSION -c pytorch
-```
-Don't know what `CUDA_VERSION` you have?
-[Check this link](https://stackoverflow.com/a/68499241/1908499).
-
-The preferred way to install `classy` is via `pip`. Just run `pip install classy-ml`.
-
-<!-- `classy` works on *any* platform, as long as it is correctly configured. -->
+If you are using one of our [templates](https://github.com/sunglasses-ai/classy-template), there is a handy `setup.sh` script you can use that will execute the commands to create the environment and install `classy` for you.
 
 ### Installing via pip
 
 #### Setting up a virtual environment
 
-[Conda](https://conda.io/) can be used set up a virtual environment with the
-version of Python required for `classy`.  If you already have a Python 3
-environment you want to use, you can skip to the 'installing via pip' section.
+We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning. It's also recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/)
+
+If you already have a Python 3 environment you want to use, you can skip to the [installing via pip](#installing-via-pip) section.
 
 1.  [Download and install Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
@@ -128,22 +120,6 @@ and voilà! You're all set.
 
 *Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-ml/#history)! You will ~~not~~ regret it :)*
 
-
-### Installing from source
-You can also install `classy` by cloning this repository:
-
-```yaml
-git clone https://github.com/sunglasses-ai/classy.git
-cd classy
-```
-
-Follow the steps at [setting up a virtual environment](#setting-up-a-virtual-environment) and then install `classy` by
-
-```yaml
-pip install -e .
-```
-
-This will make `classy` available in your environment, but using the sources of the cloned repository.
 
 ## Running `classy`
 Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](http://TODO). Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
