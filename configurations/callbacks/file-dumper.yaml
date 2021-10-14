@@ -1,8 +1,9 @@
 callbacks:
   - _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
+    validation_path: null
     prediction_confs:
-      - name: "file-dumper"
-        path: null
+      - name: "validation"
+        path: null  # if you leave it to None, it will be set to the validation path
         token_batch_size: 400
         prediction_param_conf_path: "configurations/prediction-params/generation-beam.yaml"
         limit: 1000

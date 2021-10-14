@@ -118,11 +118,15 @@ def train(conf: omegaconf.DictConfig) -> None:
 
 @hydra.main(config_path="../../../configurations/", config_name="root")
 def main(conf: omegaconf.DictConfig):
+
+    # fix paths
     fix_paths(
         conf,
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
         fix_fn=lambda path: hydra.utils.to_absolute_path(path),
     )
+
+    # start train
     train(conf)
 
 

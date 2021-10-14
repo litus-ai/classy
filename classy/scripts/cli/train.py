@@ -2,6 +2,8 @@ import os
 from argparse import ArgumentParser
 from pathlib import Path
 
+from omegaconf import OmegaConf, open_dict
+
 from classy.scripts.cli.utils import get_device
 from classy.utils.log import get_project_logger
 
@@ -45,8 +47,37 @@ def parse_args():
 def _main_mock(cfg):
     # import here to avoid importing torch before it's actually needed
     import hydra
+    import omegaconf
     from classy.scripts.model.train import fix_paths, train
 
+    # apply profile
+
+    def override_subtree(node, prefix: str):
+        if OmegaConf.is_list(node):
+            # if profiles override a list, the original list should be completely overwritten
+            OmegaConf.update(cfg, prefix, node, merge=False, force_add=True)
+        elif OmegaConf.is_dict(node):
+            # if profiles override a dict, the original dict should be discarded if _target_ is changed, and updated otherwise
+            target_node = OmegaConf.select(cfg, prefix)
+            if target_node is None:
+                OmegaConf.update(cfg, prefix, node, force_add=True)
+            else:
+                if '_target_' in node:
+                    OmegaConf.update(cfg, prefix, node, merge=False, force_add=True)
+                else:
+                    for k, v in node.items():
+                        override_subtree(v, prefix=f"{prefix}.{k}")
+        elif type(node) in [str, float, int, bool] or node is None:
+            OmegaConf.update(cfg, prefix, node, force_add=True)
+        else:
+            raise ValueError(f"Unexpected type {type(node)}: {node}")
+
+    profile = cfg.profiles
+    del cfg.profiles
+    for k, n in profile.items():
+        override_subtree(n, prefix=k)
+
+    # fix paths
     fix_paths(
         cfg,
         check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),

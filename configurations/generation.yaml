@@ -5,6 +5,9 @@ exp_folder: ./experiments/${exp_name}
 
 transformer_model: "facebook/bart-base"
 
+callbacks_monitor: 'val_loss'
+callbacks_mode: 'min'
+
 hydra:
   # customize working dir
   run:

@@ -168,7 +168,7 @@ class GPT2GenerativeModule(HFGenerativeModel):
         self, transformer_model: str, decoding_skip_special_tokens: bool, decoding_clean_up_tokenization_spaces: bool
     ):
         super().__init__(transformer_model, decoding_skip_special_tokens, decoding_clean_up_tokenization_spaces)
-        self.tokenizer = GPT2TokenizerFast.from_pretrained(transformer_model, add_prefix_space=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, add_prefix_space=True)
         self.model = GPT2LMHeadModel.from_pretrained(transformer_model)
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
         self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces

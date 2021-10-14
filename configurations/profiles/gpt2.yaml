@@ -1,0 +1,20 @@
+supported_tasks:
+  - generation
+
+# global params
+transformer_model: gpt2
+
+# trainer
+training:
+  pl_trainer:
+    accumulate_grad_batches: 1
+    val_check_interval: 1.0
+    max_steps: 100_000
+
+# MODEL PARAMS
+model:
+  optim_conf:
+    _target_: "classy.optim.factories.TorchFactory"
+    optimizer:
+      _target_: torch.optim.Adam
+      lr: 1e-5
