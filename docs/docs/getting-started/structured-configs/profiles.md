@@ -4,7 +4,7 @@ title: Profiles
 ---
 
 As you have seen from the previous tutorials, your systems are fully customizable in classy. 
-Even if we strongly encourage you to create you own configurations, we provide a set of predefined and well established profiles
+Even if we strongly encourage you to create you own configurations, we provide a set of predefined and well-established profiles
 that will work with competitive performances in almost all setting and scenarios.
 
 :::tip
@@ -13,7 +13,6 @@ To use a profile, you just have to pass the profile name to the parameter `--pro
 classy train task my_dataset_path -n my_model --profile profile_name
 ```
 :::
-
 
 ##  distilbert :deciduous_tree: :rocket:
 
@@ -117,7 +116,33 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ```
 ##### When should I use this profile?
 - You want a **trade-off between training/inference speed and model performances**
-- You want a **well established model** for everyday use
+- You want a **well-established model** for everyday use
+- You have at your disposal a GPU with at least 8GB of VRAM
+- You will use the model in **moderate energy consumption** scenarios
+
+---
+
+## gpt2 :evergreen_tree: :bullettrain_side:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `generation` | English | < 8GB |
+
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>GPT2</u> (:page_facing_up: [Paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/gpt2.html)) | <u>Adam</u> ([Paper](https://arxiv.org/abs/1412.6980) :page_facing_up: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) :hammer:) |
+
+##### Train command
+```bash
+classy train [generation] my_dataset_path -n my_model --profile gpt2
+```
+##### When should I use this profile?
+- You want an affordable (decoder-only) **generative model** for English
 - You have at your disposal a GPU with at least 8GB of VRAM
 - You will use the model in **moderate energy consumption** scenarios
 
@@ -144,7 +169,7 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ```
 ##### When should I use this profile?
 - You want a **trade-off between training/inference speed and model performances**
-- You want a **well established model** for everyday use
+- You want a **well-established model** for everyday use
 - You have at your disposal a GPU with at least 8GB of VRAM
 - You will use the model in **moderate energy consumption** scenarios
 
@@ -171,7 +196,35 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ```
 ##### When should I use this profile?
 - You want a **trade-off between training/inference speed and model performances**
-- You want a **recentrly released model with state-of-the-art performances** on several NLU benchmarks
+- You want a **recently released model with state-of-the-art performances** on several NLU benchmarks
+- You have at your disposal a GPU with at least 8GB of VRAM
+- You will use the model in **moderate energy consumption** scenarios
+
+---
+
+## bart-base :evergreen_tree: :bullettrain_side:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `sequence` `sentence-pair` `token` `qa` `generation` | English | < 8GB |
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>Bart-base</u> (:page_facing_up: [Paper](https://arxiv.org/abs/1910.13461) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/bart.html)) | <u>RAdam</u> ([Paper](https://arxiv.org/pdf/1908.03265v3.pdf) :page_facing_up: [Implementation](https://github.com/LiyuanLucasLiu/RAdam) :hammer:) |
+
+
+##### Train command
+```bash
+classy train [sequence|sentence-pair|token|qa|generation] my_dataset_path -n my_model --profile bart-base
+```
+
+##### When should I use this profile?
+- You want a **trade-off between training/inference speed and model performances**
+- You want to tackle an English generation task with an affordable model
 - You have at your disposal a GPU with at least 8GB of VRAM
 - You will use the model in **moderate energy consumption** scenarios
 
@@ -200,7 +253,7 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ##### When should I use this profile?
 - You require a **multilingual model** covering languages other than English
 - You want a **trade-off between training/inference speed and model performances**
-- You want a **well established model** for everyday use
+- You want a **well-established model** for everyday use
 - You have at your disposal a GPU with at least 8GB of VRAM
 - You will use the model in **moderate energy consumption** scenarios
 
@@ -229,7 +282,7 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ##### When should I use this profile?
 - You require a state-of-the-art **multilingual model** covering languages other than English
 - You want a **trade-off between training/inference speed and model performances**
-- You want a **well established model** for everyday use
+- You want a **well-established model** for everyday use
 - You have at your disposal a GPU with at least 8GB of VRAM
 - You will use the model in **moderate energy consumption** scenarios
 
@@ -261,7 +314,7 @@ Remember to use the `--fp16` at training time or otherwise the model may not fit
 ##### When should I use this profile?
 - You want state-of-the-art performances, **no compromise!**
 - You want to show how far you can go with the proper infrastructure
-- You want a **well established model** used by thousands of users
+- You want a **well-established model** used by thousands of users
 - You have at your disposal a GPU with at least 11GB of VRAM that supports fp16 precision
 - You don't have any energy consumption restriction
 
@@ -291,7 +344,7 @@ Remember to use the `--fp16` at training time or otherwise the model may not fit
 ##### When should I use this profile?
 - You want state-of-the-art performances, **no compromise!**
 - You want to show how far you can go with the proper infrastructure
-- You want a **well established model** used by thousands of users
+- You want a **well-established model** used by thousands of users
 - You have at your disposal a GPU with at least 11GB of VRAM that supports fp16 precision
 - You don't have any energy consumption restriction
 
@@ -351,6 +404,116 @@ Remember to use the `--fp16` at training time or otherwise the model may not fit
 ##### When should I use this profile?
 - You require a state-of-the-art **multilingual model** covering languages other than English, with **no compromise**
 - You want to show how far you can go with the proper infrastructure
-- You want a **well established model** used by thousands of users
+- You want a **well-established model** used by thousands of users
 - You have at your disposal a GPU with at least 11GB of VRAM that supports fp16 precision
+- You don't have any energy consumption restriction
+
+---
+
+## gpt2-medium :cactus: :tractor:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `generation` | English | < 11GB (fp16) |
+
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>GPT2</u> (:page_facing_up: [Paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/gpt2.html)) | <u>AdamW</u> ([Paper](https://arxiv.org/abs/1711.05101) :page_facing_up: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html) :hammer:) |
+
+##### Train command
+```bash
+classy train [generation] my_dataset_path -n my_model --profile gpt2-medium
+```
+##### When should I use this profile?
+- You want a medium (decoder-only) **generative model** for English
+- You have at your disposal a GPU with at least 11GB of VRAM that supports fp16 precision
+- You don't have any energy consumption restriction
+
+---
+
+## bart-large :cactus: :tractor:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `sequence` `sentence-pair` `token` `qa` `generation` | English | < 11GB (fp16) |
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>Bart-large</u> (:page_facing_up: [Paper](https://arxiv.org/abs/1910.13461) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/bart.html)) | <u>RAdam</u> ([Paper](https://arxiv.org/pdf/1908.03265v3.pdf) :page_facing_up: [Implementation](https://github.com/LiyuanLucasLiu/RAdam) :hammer:) |
+
+
+##### Train command
+```bash
+classy train [sequence|sentence-pair|token|qa|generation] my_dataset_path -n my_model --profile bart-large
+```
+
+##### When should I use this profile?
+- You want state-of-the-art performances, especially on English generation problems, with **no compromise!**
+- You want to show how far you can go with the proper infrastructure
+- You want a **well-established model** used by thousands of users
+- You have at your disposal a GPU with at least 11GB of VRAM that supports fp16 precision
+- You don't have any energy consumption restriction
+
+---
+
+## mbart :cactus: :building_construction: :earth_asia:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `sequence` `sentence-pair` `token` `qa` `generation` | English | < 24GB (fp16) |
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>mBART</u> (:page_facing_up: [Paper](https://arxiv.org/abs/2001.08210) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/mbart.html)) | <u>RAdam</u> ([Paper](https://arxiv.org/pdf/1908.03265v3.pdf) :page_facing_up: [Implementation](https://github.com/LiyuanLucasLiu/RAdam) :hammer:) |
+
+
+##### Train command
+```bash
+classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --profile bart-base
+```
+
+##### When should I use this profile?
+- You want a state-of-the-art **multilingual model**, covering 25 languages and particularly suited for **generation tasks** (e.g. machine translation), with **no compromise** 
+- You want to show how far you can go with the proper infrastructure
+- You want a **well-established model** used by thousands of users
+- You have at your disposal a GPU with at least 24GB of VRAM that supports fp16 precision
+- You don't have any energy consumption restriction
+
+---
+
+## gpt2-large :cactus: :building_construction:
+
+##### General Info
+
+| Supported Tasks | Supported Languages | Required VRAM |
+| 		:---:     |     :---:           |       :---:      |
+| `generation` | English | < 24GB (fp16) |
+
+
+##### Model and Optimization
+
+| Model | Optimizer |
+| 		:---:     |     :---:           |
+| <u>GPT2</u> (:page_facing_up: [Paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf) \| :hammer: [Implementation](https://huggingface.co/transformers/model_doc/gpt2.html)) | <u>AdamW</u> ([Paper](https://arxiv.org/abs/1711.05101) :page_facing_up: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html) :hammer:) |
+
+##### Train command
+```bash
+classy train [generation] my_dataset_path -n my_model --profile gpt2-large
+```
+##### When should I use this profile?
+- You want a large (decoder-only) **generative model** for English
+- You have at your disposal a GPU with at least 24GB of VRAM that supports fp16 precision
 - You don't have any energy consumption restriction

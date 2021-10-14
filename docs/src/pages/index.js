@@ -14,7 +14,7 @@ function HomepageHeader() {
       <div class="container">
 
         <img className={styles.heroBannerLogo, "margin-vert-md"} src="img/CLASSY.svg" width="300" height="300" />
-        <h1 className={"hero__title"}><strong>{siteConfig.title}</strong></h1>
+        <h1 className={"hero__title"}>{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
