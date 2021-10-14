@@ -1,5 +1,6 @@
 ---
 title: classy
+hide_title: true
 sidebar_position: 1
 sidebar_label: Introduction
 ---
@@ -7,31 +8,19 @@ sidebar_label: Introduction
 import ReactTermynal from '../src/components/termynal';
 
 <div style={{textAlign: "center"}}>
-  <em>Your data, our code, the hardware you prefer.</em>
-  <p></p>
+    <div>
+        <img src="/img/classy_logotypo.png" alt="Classy Logo" />
+    </div>
+    <div style={{textAlign: "center"}}>
+      <em>Your data, our code, the hardware you prefer.</em>
+    </div>
 </div>
 
-<div style={{textAlign: "center"}}>
-  <a href="https://pypi.org/project/classy-ml" style={{marginRight: ".5rem"}}>
-    <img alt="PyPI Package: v0.1" src="https://img.shields.io/badge/PyPI%20Package-v0.1-lightgreen.svg?style=for-the-badge"/>
-  </a>
-  <a href="https://black.readthedocs.io/en/stable/">
-    <img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-black.svg?style=for-the-badge"/>
-  </a>
-  <p></p>
-</div>
+<p />
 
 classy is a simple-to-use library for building high-performance Machine Learning models in NLP.
 It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/), [Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
 and offers them to users with a simple CLI interface.
-
-### Key Features
-
-* **simplicity**: very simple-to-use, with no ML knowledge requirement and a usage flow thought around data
-* **powerful CLI**: train, present and REST-expose powerful ML models with a few bash commands (and no code)
-* **fast ML development**: whether for prototyping or production, reduce the time to get things up and running
-* **pretrained models**: save on training cost and speed up the development cycle with our pre-trained models
-* **modular**: whether simple (e.g. support a different input format) or advanced (e.g. use a different optimizer), classy offers straightforward hooks to match your needs
 
 ## Installation
 

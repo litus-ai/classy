@@ -16,6 +16,8 @@
     /*width: 750px;*/
     width: 850px;
     max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
     background: var(--color-bg);
     color: var(--color-text);
     font-size: 18px;
