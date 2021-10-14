@@ -1,6 +1,3 @@
-# @package _global_
-
-
 supported_tasks:
   - qa
   - sentence-pair
@@ -11,11 +8,11 @@ supported_tasks:
 transformer_model: bert-base-multilingual-cased
 
 # trainer
-pl_trainer:
-  _target_: pytorch_lightning.Trainer
-  accumulate_grad_batches: 1
-  val_check_interval: 1.0
-  max_steps: 100_000
+training:
+  pl_trainer:
+    accumulate_grad_batches: 1
+    val_check_interval: 1.0
+    max_steps: 100_000
 
 # MODEL PARAMS
 model:

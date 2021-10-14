@@ -3,7 +3,7 @@ callbacks:
     validation_path: null
     prediction_confs:
       - name: "validation"
-        path: null
+        path: null  # if you leave it to None, it will be set to the validation path
         token_batch_size: 800
         limit: 1000
         enabled_prediction_callbacks:

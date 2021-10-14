@@ -3,23 +3,25 @@ supported_tasks:
   - sentence-pair
   - sequence
   - token
+  - generation
 
 # global params
-transformer_model: microsoft/deberta-large
+transformer_model: facebook/mbart-large-cc25
 
 # trainer
 training:
   pl_trainer:
     accumulate_grad_batches: 1
-    gradient_clip_val: 1.0
     val_check_interval: 1.0
     max_steps: 100_000
 
 # MODEL PARAMS
 model:
   optim_conf:
-    _target_: classy.optim.factories.RAdamFactory
-    lr: 5e-6
+    _target_: classy.optim.factories.AdafactorWithWarmupFactory
+    lr: 1e-5
+    warmup_steps: 5000
+    total_steps: ${training.pl_trainer.max_steps}
     weight_decay: 0.01
     no_decay_params:
       - bias
