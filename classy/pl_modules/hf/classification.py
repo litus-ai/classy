@@ -165,7 +165,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
         token_offsets: List[List[Tuple[int, int]]],
-        samples: List[SequenceSample],
+        samples: List[TokensSample],
         token_type_ids: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
     ) -> ClassificationOutput:

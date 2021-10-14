@@ -45,7 +45,8 @@ def main(args):
     sys.argv = [
         "streamlit",
         "run",
-        "classy/scripts/model/describe.py",
+        # see classy/scripts/cli/demo.py for an explanation of this line :)
+        __file__.replace("/cli/", "/model/"),
         *script_params,
         "--server.port",
         str(args.port),

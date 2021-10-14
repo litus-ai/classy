@@ -43,7 +43,10 @@ def main(args):
     sys.argv = [
         "streamlit",
         "run",
-        "classy/scripts/model/demo.py",
+        # __file__ points to this file's location, even when pip installed.
+        # given our code structure (this file is [...]/classy/scripts/cli/demo.py),
+        # if we replace /cli/ with /model/ we get the actual streamlit python file we need to run.
+        __file__.replace("/cli/", "/model/"),
         *script_params,
         "--server.port",
         str(args.port),

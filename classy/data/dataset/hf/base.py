@@ -1,10 +1,9 @@
-from typing import Optional, Callable, Iterable, Dict, Any, Tuple, Iterator, List, Union
+from typing import Optional, Callable, Iterator, List, Union
 
-import torch
 from transformers import AutoTokenizer
 
-from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample, GenerationSample
-from classy.data.dataset.base import BaseDataset, batchify
+from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
+from classy.data.dataset.base import BaseDataset
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
