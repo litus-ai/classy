@@ -50,8 +50,7 @@ def _main_mock(cfg):
     import omegaconf
     from classy.scripts.model.train import fix_paths, train
 
-    # apply profile
-
+    # overrides
     def override_subtree(node, prefix: str):
         if OmegaConf.is_list(node):
             # if profiles override a list, the original list should be completely overwritten
@@ -62,7 +61,7 @@ def _main_mock(cfg):
             if target_node is None:
                 OmegaConf.update(cfg, prefix, node, force_add=True)
             else:
-                if '_target_' in node:
+                if "_target_" in node:
                     OmegaConf.update(cfg, prefix, node, merge=False, force_add=True)
                 else:
                     for k, v in node.items():
@@ -72,9 +71,16 @@ def _main_mock(cfg):
         else:
             raise ValueError(f"Unexpected type {type(node)}: {node}")
 
+    # apply profile overrides
     profile = cfg.profiles
     del cfg.profiles
     for k, n in profile.items():
+        override_subtree(n, prefix=k)
+
+    # apply cli overrides
+    cli_overrides = cfg.cli_overrides
+    del cfg.cli_overrides
+    for k, n in cli_overrides.items():
         override_subtree(n, prefix=k)
 
     # fix paths
@@ -212,20 +218,12 @@ def main(args):
         cmd.append("data.datamodule.test_split_size=0.05")
 
     # append all user-provided configuration overrides
-    cmd += args.config
+    cmd += [f"+cli_overrides.{c}" for c in args.config]
 
     # we are basically mocking the normal python script invocation by setting the argv to those we want
     # unfortunately there is no better way to do this at this moment in time :(
     sys.argv = cmd
     hydra.main(config_path=None)(_main_mock)()
-
-
-def test(cmd):
-    import sys
-
-    sys.argv = cmd.split(" ")
-    print(cmd, end=" -> \n\t")
-    main(parse_args())
 
 
 if __name__ == "__main__":

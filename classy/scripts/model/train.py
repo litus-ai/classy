@@ -119,6 +119,33 @@ def train(conf: omegaconf.DictConfig) -> None:
 @hydra.main(config_path="../../../configurations/", config_name="root")
 def main(conf: omegaconf.DictConfig):
 
+    # apply profile
+
+    def override_subtree(node, prefix: str):
+        if OmegaConf.is_list(node):
+            # if profiles override a list, the original list should be completely overwritten
+            OmegaConf.update(conf, prefix, node, merge=False, force_add=True)
+        elif OmegaConf.is_dict(node):
+            # if profiles override a dict, the original dict should be discarded if _target_ is changed, and updated otherwise
+            target_node = OmegaConf.select(conf, prefix)
+            if target_node is None:
+                OmegaConf.update(conf, prefix, node, force_add=True)
+            else:
+                if "_target_" in node:
+                    OmegaConf.update(conf, prefix, node, merge=False, force_add=True)
+                else:
+                    for k, v in node.items():
+                        override_subtree(v, prefix=f"{prefix}.{k}")
+        elif type(node) in [str, float, int, bool] or node is None:
+            OmegaConf.update(conf, prefix, node, force_add=True)
+        else:
+            raise ValueError(f"Unexpected type {type(node)}: {node}")
+
+    profile = conf.profiles
+    del conf.profiles
+    for k, n in profile.items():
+        override_subtree(n, prefix=k)
+
     # fix paths
     fix_paths(
         conf,
