@@ -3,3 +3,4 @@ min_length: 5
 max_length: 100
 length_penalty: 1.0
 repetition_penalty: 1.0
+early_stopping: false

@@ -1,5 +1,6 @@
 _target_: 'classy.pl_modules.hf.generation.HFGenerationPLModule'
 transformer_model: ${transformer_model}
+additional_special_tokens: []
 decoding_skip_special_tokens: True
 decoding_clean_up_tokenization_spaces: False
 optim_conf:

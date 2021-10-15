@@ -108,4 +108,3 @@ def train(conf: DictConfig) -> None:
 
     # module fit
     trainer.fit(pl_module, datamodule=pl_data_module)
-

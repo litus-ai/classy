@@ -30,6 +30,7 @@ class HFGenerationDataset(BaseDataset):
         ],
         vocabulary: Vocabulary,
         transformer_model: str,
+        additional_special_tokens: Optional[List[str]],
         tokens_per_batch: int,
         max_batch_size: Optional[int],
         section_size: int,
@@ -39,7 +40,9 @@ class HFGenerationDataset(BaseDataset):
         max_length: int,
         for_inference: bool,
     ):
-        self.sample_encoder = HFGenerationSampleEncoder.from_transformer_model(transformer_model)
+        self.sample_encoder = HFGenerationSampleEncoder.from_transformer_model(
+            transformer_model, additional_special_tokens
+        )
         super().__init__(
             samples_iterator=samples_iterator,
             vocabulary=vocabulary,
@@ -68,24 +71,29 @@ class HFGenerationDataset(BaseDataset):
 
 class HFGenerationSampleEncoder:
     @classmethod
-    def from_transformer_model(cls, transformer_model: str):
+    def from_transformer_model(cls, transformer_model: str, additional_special_tokens: Optional[List[str]]):
         if re.fullmatch("facebook/bart-(base|large)", transformer_model):
-            return BartHFGenerationSampleEncoder(transformer_model)
+            return BartHFGenerationSampleEncoder(transformer_model, additional_special_tokens)
         elif transformer_model.startswith("gpt2"):
-            return GPT2HFGenerationSampleEcnoder(transformer_model)
+            return GPT2HFGenerationSampleEcnoder(transformer_model, additional_special_tokens)
         elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
-            return MBARTHFGenerationSampleEncoder(transformer_model)
+            return MBARTHFGenerationSampleEncoder(transformer_model, additional_special_tokens)
         else:
             raise ValueError
 
     _shared_state = {}
 
-    def __init__(self, transformer_model: str):
+    def __init__(self, transformer_model: str, additional_special_tokens: Optional[List[str]]):
         if "tokenizer" not in self._shared_state:
             self._shared_state["tokenizer"] = {}
         if transformer_model not in self._shared_state["tokenizer"]:
             self._shared_state["tokenizer"][transformer_model] = AutoTokenizer.from_pretrained(
-                transformer_model, use_fast=True, add_prefix_space=True
+                transformer_model,
+                additional_special_tokens=list(additional_special_tokens)
+                if additional_special_tokens is not None
+                else None,
+                use_fast=True,
+                add_prefix_space=True,
             )
         self.tokenizer = self._shared_state["tokenizer"][transformer_model]
 
