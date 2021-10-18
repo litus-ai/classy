@@ -25,8 +25,8 @@ with open("requirements.txt") as f:
     requirements = f.readlines()
 
 setup(
-    name="classy-ml",
-    version="0.1.0",
+    name="classy-core",
+    version=VERSION["VERSION"],
     description="A powerful tool to train and use your classification models.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -39,12 +39,12 @@ setup(
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "Topic :: Text Processing :: Linguistic",
-        "Topic :: Scientific / Engineering:: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     keywords="classy nn ml sunglassesai classification",
     url="https://github.com/sunglasses-ai/classy",
-    author="Sunglasses AI",
-    author_email="TODO",
+    author="Classy Team @ Sunglasses AI",
+    author_email="classy@sunglasses.ai",
     license="Apache",
     packages=find_namespace_packages(include=["hydra_plugins.*"]) + find_packages(include=("classy", "configurations")),
     install_requires=requirements,

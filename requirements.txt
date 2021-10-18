@@ -3,7 +3,7 @@ pytorch-lightning==1.4.9
 transformers==4.11.3
 hydra-core==1.1.1
 # datasets and metrics
-datasets==1.11.0
+datasets==1.12.1
 seqeval==1.2.2
 scikit-learn==0.24.2
 matplotlib==3.4.3
@@ -15,7 +15,7 @@ st-annotated-text==2.0.0
 # optional(?)
 sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
 wandb==0.12.2  # required for logging
-nltk==3.4.5  # required by esc
+nltk==3.6.5  # required by esc
 networkx==2.5  # required by esc
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==1.4.12  # required by sacrebleu callback

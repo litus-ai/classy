@@ -1,6 +1,6 @@
 <div align="center">
     <br>
-    <img alt="classy logo" src="img/logo.png" width="400"/>
+    <img alt="classy logo" src="https://github.com/sunglasses-ai/classy/raw/main/img/logo.png" width="400"/>
     <p>
     A PyTorch-based library for fast prototyping and sharing of deep neural network models. 
     </p>
@@ -21,8 +21,8 @@
     <a href="">
         <img alt="Python" src="https://img.shields.io/badge/Python 3.7--3.9-blue?style=for-the-badge&logo=python&logoColor=white">
     </a>
-    <a href="https://pypi.org/project/classy-ml/">
-        <img alt="PyPI" src="https://img.shields.io/pypi/v/classy-ml?style=for-the-badge&logo=pypi">
+    <a href="https://pypi.org/project/classy-core/">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/classy-core?style=for-the-badge&logo=pypi">
     </a>
     <a href="https://pytorch.org/get-started/locally/">
         <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch 1.8+-ee4c2c?style=for-the-badge&logo=pytorch&logoColor=white">
@@ -45,13 +45,15 @@
 ## Quick Links
 
 <!-- - [💻 Demo (TODO?)](https://TODO/) 
+- [🔦 Guide (TODO)](https://TODO/)
+- [📓 Versioned Documentation](http://sunglasses-ai.github.io/classy/docs/intro) ( [latest](http://sunglasses-ai.github.io/classy/docs/intro) | [stable](http://sunglasses-ai.github.io/classy/docs/intro) | [commit](http://sunglasses-ai.github.io/classy/docs/intro) )
 - [⚙️ Continuous Build (TODO)](https://TODO)-->
-- [↗️ Website](http://151.100.179.12:30000/)
-- [🔦 Guide](http://151.100.179.12:30000/docs/intro)
-- [💻 Template and Examples](https://github.com/sunglasses-ai/classy-template)
-- [📓 Documentation (FILL LINKS)](https://TODO/) ( [latest](https://TODO/latest/) | [stable](https://TODO/stable/) | [commit](https://TODO/main/) )
-- [✋ Contributing Guidelines (TODO)](CONTRIBUTING.md)
-- [🌙 Nightly Releases](https://pypi.org/project/classy-ml/#history)
+- [↗️ Website](http://sunglasses-ai.github.io/classy/)
+- [📓 Documentation](http://sunglasses-ai.github.io/classy/docs/intro)
+- [💻 Template](https://github.com/sunglasses-ai/classy-template)
+- [🔦 Examples](https://github.com/sunglasses-ai/classy-examples)
+- [✋ Contributing Guidelines](CONTRIBUTING.md)
+- [🌙 Nightly Releases](https://pypi.org/project/classy-core/#history)
 
 
 ## In this README
@@ -70,19 +72,19 @@
     - [Enable `classy` shell completion](#enabling-shell-completion)
 - [🤔 Issues](#issues)
 - [❤️ Contributions](#contributions)
-- [🤓 Team](#team)
 
 
 ## Getting Started using classy
 If this is your first time meeting `classy`, don't worry! We have plenty of resources to help you learn how it works and what it can do for you.
 
-For starters, have a look at our [amazing website](http://151.100.179.12:30000) and [our documentation](http://151.100.179.12:30000/docs/intro)!
+For starters, have a look at our [amazing website](http://sunglasses-ai.github.io/classy) and [our documentation](http://sunglasses-ai.github.io/classy/docs/intro)!
 
-If you want to get your hands dirty right away, have a look at our [base classy template](https://github.com/sunglasses-ai/classy-template). There are a few example branches there that you can look at to get to know `classy`!
+If you want to get your hands dirty right away, have a look at our [base classy template](https://github.com/sunglasses-ai/classy-template). 
+Also, we have [a few examples](https://github.com/sunglasses-ai/classy-examples) that you can look at to get to know `classy`!
 
 ## Installation
 
-*For a more in-depth installation guide (covering also installing from source and through docker), please visit our [installation page](http://151.100.179.14:30000/docs/getting-started/installation).*
+*For a more in-depth installation guide (covering also installing from source and through docker), please visit our [installation page](http://sunglasses-ai.github.io/classy/docs/getting-started/installation).*
 
 If you are using one of our [templates](https://github.com/sunglasses-ai/classy-template), there is a handy `setup.sh` script you can use that will execute the commands to create the environment and install `classy` for you.
 
@@ -113,19 +115,20 @@ If you already have a Python 3 environment you want to use, you can skip to the 
 Simply execute
 
 ```yaml
-pip install classy-ml
+pip install classy-core
 ```
 
 and voilà! You're all set.
 
-*Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-ml/#history)! You will ~~not~~ regret it :)*
+*Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-core/#history)! You will ~~not~~ regret it :)*
 
 
 ## Running `classy`
-Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](http://TODO). Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
+Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/cli/). 
+Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
 
 ### `classy train`
-In its simplest form, `classy train` lets you train a transformer-based neural network for one of the tasks supported by `classy` (see TODO).
+In its simplest form, `classy train` lets you train a transformer-based neural network for one of the tasks supported by `classy` (see [the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/tasks/)).
 
 ```yaml
 classy train sentence-pair path/to/dataset/folder-or-file -n my-model
@@ -159,7 +162,7 @@ Models uploaded via `classy upload` will be available for download by other clas
 ### `classy download`
 `classy download <model>` downloads a previously uploaded `classy`-trained model from the [HuggingFace Hub](https://huggingface.co) and stores it on your machine so that it is usable with any other `classy` command which requires a trained model (`predict`, `evaluate`, `serve`, `demo`, `upload`). 
 
-You can find [SunglassesAI](http://sunglasses.ai)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai). 
+You can find [SunglassesAI](http://sunglasses-ai.github.io/)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai). 
 
 Models uploaded via `classy upload` are available by doing `classy download username@model`.
 
@@ -181,74 +184,3 @@ Small contributions can be made directly in a pull request. For contributing maj
 
 Pull requests (PRs) must have one approving review and no requested changes before they are merged. 
 As `classy` is primarily driven by SunglassesAI, we reserve the right to reject or revert contributions that we don't think are good additions or might not fit into our roadmap.
-
-
-## Team
-`classy` is an open-source project developed by [SunglassesAI](https://sunglasses.ai/), a company with the mission to [...]. If you want to know who contributed to this codebase, see our contributors page.
-
-
-
-<!--
-### Classy Commands
-
-```yaml
-classy train (sequence | token | sentence-pair) <dataset-path> [--model-name] [--exp-name] [--device] [--root] [[-c|--config] training.pl_trainer.val_check_interval=1.0 data.pl_module.batch_size=16]
-classy predict interactive <model-path> [--device]
-classy predict file <model-path> <file-path> [-o|--output-path] [--token-batch-size] [--device]
-classy serve <model-path> [-p|--port] [--token-batch-size] [--device]
-```
-
-## TODOs
-
-### V0.1
-- **luigi**: random -> np.random everywhere
-- **luigi**: add inference time to demo
-- **edoardo**: create different profiles to train the various tasks (try to build them based on the gpu memory size and report the training time on different gpus)
-- **edoardo**: look for and train "una mazzettata" of models
-- **niccolò**: classy download
-- docs
-  - docusaurus
-  - comment extensively at least all classes and some important function
-  - write readme
-- **niccolò**: package install
-- **luigi**: Dockerfile
-
-### Later on
-- num_workers can't be >1 right now
-- pre-commit black (github actions?)
-- training on colab notebooks
-- logging
-- testing
-
-
-### Classy Commands
-
-```bash
-classy train (sequence | token | sentence-pair) <dataset-path> [--model-name] [--exp-name] [--device] [--root] [[-c|--config] training.pl_trainer.val_check_interval=1.0 data.pl_module.batch_size=16]
-classy predict interactive <model-path> [--device]
-classy predict file <model-path> <file-path> [-o|--output-path] [--token-batch-size] [--device]
-classy serve <model-path> [-p|--port] [--token-batch-size] [--device]
-```
-
-## TODOs
-
-### V0.1
-- **luigi**: random -> np.random everywhere
-- **luigi**: add inference time to demo
-- **edoardo**: create different profiles to train the various tasks (try to build them based on the gpu memory size and report the training time on different gpus)
-- **edoardo**: look for and train "una mazzettata" of models
-- **niccolò**: classy download
-- docs
-  - docusaurus
-  - comment extensively at least all classes and some important function
-  - write readme
-- **niccolò**: package install
-- **luigi**: Dockerfile
-
-### Later on
-- num_workers can't be >1 right now
-- pre-commit black (github actions?)
-- training on colab notebooks
-- logging
-- testing
--->
