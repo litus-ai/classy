@@ -1,10 +1,10 @@
 import re
-from typing import Optional, Iterator, Tuple, Dict
+from typing import Optional, Iterator, Tuple, Dict, List
 
 import omegaconf
 import torch
 from torch import nn
-from transformers import GPT2LMHeadModel, AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import GPT2LMHeadModel, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
 
 from classy.data.data_drivers import GenerationSample
 from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
@@ -20,6 +20,7 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         decoding_skip_special_tokens: bool,
         decoding_clean_up_tokenization_spaces: bool,
         optim_conf: omegaconf.DictConfig,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(vocabulary=None, optim_conf=optim_conf)
         self.save_hyperparameters()
@@ -27,6 +28,7 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
             transformer_model,
             decoding_skip_special_tokens=decoding_skip_special_tokens,
             decoding_clean_up_tokenization_spaces=decoding_clean_up_tokenization_spaces,
+            additional_special_tokens=additional_special_tokens,
         )
 
     def load_prediction_params(self, prediction_params: Dict):
@@ -59,27 +61,13 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
 
 class HFGenerativeModel(nn.Module):
     @classmethod
-    def from_transformer_model(
-        cls, transformer_model: str, decoding_skip_special_tokens: bool, decoding_clean_up_tokenization_spaces: bool
-    ):
+    def from_transformer_model(cls, transformer_model: str, **kwargs):
         if re.fullmatch("facebook/bart-(base|large)", transformer_model):
-            return BartGenerativeModule(
-                transformer_model,
-                decoding_skip_special_tokens=decoding_skip_special_tokens,
-                decoding_clean_up_tokenization_spaces=decoding_clean_up_tokenization_spaces,
-            )
+            return BartGenerativeModule(transformer_model, **kwargs)
         elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
-            return MBartGenerativeModule(
-                transformer_model,
-                decoding_skip_special_tokens=decoding_skip_special_tokens,
-                decoding_clean_up_tokenization_spaces=decoding_clean_up_tokenization_spaces,
-            )
+            return MBartGenerativeModule(transformer_model, **kwargs)
         elif transformer_model.startswith("gpt2"):
-            return GPT2GenerativeModule(
-                transformer_model,
-                decoding_skip_special_tokens=decoding_skip_special_tokens,
-                decoding_clean_up_tokenization_spaces=decoding_clean_up_tokenization_spaces,
-            )
+            return GPT2GenerativeModule(transformer_model, **kwargs)
         else:
             raise ValueError
 
@@ -101,13 +89,27 @@ class HFGenerativeModel(nn.Module):
 
 class BartGenerativeModule(HFGenerativeModel):
     def __init__(
-        self, transformer_model: str, decoding_skip_special_tokens: bool, decoding_clean_up_tokenization_spaces: bool
+        self,
+        transformer_model: str,
+        decoding_skip_special_tokens: bool,
+        decoding_clean_up_tokenization_spaces: bool,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(transformer_model, decoding_skip_special_tokens, decoding_clean_up_tokenization_spaces)
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, add_prefix_space=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            transformer_model,
+            additional_special_tokens=list(additional_special_tokens)
+            if additional_special_tokens is not None
+            else None,
+            use_fast=True,
+            add_prefix_space=True,
+        )
         self.model = AutoModelForSeq2SeqLM.from_pretrained(transformer_model)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.model.model.shared = self.model.resize_token_embeddings(len(self.tokenizer))
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
         self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces
+        self.forced_bos_token_id = self.tokenizer.bos_token_id
 
     def forward(
         self,
@@ -145,6 +147,7 @@ class BartGenerativeModule(HFGenerativeModel):
             attention_mask=attention_mask,
             decoder_start=decoder_start[0][0],
             num_return_sequences=num_return_sequences,
+            forced_bos_token_id=self.forced_bos_token_id,
             **self.generation_params,
         )
         # decode
@@ -160,16 +163,31 @@ class BartGenerativeModule(HFGenerativeModel):
 
 
 class MBartGenerativeModule(BartGenerativeModule):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.forced_bos_token_id = None
 
 
 class GPT2GenerativeModule(HFGenerativeModel):
     def __init__(
-        self, transformer_model: str, decoding_skip_special_tokens: bool, decoding_clean_up_tokenization_spaces: bool
+        self,
+        transformer_model: str,
+        decoding_skip_special_tokens: bool,
+        decoding_clean_up_tokenization_spaces: bool,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(transformer_model, decoding_skip_special_tokens, decoding_clean_up_tokenization_spaces)
-        self.tokenizer = GPT2TokenizerFast.from_pretrained(transformer_model, add_prefix_space=True)
-        self.model = GPT2LMHeadModel.from_pretrained(transformer_model)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            transformer_model,
+            additional_special_tokens=list(additional_special_tokens)
+            if additional_special_tokens is not None
+            else None,
+            use_fast=True,
+            add_prefix_space=True,
+        )
+        self.model = AutoModelForCausalLM.from_pretrained(transformer_model)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.model.model.shared = self.model.resize_token_embeddings(len(self.tokenizer))
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
         self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces
 

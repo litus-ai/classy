@@ -1,6 +1,6 @@
 task: sequence
 project_name: classy
-exp_name: ???
+exp_name: null
 exp_folder: ./experiments/${exp_name}
 
 transformer_model: "bert-large-cased"

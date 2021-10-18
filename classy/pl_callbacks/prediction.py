@@ -5,7 +5,6 @@ from typing import Tuple, Union, List, Dict, Any
 import hydra
 import nltk
 import pytorch_lightning as pl
-import torchmetrics
 from datasets import load_metric
 from omegaconf import DictConfig, OmegaConf
 
@@ -55,9 +54,6 @@ class FileDumperPredictionCallback(PredictionCallback):
 class SeqEvalPredictionCallback(PredictionCallback):
     def __init__(self):
         self.backend_metric = load_metric("seqeval")
-        self.log_p_metric = torchmetrics.AverageMeter()
-        self.log_r_metric = torchmetrics.AverageMeter()
-        self.log_f1_metric = torchmetrics.AverageMeter()
 
     def __call__(
         self,
@@ -76,11 +72,6 @@ class SeqEvalPredictionCallback(PredictionCallback):
             references=[sample.labels for sample, _ in predicted_samples],
         )
         p, r, f1 = metric_out["overall_precision"], metric_out["overall_recall"], metric_out["overall_f1"]
-
-        # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
-        for metric in trainer._results.result_metrics:
-            if metric.meta.name in [f"{name}_precision", f"{name}_recall", f"{name}_f1"]:
-                metric.reset()
 
         model.log(f"{name}_precision", p, prog_bar=True, on_step=False, on_epoch=True)
         model.log(f"{name}_recall", r, prog_bar=True, on_step=False, on_epoch=True)
@@ -117,10 +108,6 @@ class SummarizationRougeGenerationCallback(PredictionCallback):
         scores = []
 
         for k, v in results.items():
-            # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
-            for metric in trainer._results.result_metrics:
-                if metric.meta.name == f"{name}_{k}":
-                    metric.reset()
             model.log(f"{name}_{k}", v.mid.fmeasure, prog_bar=True, on_step=False, on_epoch=True)
             scores.append(f"{name}_{k}: {v.mid.fmeasure:.4f}")
 
@@ -147,12 +134,7 @@ class SacreBleuGenerationCallback(PredictionCallback):
         results = self.bleu.compute(predictions=predictions, references=[[r] for r in references])
         score = results["score"]
 
-        # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
-        for metric in trainer._results.result_metrics:
-            if metric.meta.name == f"{name}_bleu":
-                metric.reset()
         model.log(f"{name}_bleu", score, prog_bar=True, on_step=False, on_epoch=True)
-
         logger.info(f"SacreBleuGenerationCallback with name {name} completed with score: {score:.2f}")
 
 
@@ -177,10 +159,6 @@ class SQuADV1Callback(PredictionCallback):
         results = self.squad.compute(predictions=pred, references=gold)
         exact_match, f1 = results["exact_match"], results["f1"]
 
-        # todo lightning reset of metrics is yet unclear: fix once it becomes clear and delete the following block
-        for metric in trainer._results.result_metrics:
-            if metric.meta.name == f"{name}_exact_match" or metric.meta.name == f"{name}_f1":
-                metric.reset()
         model.log(f"{name}_exact_match", exact_match, prog_bar=True, on_step=False, on_epoch=True)
         model.log(f"{name}_f1", f1, prog_bar=True, on_step=False, on_epoch=True)
 

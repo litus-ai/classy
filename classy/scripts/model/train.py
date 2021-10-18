@@ -108,17 +108,3 @@ def train(conf: DictConfig) -> None:
 
     # module fit
     trainer.fit(pl_module, datamodule=pl_data_module)
-
-
-@hydra.main(config_path="../../../configurations/", config_name="root")
-def main(conf: DictConfig):
-    fix_paths(
-        conf,
-        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
-    )
-    train(conf)
-
-
-if __name__ == "__main__":
-    main()
