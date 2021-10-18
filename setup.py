@@ -46,7 +46,10 @@ setup(
     author="Classy Team @ Sunglasses AI",
     author_email="classy@sunglasses.ai",
     license="Apache",
-    packages=find_namespace_packages(include=["hydra_plugins.*"]) + find_packages(include=("classy", "configurations")),
+    packages=find_namespace_packages(include=["hydra_plugins.*", "classy.*"])
+    + find_packages(include=("configurations",)),
+    package_data={"configurations": ["*.yaml", "*/*.yaml"]},
+    include_package_data=True,
     install_requires=requirements,
     entry_points={"console_scripts": ["classy=classy.scripts.cli.__init__:main"]},
     python_requires=">=3.7.0",
