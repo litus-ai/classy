@@ -15,8 +15,7 @@ st-annotated-text==2.0.0
 # optional(?)
 sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
 wandb==0.12.2  # required for logging
-nltk==3.6.5  # required by esc
-networkx==2.5  # required by esc
+nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==1.4.12  # required by sacrebleu callback
 # black

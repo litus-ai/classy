@@ -65,7 +65,9 @@ def _main_print_config(blames):
     return _print_config
 
 
-def _main_mock(cfg, profile_name: Optional[str] = None, cli_overrides: Optional[List[str]] = None, blames: Optional[List] = None):
+def _main_mock(
+    cfg, profile_name: Optional[str] = None, cli_overrides: Optional[List[str]] = None, blames: Optional[List] = None
+):
 
     dry_run_for_print, blames = blames is not None, blames or []
 
@@ -81,7 +83,7 @@ def _main_mock(cfg, profile_name: Optional[str] = None, cli_overrides: Optional[
             cli_override2result[k] = OmegaConf.select(cfg, k)
 
     # apply profile overrides
-    if 'profiles' in cfg:
+    if "profiles" in cfg:
 
         subtrees_impacted_by_profile_change = set()
 
@@ -319,7 +321,11 @@ def main(args):
     # we are basically mocking the normal python script invocation by setting the argv to those we want
     # unfortunately there is no better way to do this at this moment in time :(
     sys.argv = cmd
-    hydra.main(config_path=None)(lambda cfg: _main_mock(cfg, profile_name=args.profile, cli_overrides=cli_overrides, blames=blames if args.print else None))()
+    hydra.main(config_path=None)(
+        lambda cfg: _main_mock(
+            cfg, profile_name=args.profile, cli_overrides=cli_overrides, blames=blames if args.print else None
+        )
+    )()
 
 
 if __name__ == "__main__":

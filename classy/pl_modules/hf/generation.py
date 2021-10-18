@@ -163,7 +163,6 @@ class BartGenerativeModule(HFGenerativeModel):
 
 
 class MBartGenerativeModule(BartGenerativeModule):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.forced_bos_token_id = None
@@ -184,7 +183,7 @@ class GPT2GenerativeModule(HFGenerativeModel):
             if additional_special_tokens is not None
             else None,
             use_fast=True,
-            add_prefix_space=True
+            add_prefix_space=True,
         )
         self.model = AutoModelForCausalLM.from_pretrained(transformer_model)
         if additional_special_tokens is not None and len(additional_special_tokens) > 0:
