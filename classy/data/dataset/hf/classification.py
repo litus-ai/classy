@@ -114,7 +114,7 @@ class HFQADataset(HFBaseDataset):
         return False
 
     @staticmethod
-    def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
+    def fit_vocabulary(samples: Iterator[QASample]) -> Vocabulary:
         raise NotImplementedError
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:

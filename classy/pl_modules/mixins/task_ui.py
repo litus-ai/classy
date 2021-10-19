@@ -1,12 +1,11 @@
 import collections
 import html
-import itertools
 import json
 import re
-from typing import Union, List, Optional, Tuple
+from typing import Union, List, Optional
 
 import streamlit as st
-from annotated_text import annotated_text, annotation
+from annotated_text import annotation
 
 from classy.data.data_drivers import (
     SentencePairSample,
@@ -22,7 +21,6 @@ from classy.data.data_drivers import (
     GENERATION,
     QA,
 )
-from classy.scripts.cli.evaluate import automatically_infer_test_path
 from classy.utils.streamlit import get_md_200_random_color_generator
 
 
