@@ -26,7 +26,7 @@ from classy.pl_modules.mixins.task_ui import (
 
 
 class TaskMixin(TaskUIMixin):
-    def read_input_from_bash(self) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample]:
+    def read_input_from_bash(self) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]:
         raise NotImplementedError
 
     @property

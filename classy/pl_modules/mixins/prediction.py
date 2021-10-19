@@ -12,21 +12,21 @@ from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
+    QASample, GenerationSample,
 )
 
 
 class PredictionMixin:
     def predict(
         self,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]],
+        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         dataset_conf: Union[Dict, DictConfig],
         token_batch_size: int = 1024,
         progress_bar: bool = False,
         **kwargs
     ) -> Generator[
         Tuple[
-            Union[SentencePairSample, SequenceSample, TokensSample, QASample],
+            Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
             Union[str, List[str], Tuple[int, int]],
         ],
         None,
