@@ -156,6 +156,7 @@ class HFQADataset(HFBaseDataset):
                             if cp[0] != 0 and qa_sample.context[cp[0] - 1] != " ":
                                 # this is needed to cope with tokenizers such as bart
                                 # where t("Question", "X Y").token2chars[<bpe of X>] = (1, 1)
+                                elem_dict["token2chars"][_t_idx][0] -= 1
                                 cp = (cp[0] - 1, cp[1])
                         if cp[0] == cp[1]:
                             # this happens on some tokenizers when multiple spaces are present
