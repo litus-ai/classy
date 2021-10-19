@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+#  release:
+#    types: [published]
+#  schedule:
+#    - cron: '37 11 * * 1,2,3,4,5'  # early morning (11:37 UTC / 4:37 AM PDT) Monday - Friday
+
+jobs:
+  build:
+
+    name: Build Package
+
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - uses: actions/cache@v2
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ runner.os }}-pydeps-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}
+
+    - name: Install requirements
+      run: |
+        pip install -r requirements.txt
+
+    - name: Set version name
+      run: |
+        # You can't set env variables to bash commands, we need
+        # to export them this way instead.
+        echo "CLASSY_VERSION_SUFFIX=dev$(date -u +%Y%m%d)" >> $GITHUB_ENV
+
+    - name: Build wheel
+      run: |
+        echo "Building packages for pypi push"
+        python setup.py bdist_wheel sdist
+
+    - name: Save package
+      uses: actions/upload-artifact@v1
+      with:
+        name: package
+        path: dist
+
+    - name: Clean up
+      if: always()
+      run: |
+        pip uninstall -y classy
+
+  publish:
+    name: Publish to PyPI
+    needs: [build]
+    if: (github.repository == 'sunglasses-ai/classy')  # && (github.event_name == 'release' || github.event == 'schedule'))
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install requirements
+      run: |
+        pip install --upgrade pip setuptools wheel twine
+
+    - name: Download package
+      uses: actions/download-artifact@v1
+      with:
+        name: package
+        path: dist
+
+    - name: Publish core package
+      run: |
+        twine upload -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} dist/*
