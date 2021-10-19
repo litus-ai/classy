@@ -1,5 +1,6 @@
 _target_: 'classy.pl_modules.hf.classification.HFTokensPLModule'
 transformer_model: ${transformer_model}
+additional_special_tokens: []
 use_last_n_layers: 1
 fine_tune: True
 optim_conf:

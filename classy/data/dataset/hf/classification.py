@@ -140,8 +140,32 @@ class HFQADataset(HFBaseDataset):
                 elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze(0)
 
             if qa_sample.char_start is not None and qa_sample.char_end is not None:
-                elem_dict["start_position"] = tokenization_output.char_to_token(qa_sample.char_start, sequence_index=1)
-                elem_dict["end_position"] = tokenization_output.char_to_token(qa_sample.char_end - 1, sequence_index=1)
+                # use token2chars to build the mapping
+                # we should be using tokenization_output.char_to_token but there
+                # seems to be some bug around it with some tokenizers (e.g. BartTokenizer)
+                # t("Question", "X Y").char_to_token(1, sequence_id=1) returns None
+                # (first paper to char_to_token is 1 to account for added prefix space)
+                char2token = {}
+                first = True
+                for _t_idx, (m, cp) in enumerate(
+                    zip(elem_dict["context_mask"].tolist(), elem_dict["token2chars"].tolist())
+                ):
+                    if m:
+                        if first:
+                            first = False
+                            if cp[0] != 0 and qa_sample.context[cp[0] - 1] != " ":
+                                # this is needed to cope with tokenizers such as bart
+                                # where t("Question", "X Y").token2chars[<bpe of X>] = (1, 1)
+                                cp = (cp[0] - 1, cp[1])
+                        if cp[0] == cp[1]:
+                            # this happens on some tokenizers when multiple spaces are present
+                            assert (
+                                qa_sample.context[cp[0] - 1] == " "
+                            ), f"Token {_t_idx} found to occur at char span ({cp[0]}, {cp[1]}), which is impossible"
+                        for c in range(*cp):
+                            char2token[c] = _t_idx
+                elem_dict["start_position"] = char2token[qa_sample.char_start]
+                elem_dict["end_position"] = char2token[qa_sample.char_end - 1]
                 if elem_dict["start_position"] is None or elem_dict["end_position"] is None:
                     continue
 

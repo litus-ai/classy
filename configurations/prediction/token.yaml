@@ -1,6 +1,7 @@
 dataset:
   _target_: 'classy.data.dataset.hf.classification.HFTokenDataset.from_samples'
   transformer_model: ${transformer_model}
+  additional_special_tokens: ${model.additional_special_tokens}
   min_length: -1
   max_length: -1
   tokens_per_batch: 800

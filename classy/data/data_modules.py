@@ -86,6 +86,8 @@ class ClassyDataModule(pl.LightningDataModule):
 
     def prepare_data(self) -> None:
 
+        assert Path(self.dataset_path).exists(), f"{self.dataset_path} does not exist"
+
         # TODO: we should improve the flow of this code
         if self.train_path is not None and self.validation_path is not None and self.test_path is not None:
             logger.info("Using train dev and test splits produced by the run being resumed")

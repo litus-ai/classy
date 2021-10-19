@@ -5,7 +5,13 @@ import omegaconf
 import torch
 import torchmetrics
 from torch import nn
-from transformers import AutoConfig, AutoModel, AutoModelForSequenceClassification, AutoModelForQuestionAnswering
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    AutoModelForSequenceClassification,
+    AutoModelForQuestionAnswering,
+    AutoTokenizer,
+)
 
 from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample
 from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
@@ -25,11 +31,14 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         transformer_model: str,
         vocabulary: Vocabulary,
         optim_conf: omegaconf.DictConfig,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
         self.save_hyperparameters(ignore="vocabulary")
         num_classes = vocabulary.get_size(k="labels")
         self.classifier = AutoModelForSequenceClassification.from_pretrained(transformer_model, num_labels=num_classes)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.classifier.resize_token_embeddings(self.classifier.config.vocab_size + len(additional_special_tokens))
         self.accuracy_metric = torchmetrics.Accuracy()
         self.p_metric = torchmetrics.Precision()
         self.r_metric = torchmetrics.Recall()
@@ -116,6 +125,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         fine_tune: bool,
         vocabulary: Vocabulary,
         optim_conf: omegaconf.DictConfig,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
         self.save_hyperparameters(ignore="vocabulary")
@@ -124,6 +134,8 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         auto_config = AutoConfig.from_pretrained(transformer_model)
         auto_config.output_hidden_states = True
         self.encoder = AutoModel.from_pretrained(transformer_model, config=auto_config)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.encoder.resize_token_embeddings(self.encoder.config.vocab_size + len(additional_special_tokens))
         self.use_last_n_layers = use_last_n_layers
 
         if not fine_tune:
@@ -256,11 +268,14 @@ class HFQAPLModule(QATask, ClassyPLModule):
         self,
         transformer_model: str,
         optim_conf: omegaconf.DictConfig,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         super().__init__(vocabulary=None, optim_conf=optim_conf)
         self.save_hyperparameters()
 
         self.qa_model = AutoModelForQuestionAnswering.from_pretrained(transformer_model)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.qa_model.resize_token_embeddings(self.qa_model.config.vocab_size + len(additional_special_tokens))
 
         # metrics
         self.start_accuracy_metric = torchmetrics.Accuracy()
@@ -355,9 +370,28 @@ class HFQAPLModule(QATask, ClassyPLModule):
 
         # search for best answer and yield
         start_indexes, end_indexes = classification_output.logits.argsort(dim=-1, descending=True)[:, :, :5].tolist()
+
         for i in range(len(samples)):
+
+            # sort possible combinations
+            indexes = []
+            for start_index in start_indexes[i]:
+                for end_index in end_indexes[i]:
+                    indexes.append(
+                        (
+                            start_index,
+                            end_index,
+                            (
+                                classification_output.logits[0, i, start_index]
+                                + classification_output.logits[1, i, end_index]
+                            ).item(),
+                        )
+                    )
+            indexes = sorted(indexes, key=lambda x: x[2], reverse=True)
+
+            # iterate
             found = False
-            for start_index, end_index in zip(start_indexes[i], end_indexes[i]):
+            for start_index, end_index, score in indexes:
                 if not context_mask[i, start_index].item() or not context_mask[i, end_index].item():
                     continue
                 if end_index < start_index or end_index - start_index + 1 > 100:

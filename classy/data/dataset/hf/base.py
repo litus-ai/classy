@@ -18,6 +18,7 @@ class HFBaseDataset(BaseDataset):
         samples_iterator: Callable[[], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]],
         vocabulary: Vocabulary,
         transformer_model: str,
+        additional_special_tokens: Optional[List[str]],
         tokens_per_batch: int,
         max_batch_size: Optional[int],
         section_size: int,
@@ -30,7 +31,12 @@ class HFBaseDataset(BaseDataset):
     ):
         if "tokenizer" not in self._shared_state:
             self._shared_state["tokenizer"] = AutoTokenizer.from_pretrained(
-                transformer_model, use_fast=True, add_prefix_space=True
+                transformer_model,
+                use_fast=True,
+                add_prefix_space=True,
+                additional_special_tokens=list(additional_special_tokens)
+                if additional_special_tokens is not None
+                else None,
             )
         self.tokenizer = self._shared_state["tokenizer"]
         super().__init__(
