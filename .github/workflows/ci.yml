@@ -10,28 +10,24 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '40 07 * * *'  # early morning (04:00 UTC) every day
+    - cron: '10 08 * * *'  # early morning (04:00 UTC) every day
 
 jobs:
   check_date:
     runs-on: ubuntu-latest
     name: Check latest commit
     outputs:
-      should_run: ${{ steps.should_run.outputs.WAS_EDITED }}
+      WAS_EDITED: ${{ steps.check_date.outputs.WAS_EDITED }}
     steps:
       - uses: actions/checkout@v2
 
-      - id: should_run
-        continue-on-error: true
-        name: check latest commit is less than a day
-        if: ${{ github.event_name == 'schedule' }}
-        run: echo '::set-output name=WAS_EDITED::'$(test $(git log --pretty="format:" --name-only --since="24 hours ago") && echo 'true' || echo 'false')
+      - id: check_date
+        name: Check if there were commits in the last day
+#        if: ${{ github.event_name == 'schedule' }}
+        run: echo '::set-output name=WAS_EDITED::'$(test -n "$(git log --format=%H --since='24 hours ago')" && echo 'true' || echo 'false')
 
   build:
     needs: [check_date]
-    # check_date does not exist if the event is not a schedule, 
-    # so this if condition is alywas true unless this was a scheduled run
-    # and there were no commits in the last 24 hours
     if: ${{ github.event_name == 'release' || needs.check_date.outputs.WAS_EDITED == 'true' }}
     
     name: Build Package
