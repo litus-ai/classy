@@ -10,11 +10,9 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '00 04 * * *'  # early morning (04:00 UTC) every day
+    - cron: '40 07 * * *'  # early morning (04:00 UTC) every day
 
 jobs:
-  # checks if there has been an update in the last 24 hours
-  # https://github.community/t/trigger-action-on-schedule-only-if-there-are-changes-to-the-branch/17887/4
   check_date:
     runs-on: ubuntu-latest
     name: Check latest commit
@@ -23,21 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: print latest_commit
-        run: echo ${{ github.sha }}
-
       - id: should_run
         continue-on-error: true
         name: check latest commit is less than a day
         if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list --after="24 hours" ${{ github.sha }}) && echo "::set-output name=should_run::false"
+        run: echo '::set-output name=WAS_EDITED::'$(test $(git log --pretty="format:" --name-only --since="24 hours ago") && echo 'true' || echo 'false')
 
   build:
-    needs: check_date
+    needs: [check_date]
     # check_date does not exist if the event is not a schedule, 
     # so this if condition is alywas true unless this was a scheduled run
     # and there were no commits in the last 24 hours
-    if: ${{ needs.check_date.outputs.should_run != 'false' }}
+    if: ${{ github.event_name == 'release' || needs.check_date.outputs.WAS_EDITED == 'true' }}
     
     name: Build Package
 
@@ -84,7 +79,7 @@ jobs:
   publish:
     name: Publish to PyPI
     needs: [build]
-    if: ${{ (github.repository == 'sunglasses-ai/classy') && (github.event_name == 'release' || github.event == 'schedule') }}
+    if: ${{ (github.repository == 'sunglasses-ai/classy') && (github.event_name == 'release' || github.event_name == 'schedule') }}
     runs-on: ubuntu-latest
 
     steps:
