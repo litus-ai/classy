@@ -10,7 +10,7 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '10 08 * * *'  # early morning (04:00 UTC) every day
+    - cron: '30 08 * * *'  # early morning (04:00 UTC) every day
 
 jobs:
   check_date:
