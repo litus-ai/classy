@@ -75,7 +75,18 @@ def autocomplete_model_path(prefix: str, **kwargs):
 
 
 def checkpoint_path_from_user_input(model_path: str) -> str:
-    path = try_get_checkpoint_path_from_user_input(model_path)
+    try:
+        path = try_get_checkpoint_path_from_user_input(model_path)
+    except Exception as e:
+        print(
+            f"Unexpected exception occurred when converting your model argument"
+            f" (`{model_path}`) to an actual checkpoint"
+        )
+        print("Exception:", e)
+        print("If you have trouble understanding where this may come from, open a new issue on GitHub.")
+        print("https://github.com/sunglasses-ai/classy/issues/new")
+        exit(1)
+
     if path is None:
         print(f"Unable to convert {model_path} to its actual checkpoint, exiting.")
         exit(1)
@@ -84,6 +95,10 @@ def checkpoint_path_from_user_input(model_path: str) -> str:
 
 
 def try_get_checkpoint_path_from_user_input(model_path: str) -> Optional[str]:
+
+    # immediately check if the path exists and is a checkpoint, in which case we return it
+    if model_path.endswith(".ckpt") and Path(model_path).exists():
+        return model_path
 
     # downloaded model!
     if "@" in model_path:
