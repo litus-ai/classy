@@ -23,7 +23,7 @@ jobs:
 
       - id: check_date
         name: Check if there were commits in the last day
-#        if: ${{ github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'schedule' }}
         run: echo '::set-output name=WAS_EDITED::'$(test -n "$(git log --format=%H --since='24 hours ago')" && echo 'true' || echo 'false')
 
   build:
