@@ -80,6 +80,7 @@ def _main_mock(
     if cli_overrides is not None:
         cli_override2result = {}
         for k in cli_overrides:
+            k = k.lstrip('+')  # removing + and ++ from prefix
             cli_override2result[k] = OmegaConf.select(cfg, k)
 
     # apply profile overrides
@@ -132,7 +133,7 @@ def _main_mock(
             # this is what the following warning checks
             for _st in subtrees_impacted_by_profile_change:
                 assert not is_subtree(_st, k), f"{_st}, changed by profile, is a subtree of {k}, changed by CLI"
-            OmegaConf.update(cfg, k, v, merge=False)
+            OmegaConf.update(cfg, k, v, merge=False, force_add=True)
 
     # fix paths
     fix_paths(
@@ -237,7 +238,7 @@ def main(args):
         blames.append((["data.datamodule.shuffle_dataset"], ClassyBlame("--no-shuffle")))
 
     if args.epochs:
-        cmd.append(f"training.pl_trainer.max_epochs={args.epochs}")
+        cmd.append(f"++training.pl_trainer.max_epochs={args.epochs}")
 
     # wandb logging
     if args.wandb is not None:
