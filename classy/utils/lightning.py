@@ -72,14 +72,14 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     if vocabulary_path.exists():
         vocabulary = Vocabulary.from_folder(vocabulary_path)
 
-    # instantiate and return
-    instantiate_input = dict(checkpoint_path=checkpoint_path)
+    # prepare instantiate params
+    instantiate_input = dict(checkpoint_path=checkpoint_path, _recursive_=False, **conf.model)
     if vocabulary is not None:
         instantiate_input["vocabulary"] = vocabulary
+    instantiate_input["_target_"] = f'{conf.model["_target_"]}.load_from_checkpoint'
 
-    return hydra.utils.instantiate(
-        {"_target_": f'{conf["model"]["_target_"]}.load_from_checkpoint'}, **instantiate_input
-    )
+    # instantiate and return
+    return hydra.utils.instantiate(instantiate_input)
 
 
 def load_prediction_dataset_conf_from_checkpoint(checkpoint_path: str) -> DictConfig:

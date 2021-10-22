@@ -13,7 +13,11 @@ class ClassyStruct:
         self._d = kwargs
 
     def __getattr__(self, item):
-        if item in self._d:
+        if item.startswith('__') and item.startswith('__'):
+            # this is likely some python library-specific variable (such as __deepcopy__ for copy)
+            # better follow standard behavior here
+            raise AttributeError(item)
+        elif item in self._d:
             return self._d[item]
         else:
             return None

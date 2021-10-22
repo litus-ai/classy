@@ -106,7 +106,7 @@ class BartGenerativeModule(HFGenerativeModel):
         )
         self.model = AutoModelForSeq2SeqLM.from_pretrained(transformer_model)
         if additional_special_tokens is not None and len(additional_special_tokens) > 0:
-            self.model.model.shared = self.model.resize_token_embeddings(len(self.tokenizer))
+            self.model.resize_token_embeddings(len(self.tokenizer))
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
         self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces
         self.forced_bos_token_id = self.tokenizer.bos_token_id

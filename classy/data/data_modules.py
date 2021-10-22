@@ -86,13 +86,15 @@ class ClassyDataModule(pl.LightningDataModule):
 
     def prepare_data(self) -> None:
 
+        assert Path(self.dataset_path).exists(), f"{self.dataset_path} does not exist"
+
         # TODO: we should improve the flow of this code
         if self.train_path is not None and self.validation_path is not None and self.test_path is not None:
             logger.info("Using train dev and test splits produced by the run being resumed")
         elif Path(self.dataset_path).is_dir():  # the user provided a directory containing the datasets
             dir_train_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
 
-            assert len(dir_train_files) == 1, "Found more than one file with 'train' in their name"  # todo: expand
+            assert len(dir_train_files) == 1, f"Expected one file with 'train' in its name, but {len(dir_train_files)} were found in {self.dataset_path}: {dir_train_files}"
 
             train_file = dir_train_files[0]
             self.file_extension = train_file.split(".")[-1]
