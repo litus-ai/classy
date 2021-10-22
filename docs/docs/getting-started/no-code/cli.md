@@ -5,7 +5,7 @@ title: CLI
 
 import ReactTermynal from '../../../src/components/termynal';
 
-Once task identification and data organization are complete, your "have-to-code" section is over, and you can use classy
+Once task identification and data organization are complete, your "have-to-code" section is over, and you can use `classy`
 CLI to handle the rest, covering every step during the lifecycle of a ML model:
 * train
 * predict (both file-based and bash-interactive)
@@ -26,7 +26,7 @@ classy train
 
 :::info
 
-If a device is not provided explicitly, classy will search and use a gpu if present, resorting otherwise to cpu.
+If a device is not provided explicitly, `classy` will search and use a gpu if present, resorting otherwise to cpu.
 
 :::
 
@@ -94,7 +94,7 @@ classy <cmd> experiments/sequence-example/<day>/<time>/checkpoints/epoch=00-val_
 
 :::tip
 
-For all CLI commands, you can checkout `classy <command> -h` for more information and parameters.
+For all CLI commands, you can execute `classy <command> -h` for additional information and parameters.
 
 :::
 
@@ -154,8 +154,8 @@ provided, classy will try to locate the test set provided to `classy train` (if 
 :::caution
 
 If you move your model to a different pc, automatically inferring the location of the test set will fail 
-unless it was also moved (and placed in a symmetric location in the file-system). Should it fail, provide
-explicitly its path in this case.
+unless it was also moved (and placed in a symmetric location in the file-system). Should it fail, providing the 
+path explicitly should solve the issue.
 
 :::
 

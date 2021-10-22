@@ -6,7 +6,7 @@ sidebar_label: Introduction
 
 import ReactTermynal from '../src/components/termynal';
 
-classy is a simple-to-use library for building high-performance Machine Learning models in NLP.
+`classy` is a simple-to-use library for building high-performance Machine Learning models in NLP.
 It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/), [Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
 and offers them to users with a simple CLI interface.
 
@@ -57,7 +57,7 @@ This is the only part where some coding is required.
 
 :::note 
 
-You don't have to use Python here, you can use any tool as far as data gets organized into a .tsv file (if you are an *AWK* fan, for it).
+You don't have to use Python here, you can use any tool as far as data gets organized into a .tsv file (if you are an *AWK* fan, go for it).
 
 :::
 

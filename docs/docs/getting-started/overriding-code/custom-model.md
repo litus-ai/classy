@@ -6,14 +6,14 @@ title: Custom Model
 
 :::info
 
-classy is built on top of PyTorch Lightning and, in order to better understand classy code infrastructure, we recommend
+`classy` is built on top of PyTorch Lightning and, in order to better understand classy code infrastructure, we recommend
 going through PyTorch Lightning [intro guide](https://pytorch-lightning.readthedocs.io/en/latest/starter/new-project.html)
 before proceeding.
 
 :::
 
 Implementing your own model within classy is easy. You just need to:
-* subclass ClassyPLModule and your task mixin (*SequenceTask*, *SentencePairTask*, *TokensTask*, *QATask*)
+* subclass `ClassyPLModule` and your task mixin (*SequenceTask*, *SentencePairTask*, *TokensTask*, *QATask*)
 * implement abstract methods
 * (optional) override any other method
 
@@ -60,7 +60,7 @@ class CustomModel(SequenceTask, ClassyPLModule):
 
 ## A Minimal Example
 
-Practically, imagine you want to build a Sequence Classification model on top of a Huggingface Transformer model.
+Practically, imagine you want to build a Sequence Classification model on top of a HuggingFace Transformer model.
 
 ```python title="classy.pl_modules.custom_model.py"
 class CustomModel(SequenceTask, ClassyPLModule):
@@ -107,7 +107,7 @@ def forward(
     )
 ```
 
-There's nothing really special about this forward. ClassificationOutput is just a dataclass to conveniently store logits,
+There's nothing really special about this forward. `ClassificationOutput` is just a dataclass to conveniently store logits,
 probabilities, predictions and loss. The only important thing is the signature: it **must match** with the batches your 
 dataset emits (here, we are using *classy.data.dataset.hf.HFSequenceDataset*).
 
@@ -125,22 +125,22 @@ You just invoke the forward method, and use the vocabulary to perform label tens
 
 Finally, you have to implement lightning hooks:
 
-```python     
-    def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
-        classification_output = self.forward(**batch)
-        self.log("loss", classification_output.loss)
-        return classification_output.loss
+```python
+def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+    classification_output = self.forward(**batch)
+    self.log("loss", classification_output.loss)
+    return classification_output.loss
 
-    def validation_step(self, batch: dict, batch_idx: int) -> None:
-        classification_output = self.forward(**batch)
-        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.log("val_loss", classification_output.loss)
-        self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
+def validation_step(self, batch: dict, batch_idx: int) -> None:
+    classification_output = self.forward(**batch)
+    self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+    self.log("val_loss", classification_output.loss)
+    self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
 
-    def test_step(self, batch: dict, batch_idx: int) -> None:
-        classification_output = self.forward(**batch)
-        self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
-        self.log("test_accuracy", self.accuracy_metric)
+def test_step(self, batch: dict, batch_idx: int) -> None:
+    classification_output = self.forward(**batch)
+    self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
+    self.log("test_accuracy", self.accuracy_metric)
 ```
 
 The only missing component is writing the configuration file:

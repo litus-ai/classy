@@ -3,7 +3,7 @@ sidebar_position: 3
 title: Profiles
 ---
 
-As you have seen from the previous tutorials, your systems are fully customizable in classy. 
+As you have seen from the previous tutorials, your systems are fully customizable in `classy`. 
 Even if we strongly encourage you to create you own configurations, we provide a set of predefined and well-established profiles
 that will work with competitive performances in almost all setting and scenarios.
 
