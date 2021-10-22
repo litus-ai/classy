@@ -21,14 +21,14 @@ READERS_DICT[(YOUR_TASK, YOUR_FILE_EXTENSION)] = CustomDataDriver
 
 :::caution
 
-classy uses the tuple (task, file-extension) to determine the data driver to instantiate for some file. This means that
+`classy` uses the tuple (task, file-extension) to determine the data driver to instantiate for some file. This means that
 postpending file extensions is mandatory, even on Unix systems.
 
 :::
 
 ## A Minimal Example
 
-For instance, imagine you were to reimplement the .jsonl data driver for Sequence Classification:
+For instance, imagine you were to reimplement the `.jsonl` data driver for Sequence Classification:
 
 ```python
 class JSONLSequenceDataDriver(SequenceDataDriver):
@@ -64,7 +64,7 @@ def save(self, samples: Iterator[SequenceSample], path: str):
 
 :::tip
 
-While both .jsonl and .tsv are one-sample-per-line formats, your own data driver does not need to follow this behavior. As you
+While both `.jsonl` and `.tsv` are one-sample-per-line formats, your own data driver does not need to follow this behavior. As you
 have access to the lines iterator, you can read your file as you see fit.
 
 :::

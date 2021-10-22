@@ -5,8 +5,8 @@ title: Tasks
 
 import ReactTermynal from '../../../src/components/termynal';
 
-In its simplest flavor, classy lets **you focus entirely on your data** and automatically handles the development
-of full-fledged models for you, with no ML knowledge or additional line of code required. To achieve this, classy only 
+In its simplest flavor, `classy` lets **you focus entirely on your data** and automatically handles the development
+of full-fledged models for you, with no ML knowledge or additional line of code required. To achieve this, `classy` only 
 asks you to specify the task you wish to tackle and to organize your data into suitable formats.
 
 export const ButtonWithBackdrop = ({children, title}) => {

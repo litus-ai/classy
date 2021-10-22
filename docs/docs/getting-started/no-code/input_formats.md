@@ -6,18 +6,18 @@ title: Input Formats
 import ReactTermynal from '../../../src/components/termynal';
 
 Once you have realized which task you are dealing with, you have to organize your data. Currently, for each of 
-these tasks, classy supports two possible input formats:
-* .tsv
-* .jsonl
+these tasks, `classy` supports two possible input formats:
+* `.tsv`
+* `.jsonl`
 
 :::caution
 
-classy automatically infers how to process a given file from its extension. So please explicitly use ".tsv" for .tsv files
-and ".jsonl" for .jsonl files.
+`classy` automatically infers how to process a given file from its extension. So please explicitly use `".tsv"` for `.tsv` files
+and `".jsonl"` for `jsonl` files.
 
 :::
 
-## .tsv
+## `.tsv`
 
 With the .tsv format, files are expected to be standard .tsv files. Their structure varies depending on the selected task:
 
@@ -82,7 +82,7 @@ $ cat lm.tsv | head -1
 I came back home because I had forgotten my wallet.
 ```
 
-## .jsonl
+## `.jsonl`
 
 With the .jsonl format, each line contains a JSON object that represents a sample, whose type depends on the task under 
 consideration:
@@ -157,7 +157,7 @@ $ cat lm-with-langs.jsonl | head -1
 ```
 
 Note that:
-* Language specification is not supported for .tsv
+* Language specification is not supported for `.tsv`
 * Not all models support language specification (e.g. Bart), while others require it (e.g. mBart)
 
 :::
