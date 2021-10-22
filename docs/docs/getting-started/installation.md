@@ -22,7 +22,7 @@ Don't know what `CUDA_VERSION` you have?
 [Check this link](https://stackoverflow.com/a/68499241/1908499).
 :::
 
-The preferred way to install `classy` is via `pip`. Just run `pip install classy-ml`.
+The preferred way to install `classy` is via `pip`. Just run `pip install classy-core`.
 
 <!-- `classy` works on *any* platform, as long as it is correctly configured. -->
 
@@ -53,12 +53,12 @@ environment you want to use, you can skip to the 'installing via pip' section.
 Simply execute
 
 ```yaml
-pip install classy-ml
+pip install classy-core
 ```
 
 and voilà! You're all set.
 
-*Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-ml/#history)! You will ~~not~~ regret it :)*
+*Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-core/#history)! You will ~~not~~ regret it :)*
 
 
 ### Installing from source

@@ -1,22 +1,10 @@
 ---
-title: classy
-hide_title: true
+title: Introduction
 sidebar_position: 1
 sidebar_label: Introduction
 ---
 
 import ReactTermynal from '../src/components/termynal';
-
-<div style={{textAlign: "center"}}>
-    <div>
-        <img src="/img/classy_logotypo.png" alt="Classy Logo" />
-    </div>
-    <div style={{textAlign: "center"}}>
-      <em>Your data, our code, the hardware you prefer.</em>
-    </div>
-</div>
-
-<p />
 
 classy is a simple-to-use library for building high-performance Machine Learning models in NLP.
 It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/), [Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
@@ -25,9 +13,9 @@ and offers them to users with a simple CLI interface.
 ## Installation
 
 <ReactTermynal>
-  <span data-ty="input">pip install classy-ml</span>
+  <span data-ty="input">pip install classy-core</span>
   <span data-ty="progress"></span>
-  <span data-ty>Successfully installed classy-ml</span>
+  <span data-ty>Successfully installed classy-core</span>
 </ReactTermynal>
 
 ## Example Walkthrough

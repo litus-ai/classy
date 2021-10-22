@@ -57,10 +57,11 @@ class Termynal {
         finish.style.visibility = 'hidden'
         this.container.appendChild(finish)
         // Appends dynamically loaded lines to existing line elements.
-        this.lines = [...this.container.querySelectorAll(`[${this.pfx}]`)].concat(this.lineData);
-        for (let line of this.lines) {
-            line.style.visibility = 'hidden'
-            this.container.appendChild(line)
+        this.lines = Array.from(this.container.querySelectorAll(`[${this.pfx}]`)).concat(this.lineData);
+        for (let i = 0; i < this.lines.length; i++) {
+        // for (let line of this.lines) {
+            this.lines[i].style.visibility = 'hidden'
+            this.container.appendChild(this.lines[i])
         }
         const restart = this.generateRestart()
         restart.style.visibility = 'hidden'
@@ -169,7 +170,7 @@ class Termynal {
      * @param {Node} line - The line element to render.
      */
     async type(line) {
-        const chars = [...line.textContent];
+        const chars = Array.from(line.textContent);
         line.textContent = '';
         this.container.appendChild(line);
 

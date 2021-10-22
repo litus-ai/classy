@@ -6,14 +6,14 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 (module.exports = {
   title: 'Classy',
   tagline: 'The NLP toolkit that does not require you to be a programmer! (Kinda 😅)',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://sunglasses-ai.github.io',
+  baseUrl: '/classy/',
+  trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/classy_logo-short_transparent.png',
-  organizationName: 'sunglasses.ai', // Usually your GitHub org/user name.
+  favicon: '/img/classy_logo-short_transparent.png',
+  organizationName: 'sunglasses-ai', // Usually your GitHub org/user name.
   projectName: 'classy', // Usually your repo name.
-
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -49,7 +49,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
           title: 'Classy',
           logo: {
             alt: 'Classy Logo',
-            src: 'img/CLASSY.svg',
+            src: '/img/CLASSY.svg',
           },
           items: [
             {
