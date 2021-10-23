@@ -80,7 +80,7 @@ def _main_mock(
     if cli_overrides is not None:
         cli_override2result = {}
         for k in cli_overrides:
-            k = k.lstrip('+')  # removing + and ++ from prefix
+            k = k.lstrip("+")  # removing + and ++ from prefix
             cli_override2result[k] = OmegaConf.select(cfg, k)
 
     # apply profile overrides
@@ -309,6 +309,12 @@ def main(args):
     # this is the best workaround at this time, but we should investigate and / or (re-)open an issue
     # https://github.com/streamlit/streamlit/issues/1248
     import logging
+
+    import streamlit
+
+    with open("/dev/null", "w") as f:
+        # we do this here so that streamlit's import is not unused and is not removed by linters & co
+        print(streamlit.__version__, file=f)
 
     # at this point, streamlit's is the only handler added, so we can safely reset the handlers
     logging.getLogger().handlers = []
