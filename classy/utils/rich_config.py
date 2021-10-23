@@ -1,10 +1,13 @@
+import os
+
 try:
+    import rich
+    from rich.console import Console
     from rich.style import Style
     from rich.text import Text
     from rich.tree import Tree
-    import rich
 except ImportError:
-    print("classy train [...] --print-config requires `pip install rich`")
+    print("classy train [...] --print requires `pip install rich`")
     exit()
 
 from typing import Union, Iterable, List, Tuple, Optional
@@ -52,7 +55,7 @@ class RichNodeInfo:
         if isinstance(value, (int, float)):
             return Text(str(value), style=Style(color="cyan"))
 
-        return Text(value, style=Style(color="light_green"))
+        return Text(value, style=Style(color="hot_pink"))
 
     def __rich__(self):
 
@@ -156,5 +159,29 @@ class ConfigPrinter:
         return [t]
 
 
-def print_config(cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]]):
-    rich.print(ConfigPrinter(cfg, additional_blames=blames).get_rich_tree())
+def get_rich_tree_config(cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None):
+    return ConfigPrinter(cfg, additional_blames=blames).get_rich_tree()
+
+
+def print_config(cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None):
+    rich.print(get_rich_tree_config(cfg, blames))
+
+
+RICH_ST_CODE_FORMAT = (
+    "<pre style=\"font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace; "
+    'line-height: 1.1; background-color: rgb(248, 249, 251); ">'
+    "<code>{code}</code>"
+    "</pre>"
+)
+
+
+def rich_to_html(renderable, print_to_console: bool = False, width: int = 230):
+    with open(os.devnull, "w") as f:
+        console = Console(record=True, file=None if print_to_console else f, width=width)
+        console.print(renderable)
+        html = console.export_html(inline_styles=True, code_format=RICH_ST_CODE_FORMAT)
+
+        # adjust links to open in new windows
+        html = html.replace("<a ", '<a target="_blank" ')
+
+        return html

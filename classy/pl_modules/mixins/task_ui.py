@@ -49,8 +49,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
     truncate_k = 40
 
     def render_task_in_sidebar(self):
-        st.sidebar.header("Task")
-        st.sidebar.markdown(
+        st.markdown(
             f"""
                 * **task**: Sentence-Pair Classification
                 * **input**: Pair of input sentences
@@ -99,8 +98,7 @@ class SequenceTaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(SEQUENCE, JSONL)
 
     def render_task_in_sidebar(self):
-        st.sidebar.header("Task")
-        st.sidebar.markdown(
+        st.markdown(
             f"""
                 * **task**: Sequence Classification
                 * **input**: String sequence
@@ -136,8 +134,7 @@ class TokenTaskUIMixin(TaskUIMixin):
     color_mapping = collections.defaultdict(lambda: TokenTaskUIMixin.color_generator())
 
     def render_task_in_sidebar(self):
-        st.sidebar.header("Task")
-        st.sidebar.markdown(
+        st.markdown(
             f"""
                 * **task**: Token Classification
                 * **input**: Space-separeted list of tokens
@@ -197,8 +194,7 @@ class QATaskUIMixin(TaskUIMixin):
     truncate_k = 40
 
     def render_task_in_sidebar(self):
-        st.sidebar.header("Task")
-        st.sidebar.markdown(
+        st.markdown(
             f"""
                 * **task**: QA
                 * **input**: context and question
@@ -257,12 +253,11 @@ class GenerationTaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(GENERATION, JSONL)
 
     def render_task_in_sidebar(self):
-        st.sidebar.header("Task")
-        st.sidebar.markdown(
+        st.markdown(
             f"""
-                        * **task**: QA
-                        * **input**: source sequence and, optionally (depending on the model), source and target language
-                    """
+                * **task**: QA
+                * **input**: source sequence and, optionally (depending on the model), source and target language
+            """
         )
 
     def read_input(
