@@ -136,11 +136,14 @@ class ExplainableConfig:
         self.as_dict = OmegaConf.to_container(config, resolve=False)
 
         blame = config.__dict__.pop("_blame", None)
-        assert (
-            blame is not None
-        ), "`config.__dict__['_blame']` is None. are you using this class after importing `classy.utils.hydra_patch`?"
+        self.has_blames = blame is not None
 
-        self._blame = ConfigBlamer(blame + (additional_blames or []))
+        # TODO: should we print a warning here?
+        # assert (
+        #     blame is not None
+        # ), "`config.__dict__['_blame']` is None. are you using this class after importing `classy.utils.hydra_patch`?"
+
+        self._blame = ConfigBlamer((blame or []) + (additional_blames or []))
 
     @staticmethod
     def split_key(key):
@@ -173,7 +176,7 @@ class ExplainableConfig:
         return not OmegaConf.is_config(OmegaConf.select(self.cfg, key))
 
     def should_show_blame(self, key):
-        return self._blame.should_show_blame(key)
+        return self.has_blames and self._blame.should_show_blame(key)
 
     def blame(self, key):
         return self._blame.blame(key)
