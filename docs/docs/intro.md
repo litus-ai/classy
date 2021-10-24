@@ -93,7 +93,7 @@ Present a demo of *sequence-example*:
 
 Check out out the demo at http://0.0.0.0:8000!
 
-![Classy Demo](/img/intro/demo.png)
+![Classy Demo](/img/intro/classy-demo-seq-model.png)
 
 ### Exposing via REST API
 
@@ -111,7 +111,7 @@ Expose *sequence-example* via REST API:
 
 We also automatically generate the OpenAPI documentation page!
 
-![Classy Serve Docs](/img/intro/serve-docs.png)
+![Classy Serve Docs](/img/intro/classy-serve.png)
 
 
 ### Predicting

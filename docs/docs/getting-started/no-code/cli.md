@@ -175,7 +175,7 @@ You can use `classy serve` to expose your model via a REST API with [FastAPI](ht
 
 You can also checkout the OpenAPI documentation page we automatically generate at *http://0.0.0.0:8000/docs*.
 
-![Classy Serve Docs](/img/intro/serve-docs.png)
+![Classy Serve Docs](/img/intro/classy-serve.png)
 
 :::tip
 
@@ -196,7 +196,8 @@ You can use `classy demo` to spawn a [Streamlit](https://streamlit.io/) demo of 
 
 Now you can check out out the demo at *http://0.0.0.0:8000*!
 
-![Classy Demo](/img/intro/demo.png)
+![Classy Demo - Model](/img/intro/classy-demo-seq-model.png)
+![Classy Demo - Config](/img/intro/classy-demo-seq-config.png)
 
 ## Additional Commands
 
