@@ -61,6 +61,7 @@ def _main_mock(
 ):
 
     dry_run_for_print = blames is not None
+    blames = blames or []
 
     # import here to avoid importing torch before it's actually needed
     import hydra
