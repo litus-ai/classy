@@ -63,6 +63,16 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
               label: 'Classy@GitHub',
               position: 'left',
             },
+            {
+              href: 'https://github.com/sunglasses-ai/classy-template',
+              label: 'Template@GitHub',
+              position: 'left',
+            },
+            {
+              href: 'https://github.com/sunglasses-ai/classy-examples',
+              label: 'Examples@GitHub',
+              position: 'left',
+            },
           ],
         },
         footer: {
@@ -99,6 +109,14 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
                 {
                   label: 'GitHub',
                   href: 'https://github.com/sunglasses-ai/classy',
+                },
+                {
+                  label: 'Template',
+                  href: 'https://github.com/sunglasses-ai/classy-template',
+                },
+                {
+                  label: 'Examples',
+                  href: 'https://github.com/sunglasses-ai/classy-examples',
                 },
               ],
             },
