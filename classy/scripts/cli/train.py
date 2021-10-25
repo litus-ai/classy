@@ -56,20 +56,12 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def _main_print_config(blames):
-    from classy.utils.rich_config import print_config
-
-    def _print_config(cfg):
-        print_config(cfg, blames)
-
-    return _print_config
-
-
 def _main_mock(
     cfg, profile_name: Optional[str] = None, cli_overrides: Optional[List[str]] = None, blames: Optional[List] = None
 ):
 
-    dry_run_for_print, blames = blames is not None, blames or []
+    dry_run_for_print = blames is not None
+    blames = blames or []
 
     # import here to avoid importing torch before it's actually needed
     import hydra
@@ -80,7 +72,7 @@ def _main_mock(
     if cli_overrides is not None:
         cli_override2result = {}
         for k in cli_overrides:
-            k = k.lstrip('+')  # removing + and ++ from prefix
+            k = k.lstrip("+")  # removing + and ++ from prefix
             cli_override2result[k] = OmegaConf.select(cfg, k)
 
     # apply profile overrides
@@ -135,13 +127,6 @@ def _main_mock(
                 assert not is_subtree(_st, k), f"{_st}, changed by profile, is a subtree of {k}, changed by CLI"
             OmegaConf.update(cfg, k, v, merge=False, force_add=True)
 
-    # fix paths
-    fix_paths(
-        cfg,
-        check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
-        fix_fn=lambda path: hydra.utils.to_absolute_path(path),
-    )
-
     if "supported_tasks" in cfg and cfg.task not in cfg.supported_tasks:
         logger.error(
             f"The profile you selected does not support the input task. "
@@ -150,8 +135,16 @@ def _main_mock(
         exit(1)
 
     if dry_run_for_print:
-        _main_print_config(blames)(cfg)
+        from classy.utils.rich_config import print_config
+
+        print_config(cfg, blames)
     else:
+        # fix paths
+        fix_paths(
+            cfg,
+            check_fn=lambda path: os.path.exists(hydra.utils.to_absolute_path(path[: path.rindex("/")])),
+            fix_fn=lambda path: hydra.utils.to_absolute_path(path),
+        )
         train(cfg)
 
 
@@ -309,6 +302,12 @@ def main(args):
     # this is the best workaround at this time, but we should investigate and / or (re-)open an issue
     # https://github.com/streamlit/streamlit/issues/1248
     import logging
+
+    import streamlit
+
+    with open("/dev/null", "w") as f:
+        # we do this here so that streamlit's import is not unused and is not removed by linters & co
+        print(streamlit.__version__, file=f)
 
     # at this point, streamlit's is the only handler added, so we can safely reset the handlers
     logging.getLogger().handlers = []

@@ -1,3 +1,4 @@
+import os
 import shutil
 
 import pytorch_lightning as pl
@@ -34,7 +35,10 @@ class SavingMixin:
             assert input_path.exists()
             output_path = experiment_folder / "resources" / input_path.relative_to(working_folder)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy(input_path, output_path)
+            if os.path.isdir(input_path):
+                shutil.copytree(input_path, output_path)
+            else:
+                shutil.copy(input_path, output_path)
             return str(output_path.relative_to(experiment_folder))
 
         fix_paths(conf.model, check_fn=lambda path: Path(path).exists(), fix_fn=fix_with_copy_side_effect)
