@@ -1,19 +1,30 @@
 from argparse import ArgumentParser
 
 from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
+from classy.utils.help_cli import HELP_MODEL_PATH, HELP_PREDICTION_PARAMS
 
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_path", type=checkpoint_path_from_user_input).completer = autocomplete_model_path
-    parser.add_argument("-p", "--port", type=int, default=8000)
-    parser.add_argument("-d", "--device", default="gpu")
-    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
+    parser.add_argument(
+        "model_path",
+        type=checkpoint_path_from_user_input,
+        help=HELP_MODEL_PATH,
+    ).completer = autocomplete_model_path
+    parser.add_argument(
+        "-p", "--port", type=int, default=8000, help="The port where the streamlit demo will be exposed."
+    )
+    parser.add_argument("-d", "--device", default="gpu", help="On which device the model for the demo will be loaded.")
+    parser.add_argument("--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS)
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(name="demo", description="expose a demo of a classy model with Streamlit", help="TODO")
+    parser_kwargs = dict(
+        name="demo",
+        description="expose a demo of a classy model with Streamlit",
+        help="Expose a demo of a classy model with Streamlit.",
+    )
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
     populate_parser(parser)
