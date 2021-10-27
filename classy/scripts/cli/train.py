@@ -5,7 +5,9 @@ from typing import List, Optional
 
 from omegaconf import OmegaConf
 
+from classy.data.data_drivers import SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION
 from classy.scripts.cli.utils import get_device, maybe_find_directory
+from classy.utils.help_cli import HELP_TASKS
 from classy.utils.hydra_patch import ConfigBlame
 from classy.utils.log import get_project_logger
 
@@ -14,29 +16,116 @@ logger = get_project_logger(__name__)
 
 def populate_parser(parser: ArgumentParser):
 
-    # TODO: add help?
-    parser.add_argument("task", choices=("sequence", "token", "sentence-pair", "qa", "generation"))
-    parser.add_argument("dataset", type=Path)
-    parser.add_argument("--profile", type=str, default=None)
-    parser.add_argument("--transformer-model", type=str, default=None)
-    parser.add_argument("-n", "--exp-name", "--experiment-name", dest="exp_name", required=True)
-    parser.add_argument("-d", "--device", default="gpu")  # TODO: add validator?
-    parser.add_argument("-cn", "--config-name", default=None)
-    parser.add_argument("-cd", "--config-dir", default=None)
-    parser.add_argument("-c", "--config", nargs="+", default=[])
-    parser.add_argument("--epochs", type=int, default=None)
-    parser.add_argument("--resume-from", type=str)
-    parser.add_argument("--wandb", nargs="?", const="anonymous", type=str)
-    parser.add_argument("--no-shuffle", action="store_true")
-    parser.add_argument("--fp16", action="store_true")
-    parser.add_argument("--vocabulary-dir", default=None)
-    parser.add_argument("--big-dataset", action="store_true")
-    parser.add_argument("--print", action="store_true")
+    parser.add_argument(
+        "task",
+        choices=[SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION],
+        help=HELP_TASKS,
+    )
+    parser.add_argument(
+        "dataset",
+        type=Path,
+        help="""
+            Can be either a directory path containing a Training, a Validation and optionally a Test dataset, or a file
+            path. In the latter case, classy will split the file in order to produce even a Validation anda Test set.
+        """,
+    )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        default=None,
+        help="""
+            Can be either the name of a profile you created (i.e. the file name without the .yaml) or a predefined 
+            profile. For a complete list of classy predefined profiles, please refer to the documentation.
+        """,
+    )
+    parser.add_argument(
+        "--transformer-model",
+        type=str,
+        default=None,
+        help="""
+            If you are using a transformer-based architecture, you can change the transformer model here using a valid
+            name for the huggingface model-hub (e.g. roberta-base). For a complete list of available transformers please
+            visit the model-hub official website at: "https://huggingface.co/models".
+        """,
+    )
+    parser.add_argument(
+        "-n",
+        "--exp-name",
+        "--experiment-name",
+        dest="exp_name",
+        required=True,
+        help="""
+            The name of the experiment. The checkpoints and the additional data for the runs will be stored under the
+            "experiments/experiment-name" directory.
+        """,
+    )
+    parser.add_argument(
+        "-d", "--device", default="gpu", help="The device you will use for the training of your model."
+    )  # TODO: add validator?
+    parser.add_argument(
+        "-cn",
+        "--config-name",
+        default=None,
+        help="The root of the hydra config files. (Probably you should not use this parameter.)",
+    )
+    parser.add_argument(
+        "-cd",
+        "--config-dir",
+        default=None,
+        help="""
+            If you want to change the configuration directory you have to specify it here.
+        """,
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        nargs="+",
+        default=[],
+        help="""
+            Use this parameter to change anything in you configuration. To change the learning rate and the maximum
+            number of steps you can do the following: 
+            "-c model.optim_conf.lr=0.0001 training.pl_traniner.max_steps=10_000".
+            You can use --print parameter to find the parameters you want to modify.
+        """,
+    )
+    parser.add_argument("--epochs", type=int, default=None, help="The maximum number of epochs.")
+    parser.add_argument("--resume-from", type=str, help="A checkpoint path from which you want to resume the training.")
+    parser.add_argument(
+        "--wandb",
+        nargs="?",
+        const="anonymous",
+        type=str,
+        help="""
+            If you want to log the training metrics on wandb, you can either only use "--wandb" and log the run as an 
+            anonymous one or you can use "--wandb project_name@experiment_name" and the run will be automatically logged
+             into your account under the "project_name" project and with the "experiment_name" name.
+        """,
+    )
+    parser.add_argument(
+        "--no-shuffle", action="store_true", help="No shuffling will be performed on the training data."
+    )
+    parser.add_argument("--fp16", action="store_true", help="The training will use 16-bit precision.")
+    parser.add_argument(
+        "--vocabulary-dir",
+        default=None,
+        help="If you already computed the vocabulary, you can specify the directory here.",
+    )
+    parser.add_argument(
+        "--big-dataset",
+        action="store_true",
+        help="""
+            The training will follow some policies to handle large datasets, 
+            for more info please referer to the documentation.
+        """,
+    )
+    parser.add_argument(
+        "--print", action="store_true", help="Print all the training parameters following a tree structure."
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
 
-    parser_kwargs = dict(name="train", description="train a model with classy", help="TODO")
+    parser_kwargs = dict(name="train", description="train a model with classy", help="Train a model with classy.")
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
     populate_parser(parser)
@@ -87,7 +176,8 @@ def _main_mock(
                 blames.append(([prefix], ClassyBlame(f"--profile {profile_name}")))
                 subtrees_impacted_by_profile_change.add(prefix)
             elif OmegaConf.is_dict(node):
-                # if profiles override a dict, the original dict should be discarded if _target_ is changed, and updated otherwise
+                # if profiles override a dict, the original dict should be discarded if _target_ is changed,
+                # and updated otherwise
                 target_node = OmegaConf.select(cfg, prefix)
                 if target_node is None:
                     OmegaConf.update(cfg, prefix, node, force_add=True)
@@ -121,7 +211,8 @@ def _main_mock(
 
         for k, v in cli_override2result.items():
             # re-apply v
-            # note that this delete changes applied by profile if profile changed a subgraph (e.g x.y) later changed by a cli override (e.g. x)
+            # note that this delete changes applied by profile if profile changed a subgraph
+            # (e.g x.y) later changed by a cli override (e.g. x)
             # this is what the following warning checks
             for _st in subtrees_impacted_by_profile_change:
                 assert not is_subtree(_st, k), f"{_st}, changed by profile, is a subtree of {k}, changed by CLI"

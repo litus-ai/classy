@@ -15,7 +15,7 @@ def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
         name="download",
         description="download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub",
-        help="TODO",
+        help="Download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub.",
     )
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 

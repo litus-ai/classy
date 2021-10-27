@@ -1,9 +1,16 @@
 from argparse import ArgumentParser
 
+from classy.data.data_drivers import SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION
+from classy.utils.help_cli import HELP_TASKS
+
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("task")
-    parser.add_argument("--dataset", required=True, help="The dataset you want to describe (run statistics on)")
+    parser.add_argument(
+        "task",
+        choices=[SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION],
+        help=HELP_TASKS,
+    )
+    parser.add_argument("--dataset", required=True, help="The dataset you want to describe (run statistics on).")
     parser.add_argument(
         "--tokenize",
         default=None,
@@ -11,14 +18,16 @@ def populate_parser(parser: ArgumentParser):
         "the correct tokenizer. Must be a valid language code for "
         "the sacremoses tokenizer url: 'https://github.com/alvations/sacremoses'.",
     )
-    parser.add_argument("-p", "--port", type=int, default=8000)
+    parser.add_argument(
+        "-p", "--port", type=int, default=8000, help="The port where the streamlit demo will be exposed."
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
         name="describe",
         description="run several statistics on the input dataset and expose them on a streamlit page",
-        help="TODO",
+        help="Run several statistics on the input dataset and expose them on a streamlit page.",
     )
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
