@@ -114,6 +114,10 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
 
     config, model, dataset_conf, (inference_message, inferred_examples) = load_resources()
 
+    # todo make this a param, allows to reload prediction params at each query (useful for model inspection)
+    if prediction_params is not None:
+        model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
+
     # plot side bar
     st.sidebar.write(
         "<img src='https://sunglasses-ai.github.io/classy/img/CLASSY.svg' width='100%' height='100%' />",

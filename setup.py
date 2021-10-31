@@ -52,6 +52,6 @@ setup(
     include_package_data=True,
     install_requires=requirements,
     entry_points={"console_scripts": ["classy=classy.scripts.cli.__init__:main"]},
-    python_requires=">=3.7.0",
+    python_requires=">=3.8.0",
     zip_safe=False,
 )
