@@ -4,7 +4,7 @@ from typing import Optional, Iterator, Tuple, Dict, List
 import omegaconf
 import torch
 from torch import nn
-from transformers import GPT2LMHeadModel, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
 
 from classy.data.data_drivers import GenerationSample
 from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
@@ -102,7 +102,7 @@ class BartGenerativeModule(HFGenerativeModel):
             if additional_special_tokens is not None
             else None,
             use_fast=True,
-            add_prefix_space=True,
+            add_prefix_space=True,  # todo this should be read from config (like facebook/bart-large-xsum has it False)
         )
         self.model = AutoModelForSeq2SeqLM.from_pretrained(transformer_model)
         if additional_special_tokens is not None and len(additional_special_tokens) > 0:

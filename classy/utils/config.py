@@ -165,7 +165,12 @@ class ExplainableConfig:
 
         while len(parts) > 0:
             k = parts.pop(0)
-            obj = obj.get(k)
+            if type(obj) == dict:
+                obj = obj.get(k)
+            elif type(obj) == list:
+                obj = obj[int(k)]
+            else:
+                raise ValueError(f'Found unexpected type {type(obj)} for key {key}, but [dict, list] only were expected')
 
         return obj
 
