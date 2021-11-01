@@ -151,12 +151,26 @@ class ExplainableConfig:
         return ".".join(parents), k
 
     def is_interpolation(self, key):
+        return not self.has_interpolated_parent(key) and self._is_interpolation(key)
+
+    def _is_interpolation(self, key):
         parent, k = self.split_key(key)
         obj = OmegaConf.select(self.cfg, parent)
         if isinstance(obj, ListConfig):
             k = int(k)
 
         return OmegaConf.is_interpolation(obj, k)
+
+    def has_interpolated_parent(self, key):
+        # checks if any of the parent keys of `key` is interpolated
+        parts = key.split(".")
+
+        for i in range(1, len(parts)):
+            partial = ".".join(parts[:i])
+            if self.is_interpolation(partial):
+                return True
+
+        return False
 
     def get_interpolation_value(self, key):
         parts = key.split(".")
@@ -170,7 +184,10 @@ class ExplainableConfig:
             elif type(obj) == list:
                 obj = obj[int(k)]
             else:
-                raise ValueError(f'Found unexpected type {type(obj)} for key {key}, but [dict, list] only were expected')
+                raise ValueError(
+                    f"Found unexpected type {type(obj)} for key {key} (while parsing {k}), "
+                    f"but [dict, list] only were expected"
+                )
 
         return obj
 
