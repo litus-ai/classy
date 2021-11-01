@@ -61,13 +61,13 @@ configurations/
 └── root.yaml
 ```
 
-*data/token.yaml* defines data-related configurations for your Token Classification experiment, while *model/token.yaml* and
-*training/token.yaml* specify model (e.g. architecture) and training (e.g. gradient accumulation) aspects.
+`data/token.yaml` defines data-related configurations for your **Token Classification** experiment, while `model/token.yaml` and
+`training/token.yaml` specify model (e.g. architecture) and training (e.g. gradient accumulation) aspects.
 
-*root.yaml* is the yaml *orchestator*, that is, it defines global variables and specify which yaml file in each folder
+`root.yaml` is the yaml *orchestrator*, that is, it defines global variables and specify which yaml file in each folder
 should be used:
 
-```yaml
+```yaml title=root.yaml
 # global variables
 task: token
 project_name: classy
@@ -79,12 +79,12 @@ defaults:
   - data: token
   - model: token
   - logging: default
-  - _self_  # this is some hydra-specific machinery (you can ignore it)
+  - _self_  # this is some hydra-specific machinery (you can ignore it, but leave it at the end of the defaults list)
 ```
 
 ## Full Structure
 
-As a matter of fact, there are quite a few details more *data/*, *model/* and *train/* that you would want to specify.
+As a matter of fact, there are quite a few details more `data/`, `model/` and `train/` that you would want to specify.
 Thus, the actual structure of the config groups is the following:
 
 ```bash
@@ -97,15 +97,16 @@ configurations/
 └── training/           # training configuration
 ```
 
-Besides, there are 4 root `.yaml` files already defined, one for each task:
+Besides, there are 5 root `.yaml` files already defined, one for each task:
 * `qa.yaml`
 * `sentence-pair.yaml`
 * `sequence.yaml`
 * `token.yaml`
+* `generation.yaml`
 
 :::info
 
-If you manually inspect the *configurations/* folder, you'll see there are 3 additional folders: *device/*, *logging/* and
-*profiles/*. You can safely ignore the first two, and we'll go back to *profiles/* later in this Section.
+If you manually inspect the `configurations/` folder, you'll see there are 3 additional folders: `device/`, `logging/` and
+`profiles/`. You can safely ignore the first two, and we cover `profiles/` in depth [here](/docs/getting-started/customizing-things/changing-profile).
 
 :::

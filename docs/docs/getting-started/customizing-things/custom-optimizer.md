@@ -1,7 +1,8 @@
 ---
-sidebar_position: 3
-sidebar_label: Optimizers
+sidebar_position: 6
+title: Custom Optimizer
 ---
+
 
 # Optimizers
 

@@ -10,7 +10,7 @@ that will work with competitive performances in almost all setting and scenarios
 :::tip
 To use a profile, you just have to pass the profile name to the parameter `--profile` at training time
 ```bash
-classy train task my_dataset_path -n my_model --profile profile_name
+classy train <task> <dataset-path> -n <model-name> --profile <profile_name>
 ```
 :::
 

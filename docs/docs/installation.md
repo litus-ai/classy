@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 sidebar_label: Installation
 ---
 
@@ -77,7 +77,9 @@ pip install -e .
 
 This will make `classy` available in your environment, but using the sources of the cloned repository.
 
+<!--
 # TODO (?):
 - docker
 - colab
 - vastai
+-->

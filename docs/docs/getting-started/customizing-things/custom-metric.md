@@ -1,7 +1,8 @@
 ---
-sidebar_position: 1
+sidebar_position: 7
 title: Custom Evaluation Metric
 ---
+
 
 Adding a custom metric to be logged, and perhaps even monitored for early stopping, is easy with classy. There are 3 ways to go about it:
 * Hooking inside *ClassyPLModule*
@@ -134,20 +135,6 @@ class SacreBleuGenerationCallback(PredictionCallback):
         model.log(f"{name}_bleu", score, prog_bar=True, on_step=False, on_epoch=True)
 ```
 
-:::danger
-
-Pytorch Lightning recently changed its metrics logging interface and, currently, using *.log* on a float results in a metric not being reset across epochs.
-For the time being, when you log this kind of metrics, before invoking *.log*, manually reset it with:
-```python
-metric_name = "my-metric-name"
-for metric in trainer._results.result_metrics:
-    if metric.meta.name == metric_name:
-        metric.reset()
-model.log(metric_name, score, prog_bar=True, on_step=False, on_epoch=True)
-```
-
-:::
-
 As for the yaml:
 
 ```yaml title="configurations/callbacks/bleu.yaml"
@@ -176,7 +163,7 @@ Finally, start the training:
 classy train ... -c callbacks=bleu
 ```
 
-## Using Pytorch Lightning *Callback*-s
+## Using Pytorch Lightning *Callback*s
 
 *PredictionCallback* is meant to make introducing new metrics easier. However, should you find its interface to be limiting, you can just implement your own Pytorch Lightning *Callback*,
 inserting your metric computation inside it:

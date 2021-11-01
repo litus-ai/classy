@@ -25,4 +25,4 @@ function ctrl_c() {
   sudo chown -R $USER:$USER ../docs
 }
 
-docker exec $container_id bash -c "cd /docs && yarn install && yarn run start -p 30000 -h 0.0.0.0"
+docker exec $container_id bash -c "cd /docs && yarn install && yarn docusaurus parse && yarn docusaurus glossary && yarn run start -p 30000 -h 0.0.0.0"

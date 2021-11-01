@@ -4,10 +4,11 @@ sidebar_position: 1
 sidebar_label: Introduction
 ---
 
-import ReactTermynal from '../src/components/termynal';
+import ReactTermynal from '/src/components/termynal';
 
 `classy` is a simple-to-use library for building high-performance Machine Learning models in NLP.
-It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/), [Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
+It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/),
+[Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
 and offers them to users with a simple CLI interface.
 
 ## Installation
@@ -25,45 +26,41 @@ You have the following data at disposal:
 | User | Product-ID | Review | Overall Judgement |
 | ----------- | ----------- | ----------- | ----------- |
 | U1 | P1 | I really like this headphones | positive | 
-| U2 | P1 | Sound is terrible! I am returning this headphones right away. | negative |
+| U2 | P1 | Sound is terrible! I am returning these headphones right away. | negative |
 | ... | ... | ... | ... |
 
-That is, a list of reviews made by users for a given product, along with their overall judgement. Now you want to train
+That is, a list of reviews made by users for a given product, along with their overall judgement. Now, say you want to train
 a classification model on this data so that, given a new review as input, it would yield whether its overall judgement is
 positive or negative.
 
 :::info
 
-This is a *Sequence Classification* problem.
+This is a **Sequence Classification** problem, specifically *Sentiment Classification*.
 
 :::
 
-The following steps depict how you would do it with classy:
+In a nutshell, this is how you would do it with `classy`:
 
 ### Data Organization
 
-Organize your data into a *.tsv* file:
+By default, `classy` is able to work with `.tsv` and `.jsonl` files. In the case of `.tsv` for **Sequence Classification**,
+`classy` needs the file to have only two columns, one with the sequence and the other with the label.
 
-```python
-def dump_data_on_tsv(corpus, output_file):
-    # todo implement here
-    pass
+Say your review data is already stored in a `.tsv` file (with four columns, as we saw above), all you need to do is:
 
-corpus, output_file = load_corpus(), 'data/output.tsv'
-dump_data_on_tsv(corpus, output_file)
+```bash
+$ cut -f3,4 data/raw.tsv > data/output.tsv
 ```
 
-This is the only part where some coding is required. 
+:::tip
 
-:::note 
-
-You don't have to use Python here, you can use any tool as far as data gets organized into a .tsv file (if you are an *AWK* fan, go for it).
+`classy` supports many [tasks and input formats](/docs/reference-manual/tasks-and-formats), and is independent of how you 
+convert your data to a `classy`-compatible format (i.e., `sed`, `awk`, and a `python` script are all viable options).
 
 :::
 
 ### Training
-
-Train a model, named *sequence-example*:
+Now that our data is `classy`-compatible, we can train our model! Let us call it `sequence-example`:
 
 <ReactTermynal>
   <span data-ty="input">classy train sequence data/output.tsv -n sequence-example</span>
@@ -75,58 +72,17 @@ Train a model, named *sequence-example*:
 
 :::info
 
-*sequence* in the above command tells classy to train a *Sequence Classification* model. This is the only thing, beside 
+`sequence` in the above command tells classy to train a **Sequence Classification** model. This is the only thing, beside 
 organizing data, that classy expects you to do. We'll go back to this later on.
 
 :::
 
-### Presenting
+### Using your trained model
 
-Present a demo of *sequence-example*:
+Now that we have trained our model, `classy` offers a number of commands that let you use it:
 
-<ReactTermynal>
-  <span data-ty="input">classy demo sequence-example</span>
-  <span data-ty data-ty-start-delay="2000">Demo up and running at http://0.0.0.0:8000</span>
-</ReactTermynal>
-
-<p />
-
-Check out out the demo at http://0.0.0.0:8000!
-
-![Classy Demo](/img/intro/classy-demo-seq-model.png)
-
-### Exposing via REST API
-
-Expose *sequence-example* via REST API:
-
-<ReactTermynal>
-  <span data-ty="input">classy serve sequence-example</span>
-  <span data-ty data-ty-start-delay="2000">REST API up and running at http://0.0.0.0:8000</span>
-  <span data-ty>Checkout the OpenAPI docs at http://0.0.0.0:8000/docs</span>
-  <span data-ty="input">curl -X 'POST' 'http://localhost:8000/' -H 'accept: application/json' -H 'Content-Type: application/json' -d '[{'{'}"sequence": "I wish I had never bought these terrible headphones!"{'}'}]'</span>
-  <span data-ty data-ty-start-delay="2000">[{'{'}"sequence":"I wish I had never bought these terrible headphones!","label":"0"{'}'}]</span>
-</ReactTermynal>
-
-<p />
-
-We also automatically generate the OpenAPI documentation page!
-
-![Classy Serve Docs](/img/intro/classy-serve.png)
-
-
-### Predicting
-
-Use *sequence-example* to assign a label to every review stored in a target file:
-
-<ReactTermynal>
-  <span data-ty="input">cat target.tsv | head -1</span>
-  <span data-ty>I wish I had never bought these terrible headphones!</span>
-  <span data-ty="input">classy predict file sequence-example target.tsv -o target.out.tsv</span>
-  <span data-ty="progress"></span>
-  <span data-ty>Prediction complete</span>
-  <span data-ty="input">cat target.out.tsv | head -1</span>
-  <span data-ty>I wish I had never bought these terrible headphones!    negative</span>
-</ReactTermynal>
-
-<p />
+- `classy demo` spawns a [Streamlit](https://streamlit.io/)-based interface that lets you query your model visually;
+- `classy predict` lets you choose whether to use your model for file prediction or in bash-interactive mode (similarly to `demo`, but in the terminal);
+- `classy serve` spawns a REST API (through [FastAPI](https://fastapi.tiangolo.com/)) that you can query using any REST-compatible client (`requests`, `curl`, you name it);
+- `classy evaluate` runs your model on a given test set and reports metrics on the task.
 
