@@ -347,12 +347,13 @@ def main(args):
 
         # choose device
         device = get_device(args.device)
-        if device >= 0:
+        if device != -1:
             if args.fp16:
                 cmd.append("device=cuda_amp")
             else:
                 cmd.append(f"device=cuda")
-            cmd.append(f"device.gpus=[{device}]")
+            if not isinstance(device, int) or device > 0:
+                cmd.append(f"device.gpus=[{device}]")
         else:
             if args.fp16:
                 logger.error("fp16 is only available when training on a GPU")
