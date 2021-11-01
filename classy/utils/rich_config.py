@@ -65,14 +65,14 @@ class RichNodeInfo:
             key_name,
         ]
 
+        interp = self.info.interpolation
+        if interp:
+            parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
+
         if self.info.is_leaf:
             value = self.render_value()
             parts.append(": ")
             parts.append(value)
-
-            interp = self.info.interpolation
-            if interp:
-                parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
         else:
             value = self.info.value
             if len(value) == 0:
