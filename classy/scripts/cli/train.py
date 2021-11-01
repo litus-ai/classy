@@ -54,14 +54,15 @@ class ClassyBlame(ConfigBlame):
     def __str__(self):
         return f"[classy train [...] {self.arg}]"
 
+    def __repr__(self):
+        return self.__str__()
+
 
 def parse_args():
     return get_parser().parse_args()
 
 
-def _main_mock(
-    cfg, blames: Optional[List] = None
-):
+def _main_mock(cfg, blames: Optional[List] = None):
 
     dry_run_for_print = blames is not None
     blames = blames or []
@@ -131,24 +132,26 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
         if OmegaConf.is_list(profile_node):
             # if profile overrides a list, the original list should be completely overwritten
             OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
-            blames.append(([(blame_prefix + '.' + prefix).lstrip('.')], ClassyBlame(f"--profile {profile_name}")))
+            blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
         elif OmegaConf.is_dict(profile_node):
             # if profile overrides a dict, the original dict should be discarded
             # if _target_ is changed, and updated otherwise
             target_node = OmegaConf.select(cfg, prefix)
             if target_node is None:
                 OmegaConf.update(cfg, prefix, profile_node, force_add=True)
-                blames.append(([(blame_prefix + '.' + prefix).lstrip('.')], ClassyBlame(f"--profile {profile_name}")))
+                blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
             else:
                 if "_target_" in profile_node:
                     OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
-                    blames.append(([(blame_prefix + '.' + prefix).lstrip('.')], ClassyBlame(f"--profile {profile_name}")))
+                    blames.append(
+                        ([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}"))
+                    )
                 else:
                     for k, v in profile_node.items():
-                        recurse_and_fix(k, v, target_node, (blame_prefix + '.' + prefix).lstrip('.'))
+                        recurse_and_fix(k, v, target_node, (blame_prefix + "." + prefix).lstrip("."))
         elif type(profile_node) in [str, float, int, bool] or profile_node is None:
             OmegaConf.update(cfg, prefix, profile_node, force_add=True)
-            blames.append(([(blame_prefix + '.' + prefix).lstrip('.')], ClassyBlame(f"--profile {profile_name}")))
+            blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
         else:
             raise ValueError(f"Unexpected type {type(profile_node)}: {profile_node}")
 
@@ -160,23 +163,28 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
         # compute defaults dict
         is_self_first = None
         defaults = {}
-        if 'defaults' in cfg:
+
+        if "defaults" in cfg:
             for i, d in enumerate(cfg.defaults):
-                if d == '_self_':
+                if d == "_self_":
                     is_self_first = i == 0
                     continue
                 for k, v in d.items():
-                    assert k not in defaults, f'Key {k} already present in defaults list. Check your defaults list'
+                    assert k not in defaults, f"Key {k} already present in defaults list. Check your defaults list"
                     defaults[k] = v
 
         # compute potential defaults dict (folders present)
-        potential_defaults = set([d.name for d in path_to_target_config.parent.iterdir() if d.is_dir() and d.name != '__pycache__'])
+        potential_defaults = set(
+            [d.name for d in path_to_target_config.parent.iterdir() if d.is_dir() and d.name != "__pycache__"]
+        )
         assert all(d in potential_defaults for d in defaults)
 
         # iterate on nodes
         for k, v in profile_node.items():
 
-            assert not k.startswith('+'), f'Found key {k} in profile that starts with \'+\'. Using \'+\' is not necessary and the \'+\' sign can be removed'
+            assert not k.startswith(
+                "+"
+            ), f"Found key {k} in profile that starts with '+'. Using '+' is not necessary and the '+' sign can be removed"
 
             if k not in potential_defaults:
                 recurse_and_fix(k, v, cfg, prefix)
@@ -186,23 +194,23 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
                     defaults[k] = v
                 else:
                     # launch recursion on child file
-                    child_file = path_to_target_config.parent / k / (defaults[k] + '.yaml')
-                    assert child_file.exists(), f'{child_file} not found in config dir'
-                    apply_recursively(v, child_file, (prefix + '.' + k).lstrip('.'))
+                    child_file = path_to_target_config.parent / k / (defaults[k] + ".yaml")
+                    assert child_file.exists(), f"{child_file} not found in config dir"
+                    apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
 
         # update defaults
         if len(defaults) > 0:
             cfg.defaults = [{k: v} for k, v in defaults.items()]
             if is_self_first is not None:
                 if is_self_first:
-                    cfg.defaults = ['_self_'] + cfg.defaults
+                    cfg.defaults = ["_self_"] + cfg.defaults
                 else:
-                    cfg.defaults = cfg.defaults + ['_self_']
+                    cfg.defaults = cfg.defaults + ["_self_"]
 
         # update config
         OmegaConf.save(cfg, path_to_target_config)
 
-    apply_recursively(profile, Path(config_dir) / (config_name + '.yaml'), prefix='')
+    apply_recursively(profile, Path(config_dir) / (config_name + ".yaml"), prefix="")
 
     return blames
 
@@ -232,25 +240,21 @@ def main(args):
         blames = []
 
         # copy config dir and installed classy configurations into tmp_dir
-        classy_dir = str(Path(classy.__file__).parent.parent / 'configurations')
+        classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
         shutil.copytree(classy_dir, tmp_dir, dirs_exist_ok=True)
         if config_dir is not None:
             shutil.copytree(config_dir, tmp_dir, dirs_exist_ok=True)
-        assert (Path(tmp_dir) / (config_name + '.yaml')).exists(), f'No config name file {config_name} found in temporary config dir'
+        assert (
+            Path(tmp_dir) / (config_name + ".yaml")
+        ).exists(), f"No config name file {config_name} found in temporary config dir"
 
         # apply profile on config dir
         if args.profile is not None:
-            profile_path = Path(tmp_dir) / 'profiles' / (args.profile + '.yaml')
-            assert profile_path.exists(), f'No profile found at {profile_path}'
+            profile_path = Path(tmp_dir) / "profiles" / (args.profile + ".yaml")
+            assert profile_path.exists(), f"No profile found at {profile_path}"
             blames += apply_profile_on_dir(OmegaConf.load(profile_path), args.profile, config_name, tmp_dir)
 
-        cmd = [
-            "classy-train",
-            "-cn",
-            args.config_name or args.task,
-            "-cd",
-            tmp_dir
-        ]
+        cmd = ["classy-train", "-cn", args.config_name or args.task, "-cd", tmp_dir]
 
         # choose device
         device = get_device(args.device)
@@ -265,11 +269,14 @@ def main(args):
                 logger.error("fp16 is only available when training on a GPU")
                 return
             cmd.append(f"device=cpu")
+        blames.append((["device"], ClassyBlame(f"-d {args.device}")))
 
         cmd.append(f"exp_name={args.exp_name}")
+        blames.append((["exp_name"], ClassyBlame(f"-n {args.exp_name}")))
 
         # add dataset path
         cmd.append(f"data.datamodule.dataset_path={args.dataset}")
+        blames.append((["data.datamodule.dataset_path"], ClassyBlame(f"{args.dataset}")))
 
         # turn off shuffling if requested
         if args.no_shuffle:
@@ -278,6 +285,7 @@ def main(args):
 
         if args.epochs:
             cmd.append(f"++training.pl_trainer.max_epochs={args.epochs}")
+            blames.append((["training.pl_trainer.max_epochs"], ClassyBlame(f"--epochs {args.epochs}")))
 
         # wandb logging
         if args.wandb is not None:
@@ -342,6 +350,10 @@ def main(args):
 
         # append all user-provided configuration overrides
         cmd += args.config
+        for override in args.config:
+            key, value = override.split("=")
+            key = key.lstrip("+~")
+            blames.append(([key], ClassyBlame(f"-c {override}")))
 
         # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
         # it was imported in task_ui.py and was double-logging stuff...
@@ -364,11 +376,7 @@ def main(args):
         # we are basically mocking the normal python script invocation by setting the argv to those we want
         # unfortunately there is no better way to do this at this moment in time :(
         sys.argv = cmd
-        hydra.main(config_path=None)(
-            lambda cfg: _main_mock(
-                cfg, blames=blames if args.print else None
-            )
-        )()
+        hydra.main(config_path=None)(lambda cfg: _main_mock(cfg, blames=blames if args.print else None))()
 
 
 if __name__ == "__main__":
