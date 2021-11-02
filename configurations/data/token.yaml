@@ -9,7 +9,7 @@ datamodule:
     min_length: -1
     max_length: 500
     tokens_per_batch: 1000
-    max_batch_size: 10
+    max_batch_size: 16
     section_size: 10000
     prebatch: True
     materialize: False
@@ -21,7 +21,7 @@ datamodule:
     min_length: -1
     max_length: 500
     tokens_per_batch: 1000
-    max_batch_size: 10
+    max_batch_size: 16
     section_size: 10000
     prebatch: True
     materialize: True

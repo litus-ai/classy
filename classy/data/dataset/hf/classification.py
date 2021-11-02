@@ -16,8 +16,8 @@ class HFSequenceDataset(HFBaseDataset):
     def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
         return Vocabulary.from_samples([{"labels": sample.label} for sample in samples])
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: torch.tensor(lst, dtype=torch.long).squeeze(-1),
@@ -43,8 +43,8 @@ class HFTokenDataset(HFBaseDataset):
     def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
         return Vocabulary.from_samples([{"labels": label} for sample in samples for label in sample.labels])
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: batchify(lst, padding_value=-100),  # -100 == cross entropy ignore index
@@ -81,9 +81,10 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
-    def _init_fields_batcher(self) -> None:
-        super(HFSentencePairDataset, self)._init_fields_batcher()
-        self.fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+    def init_fields_batcher(self) -> Dict:
+        fields_batcher = super(HFSentencePairDataset, self).init_fields_batcher()
+        fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+        return fields_batcher
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
@@ -185,8 +186,8 @@ class HFQADataset(HFBaseDataset):
 
             yield elem_dict
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "token_type_ids": lambda lst: batchify(lst, padding_value=0),
