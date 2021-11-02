@@ -107,10 +107,11 @@ class NodeInfo:
 
     @property
     def interpolation(self) -> Optional[str]:
-        if not self._expl.is_interpolation(self.key):
+        interpolation = self._expl.try_get_interpolation(self.key)
+        if interpolation is None:
             return None
 
-        return self._expl.get_interpolation_value(self.key)
+        return str(interpolation)
 
     @property
     def is_leaf(self):
@@ -132,9 +133,6 @@ class ExplainableConfig:
     def __init__(self, config: DictConfig, additional_blames: List[Tuple[List[str], ConfigBlame]] = ()):
         self.cfg = config
 
-        # need a non-resolved dictionary config copy to get the interpolations to be shown to the user
-        self.as_dict = OmegaConf.to_container(config, resolve=False)
-
         blame = config.__dict__.pop("_blame", None)
         self.has_blames = blame is not None
 
@@ -150,24 +148,20 @@ class ExplainableConfig:
         *parents, k = key.split(".")
         return ".".join(parents), k
 
-    def is_interpolation(self, key):
+    def try_get_interpolation(self, key):
         parent, k = self.split_key(key)
         obj = OmegaConf.select(self.cfg, parent)
         if isinstance(obj, ListConfig):
             k = int(k)
 
-        return OmegaConf.is_interpolation(obj, k)
+        if OmegaConf.is_interpolation(obj, k):
+            node = obj.__dict__["_content"][k]
+            interpolation_value = node._value()
+            # resolved_value = node._dereference_node()._value()
 
-    def get_interpolation_value(self, key):
-        parts = key.split(".")
-
-        obj = self.as_dict
-
-        while len(parts) > 0:
-            k = parts.pop(0)
-            obj = obj.get(k)
-
-        return obj
+            return interpolation_value
+        else:
+            return None
 
     def get_node_info(self, key) -> NodeInfo:
         return NodeInfo(key, self)

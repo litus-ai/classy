@@ -71,10 +71,6 @@ class RichNodeInfo:
             value = self.render_value()
             parts.append(": ")
             parts.append(value)
-
-            interp = self.info.interpolation
-            if interp:
-                parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
         else:
             value = self.info.value
             if len(value) == 0:
@@ -87,6 +83,10 @@ class RichNodeInfo:
 
                 parts.append(": ")
                 parts.append(Text(v, style=Style(bold=True, color="yellow3")))
+
+        interp = self.info.interpolation
+        if interp:
+            parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
 
         blame = self.info.blame
         if blame:
