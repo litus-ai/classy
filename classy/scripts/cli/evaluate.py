@@ -61,7 +61,7 @@ def automatically_infer_test_path(model_path: str) -> str:
 
     # search if it was created via split at training time
     if exp_split_data_folder.exists():
-        possible_test_files = [fp for fp in exp_split_data_folder.iterdir() if "test" in fp.name]
+        possible_test_files = [fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"]
         if len(possible_test_files) == 1:
             return str(possible_test_files[0])
 
@@ -69,7 +69,7 @@ def automatically_infer_test_path(model_path: str) -> str:
     training_conf = load_training_conf_from_checkpoint(model_path)
     dataset_path = Path(training_conf.data.datamodule.dataset_path)
     if dataset_path.exists() and dataset_path.is_dir():
-        possible_test_files = [fp for fp in dataset_path.iterdir() if "test" in fp.name]
+        possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
         if len(possible_test_files) == 1:
             return str(possible_test_files[0])
 
@@ -101,7 +101,7 @@ def main(args):
         input_path,
         args.output_path,
         prediction_params=args.prediction_params,
-        metrics=None,
+        metrics_fn=None,
     )
 
 

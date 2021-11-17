@@ -43,3 +43,5 @@ class SavingMixin:
 
         fix_paths(conf.model, check_fn=lambda path: Path(path).exists(), fix_fn=fix_with_copy_side_effect)
         fix_paths(conf.prediction, check_fn=lambda path: Path(path).exists(), fix_fn=fix_with_copy_side_effect)
+        if 'evaluation' in conf:
+            fix_paths(conf.evaluation, check_fn=lambda path: Path(path).exists(), fix_fn=fix_with_copy_side_effect)
