@@ -4,7 +4,13 @@ from pathlib import Path
 from argcomplete import FilesCompleter
 
 from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
-from classy.utils.help_cli import HELP_MODEL_PATH, HELP_TOKEN_BATCH_SIZE, HELP_FILE_PATH, HELP_PREDICTION_PARAMS
+from classy.utils.help_cli import (
+    HELP_MODEL_PATH,
+    HELP_TOKEN_BATCH_SIZE,
+    HELP_FILE_PATH,
+    HELP_PREDICTION_PARAMS,
+    HELP_EVALUATE,
+)
 
 
 def populate_parser(parser: ArgumentParser):
@@ -31,6 +37,7 @@ def populate_parser(parser: ArgumentParser):
         """,
     ).completer = FilesCompleter()
     parser.add_argument("--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE)
+    parser.add_argument("--evaluation-config", type=str, default=None, help=HELP_EVALUATE)
     parser.add_argument("--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS)
 
 
@@ -61,7 +68,7 @@ def automatically_infer_test_path(model_path: str) -> str:
 
     # search if it was created via split at training time
     if exp_split_data_folder.exists():
-        possible_test_files = [fp for fp in exp_split_data_folder.iterdir() if "test" in fp.name]
+        possible_test_files = [fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"]
         if len(possible_test_files) == 1:
             return str(possible_test_files[0])
 
@@ -69,7 +76,7 @@ def automatically_infer_test_path(model_path: str) -> str:
     training_conf = load_training_conf_from_checkpoint(model_path)
     dataset_path = Path(training_conf.data.datamodule.dataset_path)
     if dataset_path.exists() and dataset_path.is_dir():
-        possible_test_files = [fp for fp in dataset_path.iterdir() if "test" in fp.name]
+        possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
         if len(possible_test_files) == 1:
             return str(possible_test_files[0])
 
@@ -100,8 +107,9 @@ def main(args):
         args.token_batch_size,
         input_path,
         args.output_path,
+        evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
-        metrics=None,
+        metrics_fn=None,
     )
 
 

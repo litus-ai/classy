@@ -62,7 +62,7 @@ class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
 
 Practically, imagine you want to build a Sequence Classification model on top of a HuggingFace Transformer model.
 
-```python title="classy.pl_modules.custom_model.py"
+```python title="classy/pl_modules/custom_model.py"
 class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
     pass 
 ```

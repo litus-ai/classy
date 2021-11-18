@@ -91,6 +91,22 @@ class TestProfileApplication:
         after_cfg.i = before_cfg.i
         assert before_cfg == after_cfg
 
+    def test_none_on_variable_set_from_profile(self, hydra_test_env):
+        before_cfg, after_cfg = self._run_skeleton(
+            *hydra_test_env,
+            profile=OmegaConf.create({
+                'o': None
+            }),
+            cli=[]
+        )
+
+        assert before_cfg.o != after_cfg.o
+        assert after_cfg.o is None
+
+        # check that the above change was the only one applied
+        after_cfg.o = before_cfg.o
+        assert before_cfg == after_cfg
+
     def test_list_variable_set_from_profile(self, hydra_test_env):
         before_cfg, after_cfg = self._run_skeleton(
             *hydra_test_env,

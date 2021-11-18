@@ -26,6 +26,7 @@ defaults:
   - callbacks: empty
   - data: sentence-pair
   - device: cuda
+  - evaluation: sentence-pair
   - model: sentence-pair
   - prediction: sentence-pair
   - training: default

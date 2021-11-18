@@ -1,0 +1,18 @@
+- _target_: "classy.pl_callbacks.prediction.PredictionPLCallback"
+  path: null  # leave it to null to set it to validation path
+  prediction_dataset_conf: ${prediction.dataset}
+  on_result:
+    file_dumper:
+      _target_: "classy.pl_callbacks.prediction.FileDumperPredictionCallback"
+    evaluation:
+      _target_: "classy.pl_callbacks.prediction.EvaluationPredictionCallback"
+      evaluation: ${evaluation}
+  settings:
+    - name: "validation"
+      path: null  # leave it to null to set it to PredictionPLCallback.path
+      token_batch_size: 800
+      prediction_param_conf_path: null
+      limit: 1000
+      on_result:
+        - "file_dumper"
+        - "evaluation"

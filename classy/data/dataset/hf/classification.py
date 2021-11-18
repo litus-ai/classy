@@ -16,8 +16,8 @@ class HFSequenceDataset(HFBaseDataset):
     def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
         return Vocabulary.from_samples([{"labels": sample.label} for sample in samples])
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: torch.tensor(lst, dtype=torch.long).squeeze(-1),
@@ -43,8 +43,8 @@ class HFTokenDataset(HFBaseDataset):
     def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
         return Vocabulary.from_samples([{"labels": label} for sample in samples for label in sample.labels])
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "labels": lambda lst: batchify(lst, padding_value=-100),  # -100 == cross entropy ignore index
@@ -81,9 +81,10 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
-    def _init_fields_batcher(self) -> None:
-        super(HFSentencePairDataset, self)._init_fields_batcher()
-        self.fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+    def init_fields_batcher(self) -> Dict:
+        fields_batcher = super(HFSentencePairDataset, self).init_fields_batcher()
+        fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
+        return fields_batcher
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
@@ -147,7 +148,7 @@ class HFQADataset(HFBaseDataset):
             char2token = {}
             first = True
             for _t_idx, (m, cp) in enumerate(
-                    zip(elem_dict["context_mask"].tolist(), elem_dict["token2chars"].tolist())
+                zip(elem_dict["context_mask"].tolist(), elem_dict["token2chars"].tolist())
             ):
                 if m:
 
@@ -155,8 +156,10 @@ class HFQADataset(HFBaseDataset):
                     # some tokenizers (microsoft/deberta-base) include in the token-offsets also the white space
                     # e.g. 'In Italy' => ' Italy' => (2, 8)
                     # set position to first non-white space
-                    while elem_dict["token2chars"][_t_idx][0] < elem_dict["token2chars"][_t_idx][1] and \
-                            qa_sample.context[elem_dict["token2chars"][_t_idx][0].item()] == ' ':
+                    while (
+                        elem_dict["token2chars"][_t_idx][0] < elem_dict["token2chars"][_t_idx][1]
+                        and qa_sample.context[elem_dict["token2chars"][_t_idx][0].item()] == " "
+                    ):
                         elem_dict["token2chars"][_t_idx][0] += 1
 
                     # add prefix space seems to be bugged on some tokenizers
@@ -170,7 +173,7 @@ class HFQADataset(HFBaseDataset):
                     if cp[0] == cp[1]:
                         # this happens on some tokenizers when multiple spaces are present
                         assert (
-                                qa_sample.context[cp[0] - 1] == " "
+                            qa_sample.context[cp[0] - 1] == " "
                         ), f"Token {_t_idx} found to occur at char span ({cp[0]}, {cp[1]}), which is impossible"
                     for c in range(*cp):
                         char2token[c] = _t_idx
@@ -185,8 +188,8 @@ class HFQADataset(HFBaseDataset):
 
             yield elem_dict
 
-    def _init_fields_batcher(self) -> None:
-        self.fields_batcher = {
+    def init_fields_batcher(self) -> Dict:
+        return {
             "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
             "attention_mask": lambda lst: batchify(lst, padding_value=0),
             "token_type_ids": lambda lst: batchify(lst, padding_value=0),

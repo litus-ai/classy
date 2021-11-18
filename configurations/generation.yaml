@@ -26,6 +26,7 @@ defaults:
   - callbacks: empty
   - data: generation
   - device: cuda
+  - evaluation: generation
   - model: generation
   - prediction: generation
   - training: default

@@ -21,6 +21,10 @@ HELP_FILE_PATH = """
     one file at training time.
 """
 
+HELP_EVALUATE = """
+    Path to evaluation config to use.
+"""
+
 HELP_PREDICTION_PARAMS = """
     Path to prediction params.
 """

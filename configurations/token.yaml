@@ -26,6 +26,7 @@ defaults:
   - callbacks: empty
   - data: token
   - device: cuda
+  - evaluation: token
   - model: token
   - prediction: token
   - training: default
