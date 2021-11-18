@@ -1,9 +1,7 @@
 ---
 sidebar_position: 2
-sidebar_label: Installation
+title: Installation
 ---
-
-# Installation
 
 :::tip
 We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning.
@@ -26,7 +24,7 @@ The preferred way to install `classy` is via `pip`. Just run `pip install classy
 
 <!-- `classy` works on *any* platform, as long as it is correctly configured. -->
 
-### Installing via pip
+## Installing via pip
 
 #### Setting up a virtual environment
 
@@ -61,7 +59,7 @@ and voilà! You're all set.
 *Looking for some adventures? Install nightly releases directly from [pypi](https://pypi.org/project/classy-core/#history)! You will ~~not~~ regret it :)*
 
 
-### Installing from source
+## Installing from source
 You can also install `classy` by cloning this repository:
 
 ```yaml
@@ -77,9 +75,15 @@ pip install -e .
 
 This will make `classy` available in your environment, but using the sources of the cloned repository.
 
-<!--
-# TODO (?):
-- docker
-- colab
-- vastai
--->
+## Using classy via docker
+
+Alternatively, we also release and mantain a Docker image with everything already set up. In order to use it locally,
+you need to install:
+* [docker](https://docs.docker.com/get-docker/)
+* [nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+
+Once set up, you can just run `docker run --gpus all -it poccio/classy:0.1.0-cuda11.1 bash` and you'll get a shell on a fully-setup container, with a *classy* conda environment
+already created.
+
+Alternatively, if you use external cloud computing platforms that support docker images (e.g. [vast.ai](https://vast.ai/)),
+just providing the image name (`poccio/classy:0.1.0-cuda11.1`) should suffice (it's hosted on Dockerhub).
