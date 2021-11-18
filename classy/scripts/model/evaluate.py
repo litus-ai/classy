@@ -51,7 +51,7 @@ def evaluate(
 
     # load evaluation metric
     if metrics_fn is not None:
-        assert evaluate_config_path is None, 'At most one between metrics_fn and evaluate_config_path can be provided'
+        assert evaluate_config_path is None, "At most one between metrics_fn and evaluate_config_path can be provided"
     elif evaluate_config_path is not None:
         metrics_fn = hydra.utils.instantiate(OmegaConf.load(evaluate_config_path))
     else:

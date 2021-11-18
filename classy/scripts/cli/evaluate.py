@@ -4,8 +4,13 @@ from pathlib import Path
 from argcomplete import FilesCompleter
 
 from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
-from classy.utils.help_cli import HELP_MODEL_PATH, HELP_TOKEN_BATCH_SIZE, HELP_FILE_PATH, HELP_PREDICTION_PARAMS, \
-    HELP_EVALUATE
+from classy.utils.help_cli import (
+    HELP_MODEL_PATH,
+    HELP_TOKEN_BATCH_SIZE,
+    HELP_FILE_PATH,
+    HELP_PREDICTION_PARAMS,
+    HELP_EVALUATE,
+)
 
 
 def populate_parser(parser: ArgumentParser):
