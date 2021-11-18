@@ -49,7 +49,7 @@ By default, `classy` is able to work with `.tsv` and `.jsonl` files. In the case
 Say your review data is already stored in a `.tsv` file (with four columns, as we saw above), all you need to do is:
 
 ```bash
-$ cut -f3,4 data/raw.tsv > data/output.tsv
+$ cut -f3,4 data/raw.tsv > data/classy-sentiment.tsv
 ```
 
 :::tip
@@ -63,7 +63,7 @@ convert your data to a `classy`-compatible format (i.e., `sed`, `awk`, and a `py
 Now that our data is `classy`-compatible, we can train our model! Let us call it `sequence-example`:
 
 <ReactTermynal>
-  <span data-ty="input">classy train sequence data/output.tsv -n sequence-example</span>
+  <span data-ty="input">classy train sequence data/classy-sentiment.tsv -n sequence-example</span>
   <span data-ty="progress"></span>
   <span data-ty>Training completed</span>
 </ReactTermynal>

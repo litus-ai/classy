@@ -17,7 +17,18 @@ let's name this experiment *fast-ner*:
 
 <p />
 
+
+:::tip
+
+Your model and experiment data will be saved in `experiments/<exp-name>/YYYY-MM-DD/HH-mm-ss/`.
+
+`classy` automatically saves *best* and *last* checkpoints, as well as pre- and post-trainer initialization configurations.
+
+:::
+
 :::info
 
 *token* in the above command tells classy to train a *Token Classification* model. This is the only thing, besides 
 organizing data, that classy expects you to do. We'll go back to this later on.
+
+:::

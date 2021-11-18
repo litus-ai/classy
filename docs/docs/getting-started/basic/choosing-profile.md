@@ -5,7 +5,7 @@ title: Choosing a profile
 
 :::tip
 This step is **not mandatory**, but we highly recommend you to read it as it touches an important component of 
-`classy`, the profiles, which is needed in case you want to heavily modify training configuration. 
+`classy`, the profiles, which is needed in case you want to heavily modify your training configuration. 
 
 :::
 
@@ -19,10 +19,4 @@ of their model to fit different criteria.
 `classy` comes with a predefined set of profiles, which you can find [here](/docs/reference-manual/profiles/).
 The list includes the underlying transformer model, optimizer and a few key features that each profile shines for.
 
-## Visualizing your Configuration
-
-`classy train` has an option that lets you visualize the full materialized configuration in your terminal, showing you 
-where each component comes from (including overridden configuration groups, overrides, profiles, etc.). 
-To print it, simply append `--print` to your current `classy train` command!
-
-![Classy Train Print - Token](/img/intro/classy-train-print-tok.png)
+For this tutorial, we'll stick with a fast yet powerful model, *DistilBERT*.
