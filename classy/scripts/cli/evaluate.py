@@ -4,7 +4,8 @@ from pathlib import Path
 from argcomplete import FilesCompleter
 
 from classy.scripts.cli.utils import get_device, autocomplete_model_path, checkpoint_path_from_user_input
-from classy.utils.help_cli import HELP_MODEL_PATH, HELP_TOKEN_BATCH_SIZE, HELP_FILE_PATH, HELP_PREDICTION_PARAMS
+from classy.utils.help_cli import HELP_MODEL_PATH, HELP_TOKEN_BATCH_SIZE, HELP_FILE_PATH, HELP_PREDICTION_PARAMS, \
+    HELP_EVALUATE
 
 
 def populate_parser(parser: ArgumentParser):
@@ -31,6 +32,7 @@ def populate_parser(parser: ArgumentParser):
         """,
     ).completer = FilesCompleter()
     parser.add_argument("--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE)
+    parser.add_argument("--evaluation-config", type=str, default=None, help=HELP_EVALUATE)
     parser.add_argument("--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS)
 
 
@@ -100,6 +102,7 @@ def main(args):
         args.token_batch_size,
         input_path,
         args.output_path,
+        evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
         metrics_fn=None,
     )

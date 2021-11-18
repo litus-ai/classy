@@ -134,3 +134,33 @@ For instance, in our example, to early-stop on SpanF1 on the validation set,
 use `-c [...] callbacks_monitor=validation-f1 callbacks_mode=max`
 
 :::
+
+## Swapping Evaluation Metric
+
+`classy` also supports changing the evaluation metric directly when using `classy evaluate`, regardless of the config
+used in `classy train`. To do so, you can use the the `--evaluation-config` CLI parameter to `classy evaluate`. This 
+parameter specifies the configuration path (e.g. *configurations/evaluation/span.yaml*) where the config of the desired 
+evaluation metric is stored. 
+
+<ReactTermynal>
+  <span data-ty="input">classy train token DATA-PATH -n token</span>
+  <span data-ty="progress"></span>
+  <span data-ty>Training completed</span>
+  <span data-ty="input">classy evaluate MODEL-PATH TEST-PATH</span>
+  <span data-ty="progress"></span>
+  <span data-ty># Evaluation with original training config</span>
+  <span data-ty>[...]</span>
+  <span data-ty="input">classy evaluate MODEL-PATH TEST-PATH --evaluation-config configurations/evaluation/span.yaml</span>
+  <span data-ty="progress"></span>
+  <span data-ty>* precision: 0.8746950156849076</span>
+  <span data-ty>* recall: 0.8886331444759207</span>
+  <span data-ty>* f1: 0.8816089935007905</span>
+</ReactTermynal>
+<p></p>
+
+:::caution
+
+Note that interpolation to other configs is currently not supported in this setting.
+
+:::
+
