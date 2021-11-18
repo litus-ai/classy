@@ -14,7 +14,7 @@ class HFBaseDataset(BaseDataset):
     def __init__(
         self,
         transformer_model: str,
-        additional_special_tokens: Optional[List[str]],
+        additional_special_tokens: Optional[List[str]] = None,
         **kwargs,
     ):
         if "tokenizer" not in self._shared_state:

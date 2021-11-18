@@ -5,7 +5,7 @@ datamodule:
   train_dataset:
     _target_: 'classy.data.dataset.hf.classification.HFSentencePairDataset.from_file'
     transformer_model: ${transformer_model}
-    additional_special_tokens: ${model.additional_special_tokens}
+    additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
     min_length: 5
     max_length: 500
     tokens_per_batch: 800
@@ -17,7 +17,7 @@ datamodule:
   validation_dataset:
     _target_: 'classy.data.dataset.hf.classification.HFSentencePairDataset.from_file'
     transformer_model: ${transformer_model}
-    additional_special_tokens: ${model.additional_special_tokens}
+    additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
     min_length: 5
     max_length: 500
     tokens_per_batch: 800
