@@ -9,7 +9,7 @@ class Evaluation:
         predicted_samples: List[
             Tuple[
                 Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
-                Union[str, List[str]],
+                Union[str, List[str], Tuple[int, int]],
             ]
         ],
     ) -> Dict:
