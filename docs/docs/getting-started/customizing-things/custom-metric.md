@@ -5,8 +5,9 @@ title: Custom Evaluation Metric
 
 import ReactTermynal from '/src/components/termynal';
 
-Adding a custom metric that you want to use for evaluation (with `classy evaluate`) and, perhaps, even monitor and/or
-use for early-stopping at training time, is easy with `classy`:
+Adding a custom metric for evaluation is easy in `classy`, and you can use it for both `classy evaluate` and 
+`classy train` (to monitor performance or, perhaps, even early-stop). To do this, you just need to:
+
 1. Write your *Evaluation* class
 
 ```python
