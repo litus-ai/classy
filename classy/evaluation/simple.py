@@ -38,9 +38,8 @@ class SentencePairSimpleEvaluation(Evaluation):
 
 class TokenSimpleEvaluation(Evaluation):
     def __call__(self, predicted_samples: List[Tuple[TokensSample, List[str]]]) -> Dict:
-        gold, pred = [sample.get_current_classification() for sample, p in predicted_samples], [
-            p for sample, p in predicted_samples
-        ]
+        gold = [sample.get_current_classification() for sample, p in predicted_samples]
+        pred = [p for sample, p in predicted_samples]
         gold, pred = flatten(gold), flatten(pred)
         return {"accuracy": accuracy(gold, pred), **p_r_f_support(gold, pred)}
 
