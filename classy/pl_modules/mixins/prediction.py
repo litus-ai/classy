@@ -12,7 +12,8 @@ from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample, GenerationSample,
+    QASample,
+    GenerationSample,
 )
 
 

@@ -31,23 +31,22 @@ class PredictionCallback:
 
 
 class EvaluationPredictionCallback(PredictionCallback):
-
     def __init__(self, evaluation: Evaluation):
         self.evaluation = evaluation
 
     def __call__(
-            self,
-            name: str,
-            predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]]],
-            model: ClassyPLModule,
-            trainer: pl.Trainer
+        self,
+        name: str,
+        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str]]]],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
     ):
-        logger.info(f'Starting evaluation {self.__class__.__name__} with name {name}')
+        logger.info(f"Starting evaluation {self.__class__.__name__} with name {name}")
         results = self.evaluation(predicted_samples)
         for k, v in results.items():
             model.log(f"{name}_{k}", v, prog_bar=True, on_step=False, on_epoch=True)
-        str_results = ", ".join([f'{k}={v}' for k,v in results.items()])
-        logger.info(f'Evaluation {self.__class__.__name__} with name {name} completed with results: ({str_results})')
+        str_results = ", ".join([f"{k}={v}" for k, v in results.items()])
+        logger.info(f"Evaluation {self.__class__.__name__} with name {name} completed with results: ({str_results})")
 
 
 class FileDumperPredictionCallback(PredictionCallback):

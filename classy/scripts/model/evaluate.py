@@ -17,8 +17,11 @@ from sklearn.utils.multiclass import unique_labels
 from classy.data.data_drivers import get_data_driver, SEQUENCE, SENTENCE_PAIR, TOKEN, QA
 from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample
 from classy.utils.commons import flatten
-from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint, \
-    load_training_conf_from_checkpoint
+from classy.utils.lightning import (
+    load_classy_module_from_checkpoint,
+    load_prediction_dataset_conf_from_checkpoint,
+    load_training_conf_from_checkpoint,
+)
 
 
 def evaluate(
@@ -28,7 +31,19 @@ def evaluate(
     input_path: str,
     output_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
-    metrics_fn: Optional[Callable[[List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], Union[str, List[str]]]]], Dict]] = None,
+    metrics_fn: Optional[
+        Callable[
+            [
+                List[
+                    Tuple[
+                        Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
+                        Union[str, List[str]],
+                    ]
+                ]
+            ],
+            Dict,
+        ]
+    ] = None,
 ):
 
     # load model
@@ -69,7 +84,7 @@ def evaluate(
     # run evaluation and print metrics
     result = metrics_fn(predicted_samples)
     for metric_name, metric_f in result.items():
-        print(f'* {metric_name}: {metric_f}')
+        print(f"* {metric_name}: {metric_f}")
 
 
 def main():

@@ -11,7 +11,7 @@
     - name: "validation"
       path: null  # leave it to null to set it to PredictionPLCallback.path
       token_batch_size: 800
-      prediction_param_conf_path: "configurations/prediction-params/generation-beam.yaml"
+      prediction_param_conf_path: null
       limit: 1000
       on_result:
         - "file_dumper"

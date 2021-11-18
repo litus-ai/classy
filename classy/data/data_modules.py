@@ -94,7 +94,9 @@ class ClassyDataModule(pl.LightningDataModule):
         elif Path(self.dataset_path).is_dir():  # the user provided a directory containing the datasets
             dir_train_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
 
-            assert len(dir_train_files) == 1, f"Expected one file with 'train' in its name, but {len(dir_train_files)} were found in {self.dataset_path}: {dir_train_files}"
+            assert (
+                len(dir_train_files) == 1
+            ), f"Expected one file with 'train' in its name, but {len(dir_train_files)} were found in {self.dataset_path}: {dir_train_files}"
 
             train_file = dir_train_files[0]
             self.file_extension = train_file.split(".")[-1]

@@ -44,7 +44,10 @@ def train(conf: DictConfig) -> None:
 
     # model callbacks
     for callback in conf.callbacks:
-        if callback["_target_"] == 'classy.pl_callbacks.prediction.PredictionPLCallback' and callback.get('path', None) is None:
+        if (
+            callback["_target_"] == "classy.pl_callbacks.prediction.PredictionPLCallback"
+            and callback.get("path", None) is None
+        ):
             callback["path"] = pl_data_module.validation_path
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 

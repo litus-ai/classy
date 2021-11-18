@@ -1,26 +1,20 @@
-from typing import List, Tuple, Union, Dict
-
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample
-from classy.evaluation.base import Evaluation
-from classy.pl_modules.mixins.task import SequenceTask, SentencePairTask, TokensTask, QATask, GenerationTask
-
-from classy.utils.log import get_project_logger
+from typing import List, Tuple, Dict
 
 import nltk
 from datasets import load_metric
+
+from classy.data.data_drivers import GenerationSample
+from classy.evaluation.base import Evaluation
+from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
 
 
 class RougeEvaluation(Evaluation):
-
     def __init__(self):
         self.rouge = load_metric("rouge")
 
-    def __call__(
-            self,
-            predicted_samples: List[Tuple[GenerationSample, str]]
-    ) -> Dict:
+    def __call__(self, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
         assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
 
         gold_summaries = [sample.target_sequence for sample, _ in predicted_samples]
@@ -41,7 +35,6 @@ class RougeEvaluation(Evaluation):
 
 
 class SacreBleuEvaluation(Evaluation):
-
     def __init__(self):
         self.bleu = load_metric("sacrebleu")
 

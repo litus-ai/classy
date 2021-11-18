@@ -148,7 +148,7 @@ class HFQADataset(HFBaseDataset):
             char2token = {}
             first = True
             for _t_idx, (m, cp) in enumerate(
-                    zip(elem_dict["context_mask"].tolist(), elem_dict["token2chars"].tolist())
+                zip(elem_dict["context_mask"].tolist(), elem_dict["token2chars"].tolist())
             ):
                 if m:
 
@@ -156,8 +156,10 @@ class HFQADataset(HFBaseDataset):
                     # some tokenizers (microsoft/deberta-base) include in the token-offsets also the white space
                     # e.g. 'In Italy' => ' Italy' => (2, 8)
                     # set position to first non-white space
-                    while elem_dict["token2chars"][_t_idx][0] < elem_dict["token2chars"][_t_idx][1] and \
-                            qa_sample.context[elem_dict["token2chars"][_t_idx][0].item()] == ' ':
+                    while (
+                        elem_dict["token2chars"][_t_idx][0] < elem_dict["token2chars"][_t_idx][1]
+                        and qa_sample.context[elem_dict["token2chars"][_t_idx][0].item()] == " "
+                    ):
                         elem_dict["token2chars"][_t_idx][0] += 1
 
                     # add prefix space seems to be bugged on some tokenizers
@@ -171,7 +173,7 @@ class HFQADataset(HFBaseDataset):
                     if cp[0] == cp[1]:
                         # this happens on some tokenizers when multiple spaces are present
                         assert (
-                                qa_sample.context[cp[0] - 1] == " "
+                            qa_sample.context[cp[0] - 1] == " "
                         ), f"Token {_t_idx} found to occur at char span ({cp[0]}, {cp[1]}), which is impossible"
                     for c in range(*cp):
                         char2token[c] = _t_idx

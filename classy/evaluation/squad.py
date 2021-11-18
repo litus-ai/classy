@@ -1,9 +1,9 @@
-from datasets import load_metric
-from typing import List, Tuple, Union, Dict
+from typing import List, Tuple
 
-from classy.data.data_drivers import TokensSample, QASample
+from datasets import load_metric
+
+from classy.data.data_drivers import QASample
 from classy.evaluation.base import Evaluation
-from classy.pl_modules.mixins.task import GenerationTask, QATask, TokensTask, SentencePairTask, SequenceTask
 
 
 class SQuADV1Evaluation(Evaluation):
@@ -27,7 +27,4 @@ class SQuADV1Evaluation(Evaluation):
         results = self.squad.compute(predictions=pred, references=gold)
         exact_match, f1 = results["exact_match"], results["f1"]
 
-        return {
-            "exact_match": exact_match,
-            "f1": f1
-        }
+        return {"exact_match": exact_match, "f1": f1}

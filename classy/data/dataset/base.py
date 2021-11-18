@@ -104,12 +104,18 @@ class BaseDataset(IterableDataset):
         self.for_inference = for_inference
 
         self.batch_size = batch_size
-        self.tokens_per_batch, self.max_batch_size, self.batching_fields = tokens_per_batch, max_batch_size, batching_fields
-        assert bool(self.batch_size is not None) or bool(self.tokens_per_batch is not None), f'Either batch_size or tokens_per_batch must be provided, but found {batch_size} and {tokens_per_batch}'
+        self.tokens_per_batch, self.max_batch_size, self.batching_fields = (
+            tokens_per_batch,
+            max_batch_size,
+            batching_fields,
+        )
+        assert bool(self.batch_size is not None) or bool(
+            self.tokens_per_batch is not None
+        ), f"Either batch_size or tokens_per_batch must be provided, but found {batch_size} and {tokens_per_batch}"
 
         if self.batch_size is not None:
             if max_batch_size is not None:
-                logger.warning(f'max_batch_size has no meaning when not using token batching')
+                logger.warning(f"max_batch_size has no meaning when not using token batching")
         else:
             assert len(batching_fields) > 0, "At least 1 batching field is required"
             if self.tokens_per_batch < self.max_length:
@@ -127,10 +133,12 @@ class BaseDataset(IterableDataset):
         raise NotImplementedError
 
     def prebatch_elements(self, dataset_elements: List):
-        dataset_elements = sorted(
-            dataset_elements,
-            key=lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1),
+        sorting_fn = (
+            lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1)
+            if not self.for_inference
+            else sum(len(elem[k]) for k in self.batching_fields)
         )
+        dataset_elements = sorted(dataset_elements, key=sorting_fn)
         ds = list(chunks(dataset_elements, 512))
         np.random.shuffle(ds)
         return flatten(ds)
@@ -184,7 +192,9 @@ class BaseDataset(IterableDataset):
 
         for de in dataset_elements:
 
-            if (should_token_batch and self.max_batch_size != -1 and len(current_batch) == self.max_batch_size) or (not should_token_batch and len(current_batch) == self.batch_size):
+            if (should_token_batch and self.max_batch_size != -1 and len(current_batch) == self.max_batch_size) or (
+                not should_token_batch and len(current_batch) == self.batch_size
+            ):
                 yield output_batch()
                 current_batch = []
 
@@ -215,9 +225,7 @@ class BaseDataset(IterableDataset):
 
                 future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
 
-                if (
-                    len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch
-                ):
+                if len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch:
                     yield output_batch()
                     current_batch = []
 

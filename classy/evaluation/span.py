@@ -4,10 +4,9 @@ from datasets import load_metric
 
 from classy.data.data_drivers import TokensSample
 from classy.evaluation.base import Evaluation
-from classy.pl_modules.mixins.task import TokensTask
 
 
-class BIOSpanEvaluation(Evaluation):
+class SeqEvalSpanEvaluation(Evaluation):
     def __init__(self):
         self.backend_metric = load_metric("seqeval")
 
@@ -22,8 +21,4 @@ class BIOSpanEvaluation(Evaluation):
         )
         p, r, f1 = metric_out["overall_precision"], metric_out["overall_recall"], metric_out["overall_f1"]
 
-        return {
-            "precision": p,
-            "recall": r,
-            "f1": f1
-        }
+        return {"precision": p, "recall": r, "f1": f1}
