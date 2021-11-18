@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: Profiles
+title: Default Profiles
 ---
 
 As you have seen from the previous tutorials, your systems are fully customizable in `classy`. 

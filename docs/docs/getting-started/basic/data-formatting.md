@@ -5,7 +5,7 @@ title: Formatting your data
 
 `classy` requires data to be formatted in a specific way according to the task you're tackling (check out [Tasks and Input Formats](/docs/reference-manual/tasks-and-formats) in the documentation).
 
-In our case of **Named Entity Recognition** (i.e., *Token Classification*), we the data to be formatted in a way that each line represents a single sample.
+In our case of **Named Entity Recognition** (i.e., *Token Classification*), we need the data to be formatted in a way that each line represents a single sample.
 For instance, taking again our running example of *Barack Obama visited Google in California*, we can format it as follows:
 
 ```text
