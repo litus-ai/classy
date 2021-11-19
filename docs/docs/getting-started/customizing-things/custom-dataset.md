@@ -7,7 +7,7 @@ title: Custom Dataset
 Implementing your custom dataset with classy is easy. You just need to subclass BaseDataset:
 
 ```python
-class MyCustomDataset(BaseDataset)
+class MyCustomDataset(BaseDataset):
 
     @staticmethod
     def requires_vocab() -> bool:
