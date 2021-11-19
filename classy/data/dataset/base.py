@@ -78,36 +78,50 @@ class BaseDataset(IterableDataset):
             [], Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
         ],
         vocabulary: Vocabulary,
-        batching_fields: List[str],
-        tokens_per_batch: int,
-        max_batch_size: int,
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
-        section_size: int,
-        prebatch: bool,
-        materialize: bool,
-        min_length: int,
-        max_length: int,
         for_inference: bool,
+        batch_size: Optional[int] = None,
+        tokens_per_batch: Optional[int] = None,
+        max_batch_size: Optional[int] = None,
+        batching_fields: Optional[List[str]] = None,
+        section_size: Optional[int] = None,
+        prebatch: bool = False,
+        materialize: bool = False,
+        drop_last: bool = False,
+        min_length: int = -1,
+        max_length: int = -1,
     ):
         super().__init__()
 
         self.samples_iterator = samples_iterator
         self.vocabulary = vocabulary
 
-        self.batching_fields = batching_fields
-        assert len(batching_fields) > 0, "At least 1 batching field is required"
-
-        self.tokens_per_batch, self.max_batch_size = tokens_per_batch, max_batch_size
         self.fields_batcher = fields_batchers
         self.prebatch, self.section_size = prebatch, section_size
         self.materialize = materialize
+        self.drop_last = drop_last
         self.min_length, self.max_length = min_length, max_length
         self.for_inference = for_inference
 
-        if self.tokens_per_batch < self.max_length:
-            logger.warning(
-                f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size"
-            )
+        self.batch_size = batch_size
+        self.tokens_per_batch, self.max_batch_size, self.batching_fields = (
+            tokens_per_batch,
+            max_batch_size,
+            batching_fields,
+        )
+        assert bool(self.batch_size is not None) or bool(
+            self.tokens_per_batch is not None
+        ), f"Either batch_size or tokens_per_batch must be provided, but found {batch_size} and {tokens_per_batch}"
+
+        if self.batch_size is not None:
+            if max_batch_size is not None:
+                logger.warning(f"max_batch_size has no meaning when not using token batching")
+        else:
+            assert len(batching_fields) > 0, "At least 1 batching field is required"
+            if self.tokens_per_batch < self.max_length:
+                logger.warning(
+                    f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size"
+                )
 
         # used to store the materialized dataset
         self._dataset_store = None
@@ -119,10 +133,12 @@ class BaseDataset(IterableDataset):
         raise NotImplementedError
 
     def prebatch_elements(self, dataset_elements: List):
-        dataset_elements = sorted(
-            dataset_elements,
-            key=lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1),
+        sorting_fn = (
+            lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1)
+            if not self.for_inference
+            else sum(len(elem[k]) for k in self.batching_fields)
         )
+        dataset_elements = sorted(dataset_elements, key=sorting_fn)
         ds = list(chunks(dataset_elements, 512))
         np.random.shuffle(ds)
         return flatten(ds)
@@ -172,47 +188,50 @@ class BaseDataset(IterableDataset):
 
         max_len_discards, min_len_discards = 0, 0
 
+        should_token_batch = self.batch_size is None
+
         for de in dataset_elements:
 
-            if self.max_batch_size != -1 and len(current_batch) == self.max_batch_size:
+            if (should_token_batch and self.max_batch_size != -1 and len(current_batch) == self.max_batch_size) or (
+                not should_token_batch and len(current_batch) == self.batch_size
+            ):
                 yield output_batch()
                 current_batch = []
 
-            # todo: maybe here we want to check fields or stuff like that
-            # some callback to filter out samples for example
+            # todo support max length (and min length) as dicts
 
-            too_long_batching_fields = [
-                k for k in self.batching_fields if self.max_length != -1 and len(de[k]) > self.max_length
+            too_long_fields = [
+                k for k in de if self.max_length != -1 and torch.is_tensor(de[k]) and len(de[k]) > self.max_length
             ]
-            if len(too_long_batching_fields) > 0:
+            if len(too_long_fields) > 0:
                 max_len_discards += 1
                 continue
 
-            too_short_batching_fields = [
-                k for k in self.batching_fields if self.min_length != -1 and len(de[k]) < self.min_length
+            too_short_fields = [
+                k for k in de if self.min_length != -1 and torch.is_tensor(de[k]) and len(de[k]) < self.min_length
             ]
-            if len(too_short_batching_fields) > 0:
+            if len(too_short_fields) > 0:
                 min_len_discards += 1
                 continue
 
-            de_len = sum(len(de[k]) for k in self.batching_fields)
+            if should_token_batch:
 
-            future_max_len = max(
-                de_len,
-                max([sum(len(bde[k]) for k in self.batching_fields) for bde in current_batch], default=0),
-            )
+                de_len = sum(len(de[k]) for k in self.batching_fields)
 
-            future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
+                future_max_len = max(
+                    de_len,
+                    max([sum(len(bde[k]) for k in self.batching_fields) for bde in current_batch], default=0),
+                )
 
-            if (
-                len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch
-            ):  # todo: add min batch size so as to support batching by size
-                yield output_batch()
-                current_batch = []
+                future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
+
+                if len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch:
+                    yield output_batch()
+                    current_batch = []
 
             current_batch.append(de)
 
-        if len(current_batch) != 0:
+        if len(current_batch) != 0 and not self.drop_last:
             yield output_batch()
 
         if max_len_discards > 0:
@@ -252,7 +271,7 @@ class BaseDataset(IterableDataset):
         i = None
         for i, dataset_elem in enumerate(dataset_iterator, start=1):
 
-            if len(current_dataset_elements) == self.section_size:
+            if self.section_size is not None and len(current_dataset_elements) == self.section_size:
                 for batch in self.materialize_batches(current_dataset_elements):
                     yield batch
                 current_dataset_elements = []

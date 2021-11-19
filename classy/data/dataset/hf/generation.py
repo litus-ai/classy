@@ -30,7 +30,6 @@ class HFGenerationDataset(BaseDataset):
         ],
         vocabulary: Vocabulary,
         transformer_model: str,
-        additional_special_tokens: Optional[List[str]],
         tokens_per_batch: int,
         max_batch_size: Optional[int],
         section_size: int,
@@ -39,6 +38,7 @@ class HFGenerationDataset(BaseDataset):
         min_length: int,
         max_length: int,
         for_inference: bool,
+        additional_special_tokens: Optional[List[str]] = None,
     ):
         self.sample_encoder = HFGenerationSampleEncoder.from_transformer_model(
             transformer_model, additional_special_tokens

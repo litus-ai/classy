@@ -15,10 +15,12 @@ from typing import Union, Iterable, List, Tuple, Optional
 from omegaconf import OmegaConf, DictConfig, ListConfig
 
 from classy.utils.config import ExplainableConfig, NodeInfo
-from classy.utils.hydra_patch import ConfigBlame
+from classy.utils.hydra_patch import ConfigBlame, NormalConfigBlame
 
 
 class RichNodeInfo:
+    _CLASSY_GITHUB_CONFIG_URL = "https://github.com/sunglasses-ai/classy/tree/main/configurations"
+
     def __init__(self, info: NodeInfo):
         self.info = info
 
@@ -69,10 +71,6 @@ class RichNodeInfo:
             value = self.render_value()
             parts.append(": ")
             parts.append(value)
-
-            interp = self.info.interpolation
-            if interp:
-                parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
         else:
             value = self.info.value
             if len(value) == 0:
@@ -86,9 +84,31 @@ class RichNodeInfo:
                 parts.append(": ")
                 parts.append(Text(v, style=Style(bold=True, color="yellow3")))
 
+        interp = self.info.interpolation
+        if interp:
+            parts.append(Text(f" [interp: {interp}]", style=Style(color="magenta")))
+
         blame = self.info.blame
         if blame:
-            parts.append(Text(f" {blame}", style=Style(color="blue")))
+            if isinstance(blame, NormalConfigBlame):
+                # TODO: maybe we can improve this?
+                blame = str(blame)
+                assert blame.startswith("[source: ") and blame.endswith("]"), f"Unknown blame: {blame}"
+                blame_val = blame[len("[source: ") : -1]
+                provider, config = blame_val.split("/", 1)
+                if provider == "classy":
+                    # if rich.console
+                    config_url = f"{RichNodeInfo._CLASSY_GITHUB_CONFIG_URL}/{config}.yaml"
+                    parts.append(
+                        Text.assemble(
+                            " [source: ",
+                            Text.from_markup(f"[link={config_url}][blue]classy/{config}[/blue][/link]", style="blue"),
+                            "]",
+                            style="blue",
+                        )
+                    )
+            else:
+                parts.append(Text(f" {blame}", style=Style(color="blue")))
 
         return Text.assemble(*parts)
 

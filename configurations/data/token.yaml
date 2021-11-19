@@ -5,11 +5,11 @@ datamodule:
   train_dataset:
     _target_: 'classy.data.dataset.hf.classification.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
-    additional_special_tokens: ${model.additional_special_tokens}
+    additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
     min_length: -1
     max_length: 500
     tokens_per_batch: 1000
-    max_batch_size: 10
+    max_batch_size: 16
     section_size: 10000
     prebatch: True
     materialize: False
@@ -17,11 +17,11 @@ datamodule:
   validation_dataset:
     _target_: 'classy.data.dataset.hf.classification.HFTokenDataset.from_file'
     transformer_model: ${transformer_model}
-    additional_special_tokens: ${model.additional_special_tokens}
+    additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
     min_length: -1
     max_length: 500
     tokens_per_batch: 1000
-    max_batch_size: 10
+    max_batch_size: 16
     section_size: 10000
     prebatch: True
     materialize: True
