@@ -51,7 +51,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Set version name
-      if: github.event_name == 'schedule'
+      if: ${{ github.event_name == 'schedule' }}
       run: |
         # You can't set env variables to bash commands, we need
         # to export them this way instead.
