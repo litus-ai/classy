@@ -51,10 +51,10 @@ jobs:
         pip install -r requirements.txt
 
     - name: Set version name
+      if: github.event_name == 'schedule'
       run: |
         # You can't set env variables to bash commands, we need
         # to export them this way instead.
-        if: github.event_name == 'schedule'
         echo "CLASSY_VERSION_SUFFIX=dev$(date -u +%Y%m%d)" >> $GITHUB_ENV
 
     - name: Build wheel
