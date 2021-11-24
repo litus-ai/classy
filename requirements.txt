@@ -20,5 +20,5 @@ nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==1.4.12  # required by sacrebleu callback
 # black
-black==21.8b0
+black==21.11b1
 argcomplete==1.12.3

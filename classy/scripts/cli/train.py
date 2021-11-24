@@ -269,23 +269,34 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
         assert all(d in potential_defaults for d in defaults)
 
         # iterate on nodes
-        for k, v in profile_node.items():
+        if OmegaConf.is_dict(profile_node):
 
-            assert not k.startswith(
-                "+"
-            ), f"Found key {k} in profile that starts with '+'. Using '+' is not necessary and the '+' sign can be removed"
+            for k, v in profile_node.items():
 
-            if k not in potential_defaults:
-                recurse_and_fix(k, v, cfg, prefix)
-            else:
-                if type(v) == str:
-                    # profile is being used to set a profile group, update defaults
-                    defaults[k] = v
+                assert not k.startswith(
+                    "+"
+                ), f"Found key {k} in profile that starts with '+'. Using '+' is not necessary and the '+' sign can be removed"
+
+                if k not in potential_defaults:
+                    recurse_and_fix(k, v, cfg, prefix)
                 else:
-                    # launch recursion on child file
-                    child_file = path_to_target_config.parent / k / (defaults[k] + ".yaml")
-                    assert child_file.exists(), f"{child_file} not found in config dir"
-                    apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
+                    if type(v) == str:
+                        # profile is being used to set a profile group, update defaults
+                        defaults[k] = v
+                    else:
+                        # launch recursion on child file
+                        child_file = path_to_target_config.parent / k / (defaults[k] + ".yaml")
+                        assert child_file.exists(), f"{child_file} not found in config dir"
+                        apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
+
+        elif OmegaConf.is_list(profile_node):
+
+            # if profile overrides a list, the original list should be completely overwritten
+            cfg = profile_node
+
+        else:
+
+            raise ValueError(f"Unsupported type {type(profile_node)} for profile node {profile_node}")
 
         # update defaults
         if len(defaults) > 0:

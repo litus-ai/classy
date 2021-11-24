@@ -23,7 +23,9 @@ class PredictionCallback:
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[
+            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
+        ],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -37,7 +39,9 @@ class EvaluationPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[
+            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
+        ],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -57,7 +61,9 @@ class FileDumperPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[
+            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
+        ],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
