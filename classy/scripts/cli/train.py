@@ -217,39 +217,74 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
 
     blames = []
 
-    def recurse_and_fix(prefix, profile_node, cfg, blame_prefix):
-        if OmegaConf.is_list(profile_node):
-            # if profile overrides a list, the original list should be completely overwritten
-            OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
-            blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
-        elif OmegaConf.is_dict(profile_node):
-            # if profile overrides a dict, the original dict should be discarded
-            # if _target_ is changed, and updated otherwise
+    def recurse_and_fix(prefix, profile_node, cfg, blame_prefix, path_to_target_config, defaults, potential_defaults):
+
+        if OmegaConf.is_dict(profile_node):
+            # if profile overrides a dict, the original dict should be:
             target_node = OmegaConf.select(cfg, prefix)
             if target_node is None:
+                # inserted if the dict was not present
                 OmegaConf.update(cfg, prefix, profile_node, force_add=True)
                 blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
             else:
                 if "_target_" in profile_node:
-                    OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
+                    # discarded if _target_ is changed
+                    if prefix == '':
+                        cfg = profile_node
+                        assert potential_defaults is not None
+                        for k in potential_defaults:
+                            if k in cfg:
+                                assert type(cfg[k]) == str
+                                defaults[k] = cfg[k]
+                                cfg.pop(k)
+                    else:
+                        OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
                     blames.append(
                         ([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}"))
                     )
                 else:
+                    # merged and updated recursively if it was present
                     for k, v in profile_node.items():
-                        recurse_and_fix(k, v, target_node, (blame_prefix + "." + prefix).lstrip("."))
+                        if potential_defaults is not None and k in potential_defaults:
+                            # potential defaults is not None only for direct children of a root (where the defaults logic should be applied)
+                            # if (k, v) refers to a new default
+                            if type(v) == str:
+                                # this should be added
+                                defaults[k] = v
+                            else:
+                                # launch fixing logic on child file
+                                child_file = path_to_target_config.parent / k / (defaults[k] + ".yaml")
+                                assert child_file.exists(), f"{child_file} not found in config dir"
+                                apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
+                        else:
+                            # otherwise, standard recursion
+                            recurse_and_fix(k, v, target_node, (blame_prefix + "." + prefix).lstrip("."), path_to_target_config=None, defaults=None, potential_defaults=None)
+        elif OmegaConf.is_list(profile_node):
+            # if profile overrides a list, the original list should be completely overwritten
+            if prefix == '':
+                cfg = profile_node
+            else:
+                OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
+            blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
         elif type(profile_node) in [str, float, int, bool] or profile_node is None:
             OmegaConf.update(cfg, prefix, profile_node, force_add=True)
             blames.append(([(blame_prefix + "." + prefix).lstrip(".")], ClassyBlame(f"--profile {profile_name}")))
         else:
             raise ValueError(f"Unexpected type {type(profile_node)}: {profile_node}")
 
+        return cfg
+
     def apply_recursively(profile_node, path_to_target_config: Path, prefix: str):
 
         # load conf
         cfg = OmegaConf.load(path_to_target_config)
 
-        # compute defaults dict
+        # compute potential defaults dict (folders present)
+        potential_defaults = set(
+            [d.name for d in path_to_target_config.parent.iterdir() if d.is_dir() and d.name != "__pycache__"]
+        )
+
+        # extract defaults dict
         is_self_first = None
         defaults = {}
 
@@ -262,41 +297,11 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
                     assert k not in defaults, f"Key {k} already present in defaults list. Check your defaults list"
                     defaults[k] = v
 
-        # compute potential defaults dict (folders present)
-        potential_defaults = set(
-            [d.name for d in path_to_target_config.parent.iterdir() if d.is_dir() and d.name != "__pycache__"]
-        )
+        # check all defaults are in potential defaults
         assert all(d in potential_defaults for d in defaults)
 
-        # iterate on nodes
-        if OmegaConf.is_dict(profile_node):
-
-            for k, v in profile_node.items():
-
-                assert not k.startswith(
-                    "+"
-                ), f"Found key {k} in profile that starts with '+'. Using '+' is not necessary and the '+' sign can be removed"
-
-                if k not in potential_defaults:
-                    recurse_and_fix(k, v, cfg, prefix)
-                else:
-                    if type(v) == str:
-                        # profile is being used to set a profile group, update defaults
-                        defaults[k] = v
-                    else:
-                        # launch recursion on child file
-                        child_file = path_to_target_config.parent / k / (defaults[k] + ".yaml")
-                        assert child_file.exists(), f"{child_file} not found in config dir"
-                        apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
-
-        elif OmegaConf.is_list(profile_node):
-
-            # if profile overrides a list, the original list should be completely overwritten
-            cfg = profile_node
-
-        else:
-
-            raise ValueError(f"Unsupported type {type(profile_node)} for profile node {profile_node}")
+        # apply profile
+        cfg = recurse_and_fix('', profile_node, cfg, blame_prefix=prefix, path_to_target_config=path_to_target_config, defaults=defaults, potential_defaults=potential_defaults)
 
         # update defaults
         if len(defaults) > 0:

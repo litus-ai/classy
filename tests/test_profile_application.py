@@ -22,7 +22,7 @@ def hydra_test_env(tmpdir):
                 "d": {"a": "a", "b": "b", "c": "c"},
                 "o": {"_target_": "my.custom.module", "p1": "${interpolation}"},
                 "interpolation": "interpolation",
-                "defaults": [{"x": "a"}, {"z": "a"}, "_self_"],
+                "defaults": [{"x": "a"}, {"zl": "a"}, {"zo": "a"}, "_self_"],
             }
         ),
         tmpdir / "root.yaml",
@@ -37,8 +37,15 @@ def hydra_test_env(tmpdir):
     OmegaConf.save(OmegaConf.create({"a": "0"}), tmpdir / "y" / "a.yaml")
     OmegaConf.save(OmegaConf.create({"b": "0"}), tmpdir / "y" / "b.yaml")
 
-    (tmpdir / "z").mkdir()
-    OmegaConf.save(OmegaConf.create([0, 1]), tmpdir / "z" / "a.yaml")
+    (tmpdir / "zl").mkdir()
+    OmegaConf.save(OmegaConf.create([0, 1]), tmpdir / "zl" / "a.yaml")
+
+    (tmpdir / "zo").mkdir()
+    OmegaConf.save(OmegaConf.create({"_target_": "my.custom.module", "p1": "p1", "defaults": [{"x": "a"}, "_self_"]}), tmpdir / "zo" / "a.yaml")
+
+    (tmpdir / "zo" / "x").mkdir()
+    OmegaConf.save(OmegaConf.create({"a": "0"}), tmpdir / "zo" / "x" / "a.yaml")
+    OmegaConf.save(OmegaConf.create({"b": "0"}), tmpdir / "zo" / "x" / "b.yaml")
 
     return str(tmpdir), "root"
 
@@ -87,6 +94,16 @@ class TestProfileApplication:
 
         assert before_cfg.l != after_cfg.l
         assert after_cfg.l == [1]
+
+        # check that the above change was the only one applied
+        after_cfg.l = before_cfg.l
+        assert before_cfg == after_cfg
+
+    def test_root_variable_in_list_set_from_profile(self, hydra_test_env):
+        before_cfg, after_cfg = self._run_skeleton(*hydra_test_env, profile=OmegaConf.create({"l.1": [1]}), cli=[])
+
+        assert before_cfg.l != after_cfg.l
+        assert after_cfg.l[1] == [1]
 
         # check that the above change was the only one applied
         after_cfg.l = before_cfg.l
@@ -169,14 +186,29 @@ class TestProfileApplication:
         assert before_cfg == after_cfg
 
     def test_list_override_in_config_group_from_profile(self, hydra_test_env):
-        before_cfg, after_cfg = self._run_skeleton(*hydra_test_env, profile=OmegaConf.create({"z": [1, 2]}), cli=[])
+        before_cfg, after_cfg = self._run_skeleton(*hydra_test_env, profile=OmegaConf.create({"zl": [1]}), cli=[])
 
-        assert before_cfg.z == [0, 1]
-        assert after_cfg.z == [1, 2]
+        assert before_cfg.zl == [0, 1]
+        assert after_cfg.zl == [1]
 
         # check that the above change was the only one applied
         # this works also here, with an interpolation, as no materialization took place
-        after_cfg.z = before_cfg.z
+        after_cfg.zl = before_cfg.zl
+        assert before_cfg == after_cfg
+
+    def test_object_override_in_config_group_from_profile(self, hydra_test_env):
+        before_cfg, after_cfg = self._run_skeleton(
+            *hydra_test_env,
+            profile=OmegaConf.create({"zo": {"_target_": "my.other.custom.module", "p2": "p2", "x": "b"}}),
+            cli=[]
+        )
+
+        assert before_cfg.zo != after_cfg.zo
+        assert after_cfg.zo == {"_target_": "my.other.custom.module", "p2": "p2", "x": {"b": "0"}}
+
+        # check that the above change was the only one applied
+        # this works also here, with an interpolation, as no materialization took place
+        after_cfg.zo = before_cfg.zo
         assert before_cfg == after_cfg
 
     def test_config_group_set_from_profile(self, hydra_test_env):
