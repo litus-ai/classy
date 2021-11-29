@@ -19,6 +19,8 @@ wandb==0.12.2  # required for logging
 nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==1.4.12  # required by sacrebleu callback
+plotly==5.4.0
+rich==10.15.0
 # black
 black==21.8b0
 argcomplete==1.12.3
