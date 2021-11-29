@@ -2,7 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-def boxplot(y: np.array, x_name: str, y_name: str, color: str):
+def boxplot(y: np.ndarray, x_name: str, y_name: str, color: str):
     fig = go.Figure()
     fig.add_trace(
         go.Box(

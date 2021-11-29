@@ -8,9 +8,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausa
 
 from classy.data.data_drivers import GenerationSample
 from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
-from classy.pl_modules.mixins.task import (
-    GenerationTask,
-)
+from classy.pl_modules.mixins.task import GenerationTask
 
 
 class HFGenerationPLModule(GenerationTask, ClassyPLModule):
@@ -38,18 +36,21 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         return self.generative_model.forward(*args, **kwargs)
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """ """
         forward_output = self.forward(**batch)
         self.log("loss", forward_output.loss)
         self.log("ppl", torch.exp(forward_output.loss))
         return forward_output.loss
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         forward_output = self.forward(**batch)
         self.log("val_loss", forward_output.loss)
         self.log("val_ppl", torch.exp(forward_output.loss), prog_bar=True, on_step=False, on_epoch=True)
         return forward_output.loss
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         forward_output = self.forward(**batch)
         self.log("test_loss", forward_output.loss)
         self.log("test_ppl", torch.exp(forward_output.loss), prog_bar=True, on_step=False, on_epoch=True)
