@@ -36,12 +36,14 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         return self.generative_model.forward(*args, **kwargs)
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """ """
         forward_output = self.forward(**batch)
         self.log("loss", forward_output.loss)
         self.log("ppl", torch.exp(forward_output.loss))
         return forward_output.loss
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         forward_output = self.forward(**batch)
         self.log("val_loss", forward_output.loss)
         self.log(
@@ -54,6 +56,7 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         return forward_output.loss
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         forward_output = self.forward(**batch)
         self.log("test_loss", forward_output.loss)
         self.log(

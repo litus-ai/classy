@@ -87,11 +87,13 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
             yield sample
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """ """
         classification_output = self.forward(**batch)
         self.log("loss", classification_output.loss)
         return classification_output.loss
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         self.accuracy_metric(classification_output.predictions, batch["labels"])
@@ -108,6 +110,7 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
         self.log("val_macro-f1-score", self.macro_f1_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         self.accuracy_metric(classification_output.predictions, batch["labels"])
@@ -245,11 +248,13 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             yield sample
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """ """
         classification_output = self.forward(**batch)
         self.log("loss", classification_output.loss)
         return classification_output.loss
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
@@ -271,6 +276,7 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         self.log("val_macro-f1-score", self.macro_f1_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         labels = batch["labels"].clone()
@@ -345,11 +351,13 @@ class HFQAPLModule(QATask, ClassyPLModule):
         )
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
+        """ """
         classification_output = self.forward(**batch)
         self.log("loss", classification_output.loss)
         return classification_output.loss
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         start_predictions = classification_output.predictions[0]
@@ -372,6 +380,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
+        """ """
         classification_output = self.forward(**batch)
 
         start_predictions = classification_output.predictions[0]

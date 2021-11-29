@@ -5,7 +5,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 
 class ModelCheckpointWithBest(ModelCheckpoint):
-    """A callback that explicitly saves the best checkpoint with best.ckpt.
+    """
+    A callback that explicitly saves the best checkpoint with best.ckpt.
     Note that the best checkpoint is duplicated, rather than linked, in best.ckpt
     """
 
