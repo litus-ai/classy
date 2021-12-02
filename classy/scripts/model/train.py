@@ -7,7 +7,6 @@ import pytorch_lightning as pl
 from omegaconf import OmegaConf, DictConfig
 
 from classy.data.data_modules import ClassyDataModule
-from classy.utils.hydra import fix_paths
 
 
 def train(conf: DictConfig) -> None:
@@ -64,6 +63,10 @@ def train(conf: DictConfig) -> None:
             resume="allow",
             id=conf.logging.wandb.run_id,
         )
+
+        allowed_additional_params = {"entity", "group", "tags"}
+        wandb_params.update({k: v for k, v in conf.logging.wandb if k in allowed_additional_params})
+
         if conf.logging.wandb.anonymous is not None:
             wandb_params["anonymous"] = "allow"
 
