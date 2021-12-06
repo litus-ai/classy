@@ -57,12 +57,13 @@ You first deal with the vocabulary methods. As you are doing sequence classifica
 
 ```python
     @staticmethod
-    def requires_vocab() -> bool:
-       return True
+def requires_vocab() -> bool:
+    return True
 
-    @staticmethod
-    def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
-        return Vocabulary.from_samples([{"labels": sample.label} for sample in samples])
+
+@staticmethod
+def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
+    return Vocabulary.from_samples([{"labels": sample.reference_annotation} for sample in samples])
 ```
 
 Then, define your constructor and, in particular, your *fields_batchers*:
@@ -114,18 +115,18 @@ Finally, you need to implement the *dataset_iterator_func*:
 
 ```python
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-        # iterate on samples
-        for sequence_sample in self.samples_iterator():
-            # invoke tokenizer
-            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")["input_ids"][0]
-            # build dict
-            elem_dict = {
-                "input_ids": input_ids,
-                "attention_mask": torch.ones_like(input_ids),
-            }
-            if sequence_sample.label is not None:
-                # use vocabulary to convert string labels to int labels
-                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
-            elem_dict["samples"] = sequence_sample
-            yield elem_dict
+    # iterate on samples
+    for sequence_sample in self.samples_iterator():
+        # invoke tokenizer
+        input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")["input_ids"][0]
+        # build dict
+        elem_dict = {
+            "input_ids": input_ids,
+            "attention_mask": torch.ones_like(input_ids),
+        }
+        if sequence_sample._reference_annotation is not None:
+            # use vocabulary to convert string labels to int labels
+            elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample._reference_annotation)]
+        elem_dict["samples"] = sequence_sample
+        yield elem_dict
 ```

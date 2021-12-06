@@ -84,7 +84,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
             f"""
             <div>
                 <div class="stAlert">
-                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                    <p>Model classified input with label: <b>{predicted_sample.predicted_annotation}</b></p>
                 </div>
                 <p></p>
                 <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
@@ -118,7 +118,7 @@ class SequenceTaskUIMixin(TaskUIMixin):
             f"""
             <div>
                 <div class="stAlert">
-                    <p>Model classified input with label: <b>{predicted_sample.label}</b></p>
+                    <p>Model classified input with label: <b>{predicted_sample.predicted_annotation}</b></p>
                 </div>
                 <p></p>
                 <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>
@@ -153,10 +153,10 @@ class TokenTaskUIMixin(TaskUIMixin):
 
     def render(self, predicted_sample: TokensSample, time: float):
 
-        tokens, labels = predicted_sample.tokens, predicted_sample.labels
+        tokens, labels = predicted_sample.tokens, predicted_sample.predicted_annotation
 
         # check if any token encodings (e.g. bio) are used
-        if all(l == "O" or re.fullmatch("^[BI]-.*$", l) for l in predicted_sample.labels):
+        if all(l == "O" or re.fullmatch("^[BI]-.*$", l) for l in predicted_sample.predicted_annotation):
             _tokens, _labels = [], []
             for t, l in zip(tokens, labels):
                 if l.startswith("I"):
@@ -224,15 +224,16 @@ class QATaskUIMixin(TaskUIMixin):
         return None
 
     def render(self, predicted_sample: QASample, time: float):
+        char_start, char_end = predicted_sample.predicted_annotation
         annotated_html_components = [
-            str(html.escape(f"{predicted_sample.context[: predicted_sample.char_start]} ")),
+            str(html.escape(f"{predicted_sample.context[: char_start]} ")),
             str(
                 annotation(
-                    f"{predicted_sample.context[predicted_sample.char_start: predicted_sample.char_end]}",
+                    f"{predicted_sample.context[char_start: char_end]}",
                     background="#f1e740",
                 )
             ),
-            str(html.escape(f"{predicted_sample.context[predicted_sample.char_end:]} ")),
+            str(html.escape(f"{predicted_sample.context[char_end:]} ")),
         ]
         print(annotated_html_components)
         st.markdown(
@@ -298,7 +299,7 @@ class GenerationTaskUIMixin(TaskUIMixin):
             f"""
                     <div>
                         <div class="stAlert">
-                            <p>Model generated: <br>{predicted_sample.target_sequence}</p>
+                            <p>Model generated: <br>{predicted_sample.predicted_annotation}</p>
                         </div>
                         <p></p>
                         <div style="text-align: right"><p style="color: gray">Time: {time:.2f}s</p></div>

@@ -201,7 +201,9 @@ class ClassyDataModule(pl.LightningDataModule):
         elif self.external_vocabulary_path is not None:
             logger.info("Loading vocabulary from external passed directory")
             self.vocabulary = Vocabulary.from_folder(self.external_vocabulary_path)
-            self.vocabulary.save("vocabulary")
+            self.vocabulary.save(
+                "vocabulary",
+            )
         else:
             self.vocabulary = hydra.utils.instantiate(
                 self.train_dataset_conf,
@@ -209,7 +211,9 @@ class ClassyDataModule(pl.LightningDataModule):
                 data_driver=self.data_driver,
             ).vocabulary
             if self.vocabulary is not None:
-                self.vocabulary.save("vocabulary/")
+                self.vocabulary.save(
+                    "vocabulary/",
+                )
 
     def setup(self, stage: Optional[str] = None) -> None:
 

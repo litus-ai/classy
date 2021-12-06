@@ -12,6 +12,22 @@ class ClassyStruct:
         super().__setattr__("_d", {})
         self._d = kwargs
 
+    def get_reference_annotation(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
+        raise NotImplementedError
+
+    def update_reference_annotation(self, reference_annotation: Union[str, List[str], Tuple[int, int]]):
+        raise NotImplementedError
+
+    reference_annotation = property(get_reference_annotation, update_reference_annotation)
+
+    def get_current_classification(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
+        raise NotImplementedError
+
+    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+        raise NotImplementedError
+
+    predicted_annotation = property(get_current_classification, update_classification)
+
     def __getattr__(self, item):
         if item.startswith("__") and item.startswith("__"):
             # this is likely some python library-specific variable (such as __deepcopy__ for copy)
@@ -31,12 +47,7 @@ class ClassyStruct:
     def get_additional_attributes(self) -> Dict[Any, Any]:
         return self._d
 
-    def get_current_classification(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
-        raise NotImplementedError
-
-    def update_classification(self, classification_result: Union[str, List[str], Tuple[int, int]]):
-        raise NotImplementedError
-
+    # TODO: pretty_print should not take in input any classification result
     def pretty_print(self, classification_result: Optional[Union[str, List[str], Tuple[int, int]]] = None) -> str:
         raise NotImplementedError
 
@@ -46,18 +57,25 @@ class SentencePairSample(ClassyStruct):
         super().__init__(**kwargs)
         self.sentence1 = sentence1
         self.sentence2 = sentence2
-        self.label = label
+        self._reference_annotation = label
+        self._predicted_annotation = None
+
+    def get_reference_annotation(self) -> Optional[str]:
+        return self._reference_annotation
+
+    def update_reference_annotation(self, reference_annotation: str):
+        self._reference_annotation = reference_annotation
 
     def get_current_classification(self) -> Optional[str]:
-        return self.label
+        return self._predicted_annotation
 
     def update_classification(self, classification_result: str):
-        self.label = classification_result
+        self._predicted_annotation = classification_result
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
-        if self.label is not None:
-            parts.append(f"\t# label: {self.label}")
+        if self.reference_annotation is not None:
+            parts.append(f"\t# label: {self.reference_annotation}")
         if classification_result is not None:
             parts.append(f"\t# classification_result: {classification_result}")
         return "\n".join(parts)
@@ -67,18 +85,25 @@ class SequenceSample(ClassyStruct):
     def __init__(self, sequence: str, label: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.sequence = sequence
-        self.label = label
+        self._reference_annotation = label
+        self._predicted_annotation = None
+
+    def get_reference_annotation(self) -> Optional[str]:
+        return self._reference_annotation
+
+    def update_reference_annotation(self, reference_annotation: str):
+        self._reference_annotation = reference_annotation
 
     def get_current_classification(self) -> Optional[str]:
-        return self.label
+        return self._predicted_annotation
 
     def update_classification(self, classification_result: str):
-        self.label = classification_result
+        self._predicted_annotation = classification_result
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sequence: {self.sequence}"]
-        if self.label is not None:
-            parts.append(f"\t# label: {self.label}")
+        if self.reference_annotation is not None:
+            parts.append(f"\t# label: {self.reference_annotation}")
         if classification_result is not None:
             parts.append(f"\t# classification_result: {classification_result}")
         return "\n".join(parts)
@@ -90,20 +115,27 @@ class TokensSample(ClassyStruct):
     ):
         super().__init__(**kwargs)
         self.tokens = tokens
-        self.labels = labels
+        self._reference_annotation = labels
+        self._predicted_annotation = None
         self.target = target if target is not None else list(range(len(tokens)))
         self.was_target_provided = target is not None
 
+    def get_reference_annotation(self) -> Optional[List[str]]:
+        return self._reference_annotation
+
+    def update_reference_annotation(self, reference_annotation: List[str]):
+        self._reference_annotation = reference_annotation
+
     def get_current_classification(self) -> Optional[List[str]]:
-        return self.labels
+        return self._predicted_annotation
 
     def update_classification(self, classification_result: List[str]):
-        self.labels = classification_result
+        self._predicted_annotation = classification_result
 
     def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
-        if self.labels is not None:
-            parts.append(f'\t# labels: {" ".join(self.labels)}')
+        if self.reference_annotation is not None:
+            parts.append(f'\t# labels: {" ".join(self.reference_annotation)}')
         if classification_result is not None:
             parts.append(f'\t# classification_result: {" ".join(classification_result)}')
         return "\n".join(parts)
@@ -121,14 +153,20 @@ class QASample(ClassyStruct):
         super().__init__(**kwargs)
         self.context = context
         self.question = question
-        self.char_start = answer_start
-        self.char_end = answer_end
+        self._reference_annotation = answer_start, answer_end
+        self._predicted_annotation = None, None
+
+    def get_reference_annotation(self) -> Optional[Tuple[int, int]]:
+        return self._reference_annotation
+
+    def update_reference_annotation(self, reference_annotation: Tuple[int, int]):
+        self._reference_annotation = reference_annotation
 
     def get_current_classification(self) -> Optional[Tuple[int, int]]:
-        return self.char_start, self.char_end
+        return self.predicted_annotation
 
     def update_classification(self, classification_result: Tuple[int, int]):
-        self.char_start, self.char_end = classification_result
+        self.predicted_annotation = classification_result
 
     def pretty_print(self, classification_result: Optional[Tuple[int, int]] = None) -> str:
         parts = [
@@ -136,11 +174,12 @@ class QASample(ClassyStruct):
             f"# question: {self.question}",
         ]
 
-        if self.char_start is not None and self.char_end is not None:
+        if self.reference_annotation is not None:
+            char_start, char_end = self.reference_annotation
             parts += [
                 "### Gold positions ###",
-                f"# answer start: {self.char_start}, answer end: {self.char_end}",
-                f"# answer: {self.context[self.char_start:self.char_end]}",
+                f"# answer start: {char_start}, answer end: {char_end}",
+                f"# answer: {self.context[char_start:char_end]}",
             ]
 
         if classification_result is not None:
@@ -166,14 +205,21 @@ class GenerationSample(ClassyStruct):
         super().__init__(**kwargs)
         self.source_sequence = source_sequence
         self.source_language = source_language
-        self.target_sequence = target_sequence
         self.target_language = target_language
+        self._reference_annotation = target_sequence
+        self._predicted_annotation = None
+
+    def get_reference_annotation(self) -> Optional[str]:
+        return self._reference_annotation
+
+    def update_reference_annotation(self, reference_annotation: str):
+        self._reference_annotation = reference_annotation
 
     def get_current_classification(self) -> Optional[str]:
-        return self.target_sequence
+        return self._predicted_annotation
 
     def update_classification(self, classification_result: str):
-        self.target_sequence = classification_result
+        self._predicted_annotation = classification_result
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         def maybe_prepend_language(text: str, lng: Optional[str]) -> str:
@@ -181,8 +227,10 @@ class GenerationSample(ClassyStruct):
 
         parts = [f"# input sequence: {maybe_prepend_language(self.source_sequence, self.source_language)}"]
 
-        if self.target_sequence is not None:
-            parts.append(f"\t# gold sequence: {maybe_prepend_language(self.target_sequence, self.target_language)}")
+        if self.reference_annotation is not None:
+            parts.append(
+                f"\t# gold sequence: {maybe_prepend_language(self.reference_annotation, self.target_language)}"
+            )
 
         if classification_result is not None:
             parts.append(
@@ -212,6 +260,7 @@ class DataDriver:
         self,
         samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         path: str,
+        use_predicted_annotation: bool = False,
     ):
         raise NotImplementedError
 
@@ -220,7 +269,7 @@ class SentencePairDataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Generator[SentencePairSample, None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[SentencePairSample], path: str):
+    def save(self, samples: Iterator[SentencePairSample], path: str, use_predicted_annotation=False):
         raise NotImplementedError
 
 
@@ -228,7 +277,7 @@ class SequenceDataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Generator[SequenceSample, None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[SequenceSample], path: str):
+    def save(self, samples: Iterator[SequenceSample], path: str, use_predicted_annotation=False):
         raise NotImplementedError
 
 
@@ -236,7 +285,7 @@ class TokensDataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Generator[TokensSample, None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[TokensSample], path: str):
+    def save(self, samples: Iterator[TokensSample], path: str, use_predicted_annotation=False):
         raise NotImplementedError
 
 
@@ -244,7 +293,7 @@ class QADataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[QASample], path: str):
+    def save(self, samples: Iterator[QASample], path: str, use_predicted_annotation=False):
         raise NotImplementedError
 
 
@@ -252,7 +301,7 @@ class GenerationDataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
         raise NotImplementedError
 
-    def save(self, samples: Iterator[GenerationSample], path: str):
+    def save(self, samples: Iterator[GenerationSample], path: str, use_predicted_annotation=False):
         raise NotImplementedError
 
 
@@ -268,10 +317,13 @@ class TSVSentencePairDataDriver(SentencePairDataDriver):
             label = parts[2] if len(parts) == 3 else None
             yield SentencePairSample(sentence1, sentence2, label)
 
-    def save(self, samples: Iterator[SentencePairSample], path: str):
+    def save(self, samples: Iterator[SentencePairSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(f"{sample.sentence1}\t{sample.sentence2}\t{sample.label}\n")
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                f.write(f"{sample.sentence1}\t{sample.sentence2}\t{used_annotation}\n")
 
 
 class JSONLSentencePairDataDriver(SentencePairDataDriver):
@@ -279,16 +331,19 @@ class JSONLSentencePairDataDriver(SentencePairDataDriver):
         for line in lines:
             yield SentencePairSample(**json.loads(line))
 
-    def save(self, samples: Iterator[SentencePairSample], path: str):
+    def save(self, samples: Iterator[SentencePairSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
                 f.write(
                     json.dumps(
                         {
                             "sentence1": sample.sentence1,
                             "sentence2": sample.sentence2,
                             **sample.get_additional_attributes(),
-                            "label": sample.label,
+                            "label": used_annotation,
                         }
                     )
                     + "\n"
@@ -307,10 +362,13 @@ class TSVSequenceDataDriver(SequenceDataDriver):
             label = parts[1] if len(parts) == 2 else None
             yield SequenceSample(sentence, label)
 
-    def save(self, samples: Iterator[SequenceSample], path: str):
+    def save(self, samples: Iterator[SequenceSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
-                f.write(f"{sample.sequence}\t{sample.label}\n")
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                f.write(f"{sample.sequence}\t{used_annotation}\n")
 
 
 class JSONLSequenceDataDriver(SequenceDataDriver):
@@ -318,12 +376,15 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
         for line in lines:
             yield SequenceSample(**json.loads(line))
 
-    def save(self, samples: Iterator[SequenceSample], path: str):
+    def save(self, samples: Iterator[SequenceSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
                 f.write(
                     json.dumps(
-                        {"sequence": sample.sequence, **sample.get_additional_attributes(), "label": sample.label}
+                        {"sequence": sample.sequence, **sample.get_additional_attributes(), "label": used_annotation}
                     )
                     + "\n"
                 )
@@ -345,35 +406,41 @@ class TSVTokensDataDriver(TokensDataDriver):
                 ), f"Token Classification requires as many token as labels: found {len(tokens)} tokens != {len(labels)} labels at line {line}"
             yield TokensSample(tokens, labels)
 
-    def save(self, samples: Iterator[TokensSample], path: str):
+    def save(self, samples: Iterator[TokensSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
-                f.write("\t".join([" ".join(sample.tokens), " ".join(sample.labels)]) + "\n")
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                f.write("\t".join([" ".join(sample.tokens), " ".join(used_annotation)]) + "\n")
 
 
 class JSONLTokensDataDriver(TokensDataDriver):
     def read(self, lines: Iterator[str]) -> Generator[TokensSample, None, None]:
         for line in lines:
             sample = TokensSample(**json.loads(line))
-            if sample.labels is not None:
+            if sample.reference_annotation is not None:
                 if not sample.was_target_provided:
                     assert len(sample.tokens) == len(
-                        sample.labels
-                    ), f"Token Classification requires as many tokens as labels (please specify a target list if you need otherwise): found {len(sample.tokens)} tokens != {len(sample.labels)} labels at line {line}"
+                        sample.reference_annotation
+                    ), f"Token Classification requires as many tokens as labels (please specify a target list if you need otherwise): found {len(sample.tokens)} tokens != {len(sample.reference_annotation)} labels at line {line}"
                 else:
                     assert len(sample.target) == len(
-                        sample.labels
-                    ), f"Token Classification requires as many targets as labels: found {len(sample.target)} targets != {len(sample.labels)} labels at line {line}"
+                        sample.reference_annotation
+                    ), f"Token Classification requires as many targets as labels: found {len(sample.target)} targets != {len(sample.reference_annotation)} labels at line {line}"
             yield TokensSample(**json.loads(line))
 
-    def save(self, samples: Iterator[TokensSample], path: str):
+    def save(self, samples: Iterator[TokensSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
                 d = {
                     "tokens": sample.tokens,
                     "target": list(sample.target),
                     **sample.get_additional_attributes(),
-                    "labels": sample.labels,
+                    "labels": used_annotation,
                 }
                 if sample.was_target_provided:
                     d["target"] = list(sample.target)
@@ -395,12 +462,16 @@ class TSVQADataDriver(QADataDriver):
                 answer_start, answer_end = int(answer_start), int(answer_end)
             yield QASample(context, question, answer_start, answer_end)
 
-    def save(self, samples: Iterator[QASample], path: str):
+    def save(self, samples: Iterator[QASample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
                 sample_parts = [sample.context, sample.question]
-                if sample.char_start is not None and sample.char_end is not None:
-                    sample_parts += [str(sample.char_start), str(sample.char_end)]
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                if used_annotation is not None:
+                    char_start, char_end = used_annotation
+                    sample_parts += [str(char_start), str(char_end)]
                 f.write("\t".join(sample_parts))
                 f.write("\n")
 
@@ -410,17 +481,23 @@ class JSONLQADataDriver(QADataDriver):
         for line in lines:
             yield QASample(**json.loads(line))
 
-    def save(self, samples: Iterator[QASample], path: str):
+    def save(self, samples: Iterator[QASample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
+                char_start, char_end = None, None
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                if used_annotation is not None:
+                    char_start, char_end = used_annotation
                 f.write(
                     json.dumps(
                         {
                             "question": sample.question,
                             "context": sample.context,
                             **sample.get_additional_attributes(),
-                            "answer_start": sample.char_start,
-                            "answer_end": sample.char_end,
+                            "answer_start": char_start,
+                            "answer_end": char_end,
                         }
                     )
                     + "\n"
@@ -445,13 +522,19 @@ class TSVGenerationDataDriver(GenerationDataDriver):
             previous_line_parts = parts
             yield GenerationSample(source_sequence=parts[0], target_sequence=parts[1] if len(parts) == 2 else None)
 
-    def save(self, samples: Iterator[GenerationSample], path: str):
+    def save(self, samples: Iterator[GenerationSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
                 assert (
                     sample.source_language is None and sample.target_language is None
                 ), f"TSVGenerationDataDriver does not support language specification"
-                f.write(f"{sample.source_sequence}\t{sample.target_sequence}\n")
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
+                if used_annotation is None:
+                    f.write(f"{sample.source_sequence}\n")
+                else:
+                    f.write(f"{sample.source_sequence}\t{used_annotation}\n")
 
 
 class JSONLGenerationDataDriver(GenerationDataDriver):
@@ -459,15 +542,18 @@ class JSONLGenerationDataDriver(GenerationDataDriver):
         for line in lines:
             yield GenerationSample(**json.loads(line))
 
-    def save(self, samples: Iterator[GenerationSample], path: str):
+    def save(self, samples: Iterator[GenerationSample], path: str, use_predicted_annotation=False):
         with open(path, "w") as f:
             for sample in samples:
+                used_annotation = (
+                    sample.predicted_annotation if use_predicted_annotation else sample.reference_annotation
+                )
                 f.write(
                     json.dumps(
                         {
                             "source_sequence": sample.source_sequence,
                             "source_language": sample.source_language,
-                            "target_sequence": sample.target_sequence,
+                            "target_sequence": used_annotation,
                             "target_language": sample.target_language,
                             **sample.get_additional_attributes(),
                         }

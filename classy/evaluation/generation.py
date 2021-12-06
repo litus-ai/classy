@@ -15,9 +15,9 @@ class RougeEvaluation(Evaluation):
         self.rouge = load_metric("rouge")
 
     def __call__(self, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
-        assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
+        assert all(sample.reference_annotation is not None for sample, _ in predicted_samples)
 
-        gold_summaries = [sample.target_sequence for sample, _ in predicted_samples]
+        gold_summaries = [sample.reference_annotation for sample, _ in predicted_samples]
         pred_summaries = [prediction for _, prediction in predicted_samples]
 
         # process summaries
@@ -43,9 +43,9 @@ class SacreBleuEvaluation(Evaluation):
         predicted_samples: List[Tuple[GenerationSample, str]],
     ):
 
-        assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
+        assert all(sample.reference_annotation is not None for sample, _ in predicted_samples)
 
-        references = [sample.target_sequence for sample, _ in predicted_samples]
+        references = [sample.reference_annotation for sample, _ in predicted_samples]
         predictions = [prediction for _, prediction in predicted_samples]
 
         results = self.bleu.compute(predictions=predictions, references=[[r] for r in references])

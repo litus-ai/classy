@@ -69,7 +69,7 @@ def file_main(
             source.update_classification(prediction)
             yield source
 
-    data_driver.save(it(), output_path)
+    data_driver.save(it(), output_path, use_predicted_annotation=True)
 
 
 def main():

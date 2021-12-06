@@ -166,8 +166,8 @@ class BartHFGenerationSampleEncoder(EncDecHFGenerationSampleEncoder):
         }
 
         if not inference_mode:
-            if sample.target_sequence is not None:
-                tokenization_output = self.tokenizer(sample.target_sequence, return_tensors="pt")
+            if sample.reference_annotation is not None:
+                tokenization_output = self.tokenizer(sample.reference_annotation, return_tensors="pt")
                 elem_dict.update(
                     **{
                         "labels": tokenization_output["input_ids"].squeeze(),
@@ -205,7 +205,7 @@ class MBARTHFGenerationSampleEncoder(BartHFGenerationSampleEncoder):
 
         if not inference_mode:
             with self.tokenizer.as_target_tokenizer():
-                tokenization_output = self.tokenizer(sample.target_sequence, return_tensors="pt")
+                tokenization_output = self.tokenizer(sample.reference_annotation, return_tensors="pt")
                 elem_dict.update(
                     **{
                         "labels": tokenization_output["input_ids"].squeeze(),
@@ -253,9 +253,9 @@ class GPT2HFGenerationSampleEcnoder(DecHFGenerationSampleEncoder):
             "samples": sample,
         }
         if not inference_mode:
-            if sample.target_sequence is not None:
+            if sample.reference_annotation is not None:
                 # assume masked clm
-                tokenization_output = self.tokenizer(sample.target_sequence, return_tensors="pt")
+                tokenization_output = self.tokenizer(sample.reference_annotation, return_tensors="pt")
                 elem_dict["labels"] = torch.cat(
                     (
                         torch.full_like(elem_dict["input_ids"], fill_value=-100),

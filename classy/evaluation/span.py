@@ -17,7 +17,7 @@ class SeqEvalSpanEvaluation(Evaluation):
 
         metric_out = self.backend_metric.compute(
             predictions=[labels for _, labels in predicted_samples],
-            references=[sample.labels for sample, _ in predicted_samples],
+            references=[sample.reference_annotation for sample, _ in predicted_samples],
         )
         p, r, f1 = metric_out["overall_precision"], metric_out["overall_recall"], metric_out["overall_f1"]
 
