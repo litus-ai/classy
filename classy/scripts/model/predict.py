@@ -66,7 +66,7 @@ def file_main(
             dataset_conf=dataset_conf,
             progress_bar=True,
         ):
-            source.update_classification(prediction)
+            source.predicted_annotation = prediction
             yield source
 
     data_driver.save(it(), output_path, use_predicted_annotation=True)

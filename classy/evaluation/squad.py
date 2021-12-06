@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from datasets import load_metric
 
@@ -12,14 +12,18 @@ class SQuADV1Evaluation(Evaluation):
 
     def __call__(
         self,
-        predicted_samples: List[Tuple[QASample, str]],
-    ):
+        predicted_samples: List[QASample],
+    ) -> Dict:
 
         pred = [
-            {"id": sample.squad_id, "prediction_text": sample.context[start:end]}
-            for sample, (start, end) in predicted_samples
+            {
+                "id": sample.squad_id,
+                "prediction_text": sample.context[sample.predicted_annotation[0] : sample.predicted_annotation[1]],
+            }
+            for sample in predicted_samples
         ]
-        gold = [{"id": sample.squad_id, "answers": sample.full_answers} for sample, _ in predicted_samples]
+        gold = [{"id": sample.squad_id, "answers": sample.full_answers} for sample in predicted_samples]
+
         assert all(
             g["id"] is not None and g["answers"] is not None for g in gold
         ), f"Expected 'id' and 'answers' in gold, but found None"

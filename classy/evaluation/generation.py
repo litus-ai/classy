@@ -14,11 +14,11 @@ class RougeEvaluation(Evaluation):
     def __init__(self):
         self.rouge = load_metric("rouge")
 
-    def __call__(self, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
-        assert all(sample.reference_annotation is not None for sample, _ in predicted_samples)
+    def __call__(self, predicted_samples: List[GenerationSample]) -> Dict:
+        assert all(sample.reference_annotation is not None for sample in predicted_samples)
 
-        gold_summaries = [sample.reference_annotation for sample, _ in predicted_samples]
-        pred_summaries = [prediction for _, prediction in predicted_samples]
+        gold_summaries = [sample.reference_annotation for sample in predicted_samples]
+        pred_summaries = [sample.predicted_annotation for sample in predicted_samples]
 
         # process summaries
         # todo maybe improve with something like ptb/stanza/some real sentence tokenizer
@@ -38,15 +38,12 @@ class SacreBleuEvaluation(Evaluation):
     def __init__(self):
         self.bleu = load_metric("sacrebleu")
 
-    def __call__(
-        self,
-        predicted_samples: List[Tuple[GenerationSample, str]],
-    ):
+    def __call__(self, predicted_samples: List[GenerationSample]) -> Dict:
 
-        assert all(sample.reference_annotation is not None for sample, _ in predicted_samples)
+        assert all(sample.reference_annotation is not None for sample in predicted_samples)
 
-        references = [sample.reference_annotation for sample, _ in predicted_samples]
-        predictions = [prediction for _, prediction in predicted_samples]
+        references = [sample.reference_annotation for sample in predicted_samples]
+        predictions = [sample.predicted_annotation for sample in predicted_samples]
 
         results = self.bleu.compute(predictions=predictions, references=[[r] for r in references])
         return {"bleu": results["score"]}

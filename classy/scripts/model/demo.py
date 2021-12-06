@@ -149,9 +149,8 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
         if sample is not None:
             # predict
             start = time.perf_counter()
-            _, prediction = next(model.predict(samples=[sample], dataset_conf=dataset_conf))
+            sample = next(model.predict(samples=[sample], dataset_conf=dataset_conf))
             end = time.perf_counter()
-            sample.predicted_annotation = prediction
 
             # render output
             model.render(sample, time=end - start)

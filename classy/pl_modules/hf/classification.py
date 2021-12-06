@@ -66,11 +66,12 @@ class HFSequenceCommonPLModule(ClassyPLModule, ABC):
             loss=model_output.loss,
         )
 
-    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[Union[SequenceSample, SentencePairSample]]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
-            yield sample, self.vocabulary.get_elem(k="labels", idx=prediction.item())
+            sample.predicted_annotation = self.vocabulary.get_elem(k="labels", idx=prediction.item())
+            yield sample
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         classification_output = self.forward(**batch)
@@ -212,13 +213,14 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
             loss=self.criterion(logits.view(-1, logits.shape[-1]), labels.view(-1)) if labels is not None else None,
         )
 
-    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[TokensSample, str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[TokensSample]:
         samples = kwargs.get("samples")
         classification_output = self.forward(*args, **kwargs)
         for sample, prediction in zip(samples, classification_output.predictions):
-            yield sample, [
+            sample.predicted_annotation = [
                 self.vocabulary.get_elem(k="labels", idx=_p.item()) for _p in prediction[: len(sample.tokens)]
             ]
+            yield sample
 
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         classification_output = self.forward(**batch)
@@ -363,7 +365,7 @@ class HFQAPLModule(QATask, ClassyPLModule):
         token_type_ids: Optional[torch.Tensor] = None,
         *args,
         **kwargs,
-    ) -> Iterator[Tuple[QASample, Tuple[int, int]]]:
+    ) -> Iterator[QASample]:
         classification_output = self.forward(input_ids, attention_mask, token_type_ids)
 
         # todo make logits take 5 and max answer length 100 a prediction param
@@ -400,7 +402,9 @@ class HFQAPLModule(QATask, ClassyPLModule):
                 # map token idx to char offset
                 start_index, end_index = token2chars[i][start_index][0].item(), token2chars[i][end_index][1].item()
                 # yield
-                yield samples[i], (start_index, end_index)
+                samples[i].predicted_annotation = (start_index, end_index)
+                yield samples[i]
                 break
             if not found:
-                yield samples[i], (-1, -1)
+                samples[i].predicted_annotation = (-1, -1)
+                yield samples[i]

@@ -151,7 +151,7 @@ def serve(
             dataset_conf=dataset_conf,
             token_batch_size=token_batch_size,
         ):
-            source.update_classification(prediction)
+            source.predicted_annotation = prediction
             output_samples.append(OutputSample.marshal(source))
 
         return output_samples

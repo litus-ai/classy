@@ -25,10 +25,7 @@ def evaluate(
         Callable[
             [
                 List[
-                    Tuple[
-                        Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
-                        Union[str, List[str]],
-                    ]
+                    Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
                 ]
             ],
             Dict,
@@ -72,8 +69,8 @@ def evaluate(
     # dump predictions if requested
     if output_path is not None:
         with open(output_path, "w") as f:
-            for sample, p in predicted_samples:
-                f.write(sample.pretty_print(classification_result=p) + "\n")
+            for sample in predicted_samples:
+                f.write(sample.pretty_print(classification_result=sample.predicted_annotation) + "\n")
 
     # run evaluation and print metrics
     result = metrics_fn(predicted_samples)

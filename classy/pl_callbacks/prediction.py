@@ -10,6 +10,8 @@ from classy.data.data_drivers import (
     SentencePairSample,
     SequenceSample,
     TokensSample,
+    QASample,
+    GenerationSample,
     get_data_driver,
 )
 from classy.evaluation.base import Evaluation
@@ -23,9 +25,7 @@ class PredictionCallback:
     def __call__(
         self,
         name: str,
-        predicted_samples: List[
-            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
-        ],
+        predicted_samples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -39,9 +39,7 @@ class EvaluationPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[
-            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
-        ],
+        predicted_samples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -61,15 +59,13 @@ class FileDumperPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[
-            Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
-        ],
+        predicted_samples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
         with open(str(self.folder.joinpath(f"{name}.{trainer.global_step}.tsv")), "w") as f:
-            for sample, prediction in predicted_samples:
-                f.write(sample.pretty_print(classification_result=prediction) + "\n")
+            for sample in predicted_samples:
+                f.write(sample.pretty_print(classification_result=sample.predicted_annotation) + "\n")
 
 
 class PredictionPLCallback(pl.Callback):
