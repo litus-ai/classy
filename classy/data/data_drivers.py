@@ -254,9 +254,7 @@ class GenerationSample(ClassySample):
 
 
 class DataDriver:
-    def read_from_path(
-        self, path: str
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], None, None]:
+    def read_from_path(self, path: str) -> Iterator[ClassySample]:
         def r():
             with open(path) as f:
                 for line in f:
@@ -264,14 +262,12 @@ class DataDriver:
 
         return self.read(r())
 
-    def read(
-        self, lines: Iterator[str]
-    ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[ClassySample]:
         raise NotImplementedError
 
     def save(
         self,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+        samples: Iterator[ClassySample],
         path: str,
         use_predicted_annotation: bool = False,
     ):
@@ -279,7 +275,7 @@ class DataDriver:
 
 
 class SentencePairDataDriver(DataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SentencePairSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SentencePairSample]:
         raise NotImplementedError
 
     def save(self, samples: Iterator[SentencePairSample], path: str, use_predicted_annotation: bool = False):
@@ -287,7 +283,7 @@ class SentencePairDataDriver(DataDriver):
 
 
 class SequenceDataDriver(DataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SequenceSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
         raise NotImplementedError
 
     def save(self, samples: Iterator[SequenceSample], path: str, use_predicted_annotation: bool = False):
@@ -295,7 +291,7 @@ class SequenceDataDriver(DataDriver):
 
 
 class TokensDataDriver(DataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[TokensSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[TokensSample]:
         raise NotImplementedError
 
     def save(self, samples: Iterator[TokensSample], path: str, use_predicted_annotation: bool = False):
@@ -303,7 +299,7 @@ class TokensDataDriver(DataDriver):
 
 
 class QADataDriver(DataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[QASample]:
         raise NotImplementedError
 
     def save(self, samples: Iterator[QASample], path: str, use_predicted_annotation: bool = False):
@@ -311,7 +307,7 @@ class QADataDriver(DataDriver):
 
 
 class GenerationDataDriver(DataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[GenerationSample]:
         raise NotImplementedError
 
     def save(self, samples: Iterator[GenerationSample], path: str, use_predicted_annotation: bool = False):
@@ -319,7 +315,7 @@ class GenerationDataDriver(DataDriver):
 
 
 class TSVSentencePairDataDriver(SentencePairDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SentencePairSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SentencePairSample]:
         for line in lines:
             parts = line.split("\t")
             assert len(parts) in [
@@ -340,7 +336,7 @@ class TSVSentencePairDataDriver(SentencePairDataDriver):
 
 
 class JSONLSentencePairDataDriver(SentencePairDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SentencePairSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SentencePairSample]:
         for line in lines:
             yield SentencePairSample(**json.loads(line))
 
@@ -364,7 +360,7 @@ class JSONLSentencePairDataDriver(SentencePairDataDriver):
 
 
 class TSVSequenceDataDriver(SequenceDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SequenceSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
         for line in lines:
             parts = line.split("\t")
             assert len(parts) in [
@@ -385,7 +381,7 @@ class TSVSequenceDataDriver(SequenceDataDriver):
 
 
 class JSONLSequenceDataDriver(SequenceDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[SequenceSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
         for line in lines:
             yield SequenceSample(**json.loads(line))
 
@@ -404,7 +400,7 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
 
 
 class TSVTokensDataDriver(TokensDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[TokensSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[TokensSample]:
         for line in lines:
             parts = line.split("\t")
             assert len(parts) in [
@@ -429,7 +425,7 @@ class TSVTokensDataDriver(TokensDataDriver):
 
 
 class JSONLTokensDataDriver(TokensDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[TokensSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[TokensSample]:
         for line in lines:
             sample = TokensSample(**json.loads(line))
             if sample.reference_annotation is not None:
@@ -461,7 +457,7 @@ class JSONLTokensDataDriver(TokensDataDriver):
 
 
 class TSVQADataDriver(QADataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[QASample]:
         for i, line in enumerate(lines):
             parts = line.split("\t")
             assert len(parts) in [2, 4], (
@@ -490,7 +486,7 @@ class TSVQADataDriver(QADataDriver):
 
 
 class JSONLQADataDriver(QADataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[QASample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[QASample]:
         for line in lines:
             yield QASample(**json.loads(line))
 
@@ -518,7 +514,7 @@ class JSONLQADataDriver(QADataDriver):
 
 
 class TSVGenerationDataDriver(GenerationDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[GenerationSample]:
         previous_line_parts = None
         for i, line in enumerate(lines):
             parts = line.split("\t")
@@ -551,7 +547,7 @@ class TSVGenerationDataDriver(GenerationDataDriver):
 
 
 class JSONLGenerationDataDriver(GenerationDataDriver):
-    def read(self, lines: Iterator[str]) -> Generator[GenerationSample, None, None]:
+    def read(self, lines: Iterator[str]) -> Iterator[GenerationSample]:
         for line in lines:
             yield GenerationSample(**json.loads(line))
 
