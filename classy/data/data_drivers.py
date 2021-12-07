@@ -7,7 +7,7 @@ from classy.utils.log import get_project_logger
 logger = get_project_logger(__name__)
 
 
-class ClassyStruct:
+class ClassySample:
     reference_annotation: Optional
     predicted_annotation: Optional
 
@@ -33,7 +33,7 @@ class ClassyStruct:
         elif item == "predicted_annotation":
             return self._get_predicted_annotation()
         else:
-            return super(ClassyStruct, self).__getattribute__(item)
+            return super(ClassySample, self).__getattribute__(item)
 
     def __getattr__(self, item):
         if item.startswith("__") and item.startswith("__"):
@@ -62,7 +62,7 @@ class ClassyStruct:
         raise NotImplementedError
 
 
-class SentencePairSample(ClassyStruct):
+class SentencePairSample(ClassySample):
     def __init__(self, sentence1: str, sentence2: str, label: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.sentence1 = sentence1
@@ -91,7 +91,7 @@ class SentencePairSample(ClassyStruct):
         return "\n".join(parts)
 
 
-class SequenceSample(ClassyStruct):
+class SequenceSample(ClassySample):
     def __init__(self, sequence: str, label: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.sequence = sequence
@@ -119,7 +119,7 @@ class SequenceSample(ClassyStruct):
         return "\n".join(parts)
 
 
-class TokensSample(ClassyStruct):
+class TokensSample(ClassySample):
     def __init__(
         self, tokens: List[str], labels: Optional[List[str]] = None, target: Optional[List[int]] = None, **kwargs
     ):
@@ -151,7 +151,7 @@ class TokensSample(ClassyStruct):
         return "\n".join(parts)
 
 
-class QASample(ClassyStruct):
+class QASample(ClassySample):
     def __init__(
         self,
         context: str,
@@ -206,7 +206,7 @@ class QASample(ClassyStruct):
         return "\n".join(parts)
 
 
-class GenerationSample(ClassyStruct):
+class GenerationSample(ClassySample):
     def __init__(
         self,
         source_sequence: str,

@@ -14,7 +14,7 @@ from classy.data.data_drivers import (
     TokensSample,
     QASample,
     GenerationSample,
-    ClassyStruct,
+    ClassySample,
 )
 
 
@@ -67,7 +67,7 @@ class PredictionMixin:
         if progress_bar:
             iterator.close()
 
-    def batch_predict(self, *args, **kwargs) -> Iterator[ClassyStruct]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[ClassySample]:
         """
         General method that must be implemented by each classy.pl_modules.base.ClassyPLModule in order to perform
         batch prediction.
