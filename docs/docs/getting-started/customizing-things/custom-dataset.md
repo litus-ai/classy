@@ -124,9 +124,9 @@ Finally, you need to implement the *dataset_iterator_func*:
             "input_ids": input_ids,
             "attention_mask": torch.ones_like(input_ids),
         }
-        if sequence_sample._reference_annotation is not None:
+        if sequence_sample.reference_annotation is not None:
             # use vocabulary to convert string labels to int labels
-            elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample._reference_annotation)]
+            elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.reference_annotation)]
         elem_dict["samples"] = sequence_sample
         yield elem_dict
 ```
