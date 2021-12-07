@@ -24,7 +24,7 @@ class ClassyStruct:
     def _get_predicted_annotation(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
         raise NotImplementedError
 
-    def _update_predicted_annotation(self, classification_result: Union[str, List[str], Tuple[int, int]]):
+    def _update_predicted_annotation(self, predicted_annotation: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
     def __getattribute__(self, item):
@@ -80,8 +80,8 @@ class SentencePairSample(ClassyStruct):
     def _get_predicted_annotation(self) -> Optional[str]:
         return self._predicted_annotation
 
-    def _update_predicted_annotation(self, classification_result: str):
-        self._predicted_annotation = classification_result
+    def _update_predicted_annotation(self, predicted_annotation: str):
+        self._predicted_annotation = predicted_annotation
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
@@ -108,8 +108,8 @@ class SequenceSample(ClassyStruct):
     def _get_predicted_annotation(self) -> Optional[str]:
         return self._predicted_annotation
 
-    def _update_predicted_annotation(self, classification_result: str):
-        self._predicted_annotation = classification_result
+    def _update_predicted_annotation(self, predicted_annotation: str):
+        self._predicted_annotation = predicted_annotation
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         parts = [f"# sequence: {self.sequence}"]
@@ -140,8 +140,8 @@ class TokensSample(ClassyStruct):
     def _get_predicted_annotation(self) -> Optional[List[str]]:
         return self._predicted_annotation
 
-    def _update_predicted_annotation(self, classification_result: List[str]):
-        self._predicted_annotation = classification_result
+    def _update_predicted_annotation(self, predicted_annotation: List[str]):
+        self._predicted_annotation = predicted_annotation
 
     def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
@@ -176,8 +176,8 @@ class QASample(ClassyStruct):
     def _get_predicted_annotation(self) -> Optional[Tuple[int, int]]:
         return self._predicted_annotation
 
-    def _update_predicted_annotation(self, classification_result: Tuple[int, int]):
-        self._predicted_annotation = classification_result
+    def _update_predicted_annotation(self, predicted_annotation: Tuple[int, int]):
+        self._predicted_annotation = predicted_annotation
 
     def pretty_print(self, classification_result: Optional[Tuple[int, int]] = None) -> str:
         parts = [
@@ -229,8 +229,8 @@ class GenerationSample(ClassyStruct):
     def _get_predicted_annotation(self) -> Optional[str]:
         return self._predicted_annotation
 
-    def _update_predicted_annotation(self, classification_result: str):
-        self._predicted_annotation = classification_result
+    def _update_predicted_annotation(self, predicted_annotation: str):
+        self._predicted_annotation = predicted_annotation
 
     def pretty_print(self, classification_result: Optional[str] = None) -> str:
         def maybe_prepend_language(text: str, lng: Optional[str]) -> str:
