@@ -58,8 +58,7 @@ class ClassyStruct:
     def get_additional_attributes(self) -> Dict[Any, Any]:
         return self._d
 
-    # TODO: pretty_print should not take in input any classification result
-    def pretty_print(self, classification_result: Optional[Union[str, List[str], Tuple[int, int]]] = None) -> str:
+    def pretty_print(self) -> str:
         raise NotImplementedError
 
 
@@ -83,12 +82,12 @@ class SentencePairSample(ClassyStruct):
     def _update_predicted_annotation(self, predicted_annotation: str):
         self._predicted_annotation = predicted_annotation
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self) -> str:
         parts = [f"# sentence1: {self.sentence1}", f"# sentence2: {self.sentence2}"]
         if self.reference_annotation is not None:
             parts.append(f"\t# label: {self.reference_annotation}")
-        if classification_result is not None:
-            parts.append(f"\t# classification_result: {classification_result}")
+        if self.predicted_annotation is not None:
+            parts.append(f"\t# classification_result: {self.predicted_annotation}")
         return "\n".join(parts)
 
 
@@ -111,12 +110,12 @@ class SequenceSample(ClassyStruct):
     def _update_predicted_annotation(self, predicted_annotation: str):
         self._predicted_annotation = predicted_annotation
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self) -> str:
         parts = [f"# sequence: {self.sequence}"]
         if self.reference_annotation is not None:
             parts.append(f"\t# label: {self.reference_annotation}")
-        if classification_result is not None:
-            parts.append(f"\t# classification_result: {classification_result}")
+        if self.predicted_annotation is not None:
+            parts.append(f"\t# classification_result: {self.predicted_annotation}")
         return "\n".join(parts)
 
 
@@ -143,12 +142,12 @@ class TokensSample(ClassyStruct):
     def _update_predicted_annotation(self, predicted_annotation: List[str]):
         self._predicted_annotation = predicted_annotation
 
-    def pretty_print(self, classification_result: Optional[List[str]] = None) -> str:
+    def pretty_print(self) -> str:
         parts = [f'# tokens: {" ".join(self.tokens)}']
         if self.reference_annotation is not None:
             parts.append(f'\t# labels: {" ".join(self.reference_annotation)}')
-        if classification_result is not None:
-            parts.append(f'\t# classification_result: {" ".join(classification_result)}')
+        if self.predicted_annotation is not None:
+            parts.append(f'\t# classification_result: {" ".join(self.predicted_annotation)}')
         return "\n".join(parts)
 
 
@@ -182,7 +181,7 @@ class QASample(ClassyStruct):
     def _update_predicted_annotation(self, predicted_annotation: Tuple[int, int]):
         self._predicted_annotation = predicted_annotation
 
-    def pretty_print(self, classification_result: Optional[Tuple[int, int]] = None) -> str:
+    def pretty_print(self) -> str:
         parts = [
             f"# context: {self.context}",
             f"# question: {self.question}",
@@ -196,8 +195,8 @@ class QASample(ClassyStruct):
                 f"# answer: {self.context[char_start:char_end]}",
             ]
 
-        if classification_result is not None:
-            classification_start, classification_end = classification_result
+        if self.predicted_annotation is not None:
+            classification_start, classification_end = self.predicted_annotation
             parts += [
                 "### Predicted positions ###",
                 f"# answer start: {classification_start}, answer end: {classification_end}",
@@ -235,7 +234,7 @@ class GenerationSample(ClassyStruct):
     def _update_predicted_annotation(self, predicted_annotation: str):
         self._predicted_annotation = predicted_annotation
 
-    def pretty_print(self, classification_result: Optional[str] = None) -> str:
+    def pretty_print(self) -> str:
         def maybe_prepend_language(text: str, lng: Optional[str]) -> str:
             return f"[{lng}] {text}" if lng is not None else text
 
@@ -246,9 +245,9 @@ class GenerationSample(ClassyStruct):
                 f"\t# gold sequence: {maybe_prepend_language(self.reference_annotation, self.target_language)}"
             )
 
-        if classification_result is not None:
+        if self.predicted_annotation is not None:
             parts.append(
-                f"\t# predicted sequence: {maybe_prepend_language(classification_result, self.target_language)}"
+                f"\t# predicted sequence: {maybe_prepend_language(self.predicted_annotation, self.target_language)}"
             )
 
         return "\n".join(parts)

@@ -65,7 +65,7 @@ class FileDumperPredictionCallback(PredictionCallback):
     ):
         with open(str(self.folder.joinpath(f"{name}.{trainer.global_step}.tsv")), "w") as f:
             for sample in predicted_samples:
-                f.write(sample.pretty_print(classification_result=sample.predicted_annotation) + "\n")
+                f.write(sample.pretty_print() + "\n")
 
 
 class PredictionPLCallback(pl.Callback):

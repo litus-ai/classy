@@ -70,7 +70,7 @@ def evaluate(
     if output_path is not None:
         with open(output_path, "w") as f:
             for sample in predicted_samples:
-                f.write(sample.pretty_print(classification_result=sample.predicted_annotation) + "\n")
+                f.write(sample.pretty_print() + "\n")
 
     # run evaluation and print metrics
     result = metrics_fn(predicted_samples)
