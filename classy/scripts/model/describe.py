@@ -10,16 +10,17 @@ import numpy as np
 from sacremoses import MosesTokenizer
 
 from classy.data.data_drivers import (
-    SequenceSample,
-    SentencePairSample,
-    TokensSample,
-    QASample,
     get_data_driver,
     SEQUENCE,
     SENTENCE_PAIR,
     TOKEN,
     QA,
     GENERATION,
+    ClassySample,
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    QASample,
 )
 
 # colors
@@ -51,9 +52,7 @@ class UIMetric:
     def is_writable(self) -> bool:
         raise NotImplementedError
 
-    def update_metric(
-        self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, str]
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[ClassySample, str]) -> None:
         raise NotImplementedError
 
     def write_metric(self) -> None:
@@ -95,19 +94,14 @@ class InputLenUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return len(self._input_lens) > 0
 
-    def update_metric(
-        self,
-        dataset_sample: Union[
-            str, List[str], Tuple[List[str], Union[SequenceSample, SentencePairSample, TokensSample, QASample]]
-        ],
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[str, List[str], Tuple[List[str], ClassySample]]) -> None:
         """
         Update the metrics lengths store
         Args:
             dataset_sample: can be
                 - str: a text sequence
                 - List[str]: list of tokens
-                - Tuple[List[str], Union[SequenceSample, SentencePairSample, TokensSample, QASample]]: a tuple
+                - Tuple[List[str], ClassySample]: a tuple
                     containing a list of tokens along with the original_sample
 
         Returns:
@@ -168,7 +162,7 @@ class ClassSpecificInputLenUIMetric(UIMetric):
     def update_metric(self, dataset_sample) -> None:
         sequence, dataset_sample = dataset_sample
 
-        label = dataset_sample.get_current_classification()
+        label = dataset_sample.reference_annotation
 
         if label is None:
             return
@@ -209,9 +203,7 @@ class LambdaWrapperUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return any(um.is_writable() for um in self.ui_metrics)
 
-    def update_metric(
-        self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, str]
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[ClassySample, str]) -> None:
         new_sample = self._dsm(dataset_sample)
         for ui_metric in self.ui_metrics:
             ui_metric.update_metric(new_sample)
@@ -298,9 +290,10 @@ class AnswerPositionUIMetric(UIMetric):
         return len(self._positions) > 0
 
     def update_metric(self, dataset_sample: QASample) -> None:
-        if dataset_sample.char_start is None or dataset_sample.char_end is None:
+        if dataset_sample.reference_annotation is None:
             return
-        answer_center = round((dataset_sample.char_end + dataset_sample.char_start) / 2)
+        char_start, char_end = dataset_sample.reference_annotation
+        answer_center = round((char_end + char_start) / 2)
         self._positions.append(answer_center / len(dataset_sample.context) * 100)
 
     def write_body(self) -> None:
@@ -474,8 +467,8 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                     description="Average, Min and Max answers length in terms of characters (Top). "
                     "Quartiles on a boxplot (Bottom)",
                 ),
-                lambda sample: sample.context[sample.char_start : sample.char_end]
-                if sample.char_start is not None
+                lambda sample: sample.context[sample.reference_annotation[0] : sample.reference_annotation[1]]
+                if sample.reference_annotation is not None
                 else None,
             )
         )
@@ -511,8 +504,10 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                         description="Average, Min and Max answers length in terms of tokens (Top). "
                         "Quartiles on a boxplot (Bottom)",
                     ),
-                    lambda sample: tokenizer.tokenize(sample.context[sample.char_start : sample.char_end])
-                    if sample.char_start is not None
+                    lambda sample: tokenizer.tokenize(
+                        sample.context[sample.reference_annotation[0] : sample.reference_annotation[1]]
+                    )
+                    if sample.reference_annotation is not None
                     else None,
                 )
             )
@@ -537,7 +532,7 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                     description="Average, Min and Max target sequences length in terms of characters (Top). "
                     "Quartiles on a boxplot (Bottom)",
                 ),
-                lambda sample: sample.target_sequence,
+                lambda sample: sample.reference_annotation,
             )
         )
         if tokenize is not None:
@@ -562,8 +557,8 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                         description="Average, Min and Max target sequences length in terms of tokens (Top). "
                         "Quartiles on a boxplot (Bottom)",
                     ),
-                    lambda sample: tokenizer.tokenize(sample.target_sequence)
-                    if sample.target_sequence is not None
+                    lambda sample: tokenizer.tokenize(sample.reference_annotation)
+                    if sample.reference_annotation is not None
                     else None,
                 )
             )

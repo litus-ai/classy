@@ -59,7 +59,7 @@ class MarshalOutputSequenceSample(MarshalInputSequenceSample):
 
     @classmethod
     def marshal(cls, sample: SequenceSample):
-        return cls(sequence=sample.sequence, label=sample.label)
+        return cls(sequence=sample.sequence, label=sample.predicted_annotation)
 
 
 class MarshalOutputSentencePairSample(MarshalInputSentencePairSample):
@@ -67,7 +67,7 @@ class MarshalOutputSentencePairSample(MarshalInputSentencePairSample):
 
     @classmethod
     def marshal(cls, sample: SentencePairSample):
-        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.label)
+        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.predicted_annotation)
 
 
 class MarshalOutputTokensSample(MarshalInputTokensSample):
@@ -75,7 +75,7 @@ class MarshalOutputTokensSample(MarshalInputTokensSample):
 
     @classmethod
     def marshal(cls, sample: TokensSample):
-        return cls(tokens=sample.tokens, labels=sample.labels)
+        return cls(tokens=sample.tokens, labels=sample.predicted_annotation)
 
 
 class MarshalOutputQASample(MarshalInputQASample):
@@ -84,11 +84,12 @@ class MarshalOutputQASample(MarshalInputQASample):
 
     @classmethod
     def marshal(cls, sample: QASample):
+        char_start, char_end = sample.predicted_annotation
         return cls(
             context=sample.context,
             question=sample.question,
-            answer_char_start=sample.char_start,
-            answer_char_end=sample.char_end,
+            answer_char_start=char_start,
+            answer_char_end=char_end,
         )
 
 
@@ -150,7 +151,7 @@ def serve(
             dataset_conf=dataset_conf,
             token_batch_size=token_batch_size,
         ):
-            source.update_classification(prediction)
+            source.predicted_annotation = prediction
             output_samples.append(OutputSample.marshal(source))
 
         return output_samples

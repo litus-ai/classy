@@ -55,7 +55,7 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         self.log("test_ppl", torch.exp(forward_output.loss), prog_bar=True, on_step=False, on_epoch=True)
         return forward_output.loss
 
-    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[GenerationSample, str]]:
+    def batch_predict(self, *args, **kwargs) -> Iterator[GenerationSample]:
         return self.generative_model.batch_predict(*args, **kwargs)
 
 
@@ -139,7 +139,7 @@ class BartGenerativeModule(HFGenerativeModel):
         decoder_start: torch.Tensor,
         num_return_sequences: int = 1,  # todo implement
         **kwargs,
-    ) -> Iterator[Tuple[GenerationSample, str]]:
+    ) -> Iterator[GenerationSample]:
         assert len(set(decoder_start.squeeze(-1).tolist())) == 1
         # generate
         bart_out = self.model.generate(
@@ -159,7 +159,8 @@ class BartGenerativeModule(HFGenerativeModel):
         # postprocess
         samples = kwargs.get("samples")
         for sample, prediction in zip(samples, decoded_bart_out):
-            yield sample, prediction
+            sample.predicted_annotation = prediction
+            yield sample
 
 
 class MBartGenerativeModule(BartGenerativeModule):

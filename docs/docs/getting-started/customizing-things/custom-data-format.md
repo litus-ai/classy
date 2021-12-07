@@ -59,7 +59,7 @@ def save(self, samples: Iterator[SequenceSample], path: str):
         # iterate on samples
         for sample in samples:
             # dump json object
-            f.write(json.dumps({"sequence": sample.sequence, "label": sample.label}) + "\n")
+            f.write(json.dumps({"sequence": sample.sequence, "label": sample.reference_annotation}) + "\n")
 ```
 
 :::tip

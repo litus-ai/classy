@@ -1,17 +1,12 @@
 import itertools
 from pathlib import Path
-from typing import Tuple, Union, List, Dict, Any
+from typing import List, Dict, Any
 
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 
-from classy.data.data_drivers import (
-    SentencePairSample,
-    SequenceSample,
-    TokensSample,
-    get_data_driver,
-)
+from classy.data.data_drivers import get_data_driver, ClassySample
 from classy.evaluation.base import Evaluation
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.log import get_project_logger
@@ -23,7 +18,7 @@ class PredictionCallback:
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[ClassySample],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -37,7 +32,7 @@ class EvaluationPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[ClassySample],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
@@ -57,13 +52,13 @@ class FileDumperPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
-        predicted_samples: List[Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]],
+        predicted_samples: List[ClassySample],
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
         with open(str(self.folder.joinpath(f"{name}.{trainer.global_step}.tsv")), "w") as f:
-            for sample, prediction in predicted_samples:
-                f.write(sample.pretty_print(classification_result=prediction) + "\n")
+            for sample in predicted_samples:
+                f.write(sample.pretty_print() + "\n")
 
 
 class PredictionPLCallback(pl.Callback):

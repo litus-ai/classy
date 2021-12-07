@@ -1,5 +1,4 @@
 import json
-from typing import Union
 
 from classy.data.data_drivers import (
     SENTENCE_PAIR,
@@ -14,6 +13,7 @@ from classy.data.data_drivers import (
     JSONL,
     GENERATION,
     GenerationSample,
+    ClassySample,
 )
 from classy.pl_modules.mixins.task_ui import (
     TaskUIMixin,
@@ -28,7 +28,7 @@ from classy.pl_modules.mixins.task_ui import (
 class TaskMixin(TaskUIMixin):
     def read_input_from_bash(
         self,
-    ) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]:
+    ) -> ClassySample:
         raise NotImplementedError
 
     @property
