@@ -13,6 +13,7 @@ from classy.data.data_drivers import (
     TokensSample,
     QASample,
     GenerationSample,
+    ClassySample,
 )
 from classy.utils.commons import chunks, flatten, add_noise_to_value
 from classy.utils.log import get_project_logger
@@ -41,9 +42,7 @@ class BaseDataset(IterableDataset):
         return True
 
     @staticmethod
-    def fit_vocabulary(
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
-    ) -> Vocabulary:
+    def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         raise NotImplementedError
 
     @classmethod
@@ -66,7 +65,7 @@ class BaseDataset(IterableDataset):
     @classmethod
     def from_samples(
         cls,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+        samples: Iterator[ClassySample],
         vocabulary: Vocabulary,
         **kwargs,
     ):
@@ -74,9 +73,7 @@ class BaseDataset(IterableDataset):
 
     def __init__(
         self,
-        samples_iterator: Callable[
-            [], Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
-        ],
+        samples_iterator: Callable[[], Iterator[ClassySample]],
         vocabulary: Vocabulary,
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         for_inference: bool,

@@ -8,14 +8,7 @@ from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from classy.data.data_drivers import (
-    SentencePairSample,
-    SequenceSample,
-    TokensSample,
-    QASample,
-    GenerationSample,
-    ClassySample,
-)
+from classy.data.data_drivers import ClassySample
 
 
 class PredictionMixin:
@@ -25,12 +18,12 @@ class PredictionMixin:
 
     def predict(
         self,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+        samples: Iterator[ClassySample],
         dataset_conf: Union[Dict, DictConfig],
         token_batch_size: int = 1024,
         progress_bar: bool = False,
         **kwargs
-    ) -> Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]:
+    ) -> Iterator[ClassySample]:
         """
         Exposed method of each classy.pl_modules.base.ClassyPLModule invoked to annotate a collection of input
         samples.

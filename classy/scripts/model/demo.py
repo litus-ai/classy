@@ -8,7 +8,7 @@ import streamlit as st
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver
+from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, ClassySample
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,
@@ -16,9 +16,7 @@ from classy.utils.lightning import (
 )
 
 
-def auto_infer_examples(
-    task: str, model_checkpoint_path: str
-) -> Tuple[str, List[Union[SentencePairSample, SequenceSample, TokensSample]]]:
+def auto_infer_examples(task: str, model_checkpoint_path: str) -> Tuple[str, List[ClassySample]]:
     experiment_folder = Path(model_checkpoint_path).parent.parent
     if (experiment_folder / "data" / "examples-test.jsonl").exists():
         return "Examples from test", list(

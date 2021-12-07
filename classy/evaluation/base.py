@@ -1,11 +1,11 @@
-from typing import List, Tuple, Union, Dict
+from typing import List, Dict
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample
+from classy.data.data_drivers import ClassySample
 
 
 class Evaluation:
     def __call__(
         self,
-        predicted_samples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+        predicted_samples: List[ClassySample],
     ) -> Dict:
         raise NotImplementedError

@@ -1,10 +1,10 @@
-from typing import Optional, List, Callable, Union, Tuple, Dict
+from typing import Optional, List, Callable, Dict
 
 import hydra
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample
+from classy.data.data_drivers import ClassySample
 from classy.data.data_drivers import get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
@@ -21,16 +21,7 @@ def evaluate(
     output_path: Optional[str] = None,
     evaluate_config_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
-    metrics_fn: Optional[
-        Callable[
-            [
-                List[
-                    Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
-                ]
-            ],
-            Dict,
-        ]
-    ] = None,
+    metrics_fn: Optional[Callable[[List[ClassySample]], Dict]] = None,
 ):
 
     # load model

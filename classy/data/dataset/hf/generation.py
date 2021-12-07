@@ -6,7 +6,14 @@ import torch
 from transformers import AutoTokenizer, MBartTokenizerFast
 from transformers.models.mbart.tokenization_mbart_fast import FAIRSEQ_LANGUAGE_CODES
 
-from classy.data.data_drivers import SequenceSample, TokensSample, SentencePairSample, QASample, GenerationSample
+from classy.data.data_drivers import (
+    SequenceSample,
+    TokensSample,
+    SentencePairSample,
+    QASample,
+    GenerationSample,
+    ClassySample,
+)
 from classy.data.dataset.base import batchify, BaseDataset
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -20,14 +27,12 @@ class HFGenerationDataset(BaseDataset):
         return False
 
     @staticmethod
-    def fit_vocabulary(samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample]]) -> Vocabulary:
+    def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         raise NotImplementedError
 
     def __init__(
         self,
-        samples_iterator: Callable[
-            [], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample]]
-        ],
+        samples_iterator: Callable[[], Iterator[ClassySample]],
         vocabulary: Vocabulary,
         transformer_model: str,
         tokens_per_batch: int,

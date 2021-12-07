@@ -10,16 +10,17 @@ import numpy as np
 from sacremoses import MosesTokenizer
 
 from classy.data.data_drivers import (
-    SequenceSample,
-    SentencePairSample,
-    TokensSample,
-    QASample,
     get_data_driver,
     SEQUENCE,
     SENTENCE_PAIR,
     TOKEN,
     QA,
     GENERATION,
+    ClassySample,
+    SentencePairSample,
+    SequenceSample,
+    TokensSample,
+    QASample,
 )
 
 # colors
@@ -51,9 +52,7 @@ class UIMetric:
     def is_writable(self) -> bool:
         raise NotImplementedError
 
-    def update_metric(
-        self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, str]
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[ClassySample, str]) -> None:
         raise NotImplementedError
 
     def write_metric(self) -> None:
@@ -95,19 +94,14 @@ class InputLenUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return len(self._input_lens) > 0
 
-    def update_metric(
-        self,
-        dataset_sample: Union[
-            str, List[str], Tuple[List[str], Union[SequenceSample, SentencePairSample, TokensSample, QASample]]
-        ],
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[str, List[str], Tuple[List[str], ClassySample]]) -> None:
         """
         Update the metrics lengths store
         Args:
             dataset_sample: can be
                 - str: a text sequence
                 - List[str]: list of tokens
-                - Tuple[List[str], Union[SequenceSample, SentencePairSample, TokensSample, QASample]]: a tuple
+                - Tuple[List[str], ClassySample]: a tuple
                     containing a list of tokens along with the original_sample
 
         Returns:
@@ -209,9 +203,7 @@ class LambdaWrapperUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return any(um.is_writable() for um in self.ui_metrics)
 
-    def update_metric(
-        self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, str]
-    ) -> None:
+    def update_metric(self, dataset_sample: Union[ClassySample, str]) -> None:
         new_sample = self._dsm(dataset_sample)
         for ui_metric in self.ui_metrics:
             ui_metric.update_metric(new_sample)

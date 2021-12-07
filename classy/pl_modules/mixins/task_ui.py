@@ -20,6 +20,7 @@ from classy.data.data_drivers import (
     TOKEN,
     GENERATION,
     QA,
+    ClassySample,
 )
 from classy.utils.streamlit import get_md_200_random_color_generator
 
@@ -31,13 +32,13 @@ class TaskUIMixin:
     def read_input(
         self,
         inference_message: str,
-        inferred_examples: List[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
-    ) -> Optional[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]:
+        inferred_examples: List[ClassySample],
+    ) -> Optional[ClassySample]:
         raise NotImplementedError
 
     def render(
         self,
-        predicted_sample: Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
+        predicted_sample: ClassySample,
         time: float,
     ):
         raise NotImplementedError
