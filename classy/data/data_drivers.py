@@ -8,6 +8,9 @@ logger = get_project_logger(__name__)
 
 
 class ClassyStruct:
+    reference_annotation: Optional
+    predicted_annotation: Optional
+
     def __init__(self, **kwargs):
         super().__setattr__("_d", {})
         self._d = kwargs
@@ -18,15 +21,19 @@ class ClassyStruct:
     def _update_reference_annotation(self, reference_annotation: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
-    reference_annotation = property(_get_reference_annotation, _update_reference_annotation)
-
     def _get_predicted_annotation(self) -> Optional[Union[str, List[str], Tuple[int, int]]]:
         raise NotImplementedError
 
     def _update_predicted_annotation(self, classification_result: Union[str, List[str], Tuple[int, int]]):
         raise NotImplementedError
 
-    predicted_annotation = property(_get_predicted_annotation, _update_predicted_annotation)
+    def __getattribute__(self, item):
+        if item == "reference_annotation":
+            return self._get_reference_annotation()
+        elif item == "predicted_annotation":
+            return self._get_predicted_annotation()
+        else:
+            return super(ClassyStruct, self).__getattribute__(item)
 
     def __getattr__(self, item):
         if item.startswith("__") and item.startswith("__"):
@@ -39,6 +46,10 @@ class ClassyStruct:
             return None
 
     def __setattr__(self, key, value):
+        if key == "reference_annotation":
+            return self._update_reference_annotation(value)
+        elif key == "predicted_annotation":
+            return self._update_predicted_annotation(value)
         if key in self._d:
             self._d[key] = value
         else:
