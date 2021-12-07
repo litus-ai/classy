@@ -164,7 +164,10 @@ class QASample(ClassyStruct):
         super().__init__(**kwargs)
         self.context = context
         self.question = question
-        self._reference_annotation = answer_start, answer_end
+        if answer_start is not None and answer_end is not None:
+            self._reference_annotation = answer_start, answer_end
+        else:
+            self._reference_annotation = None
         self._predicted_annotation = None
 
     def _get_reference_annotation(self) -> Optional[Tuple[int, int]]:
