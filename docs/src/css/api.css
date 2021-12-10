@@ -1,14 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css");
 
-a.theme-edit-this-page {
-    display: none;
-}
-
-.pagination-nav {
-    display: none;
-}
-
 .api p {
     margin: 0;
 }
@@ -35,7 +27,6 @@ a.theme-edit-this-page {
 
 .api__signature {
     position: relative;
-    /*white-space: nowrap;*/
     overflow: auto;
     padding: 5px 10px;
     font-weight: bold;
@@ -44,9 +35,13 @@ a.theme-edit-this-page {
     background-color: var(--ifm-code-background);
 }
 
-/*.api__signature p {*/
-/*    white-space: nowrap;*/
-/*}*/
+.api__body {
+  margin: 0 0 0 1rem;
+}
+
+.api__description {
+  margin: 1rem 0;
+}
 
 .links-div {
     text-transform: uppercase;
@@ -65,12 +60,7 @@ a.theme-edit-this-page {
     margin-left: auto;
 }
 
-.api__signature .direct-link {
-    margin-right: 1em;
-}
-
 .api__signature .git-link::after {
-    /*position: absolute;*/
     top: 10px;
     right: 10px;
     background-image: url("https://raw.githubusercontent.com/gilbarbara/logos/f4c8e8b933aa80ce83b6d6d387e016bf4cb4e376/logos/github-icon.svg");
@@ -78,7 +68,6 @@ a.theme-edit-this-page {
     display: inline-block;
     width: 12px;
     height: 12px;
-    margin: 0 0 0 5px;
     content:"";
     visibility: visible;
 }
@@ -106,6 +95,10 @@ a.theme-edit-this-page {
     visibility: hidden;
 }
 
+.ident {
+    color: #900;
+}
+
 .class-variable .ident {
     color: #8b008b;
 }
@@ -120,7 +113,7 @@ a.theme-edit-this-page {
 }
 
 .api details a:link {
-    border-bottom: 1px solid darkgray;
+    text-decoration-color: var(--ifm-link-decoration);
 }
 
 .api details a:link:hover {
@@ -148,7 +141,7 @@ div.class-variable + .api__body {
 /* ********************************************************* */
 
 :root {
-  --h2o-accent-color: #ffe52b;
+  /*--h2o-accent-color: #ffe52b;*/
 
 /*  --ifm-color-primary: #000000;*/
 /*  --ifm-color-primary-dark: #000000;*/
@@ -222,24 +215,20 @@ video {
   height: auto;
 }
 
-.ident {
-    color: #900;
-}
-
-.cover {
-  width: 360px;
-  height: 140px;
-  background-size: cover;
-  background-position: left top;
-  overflow: hidden;
-  transition: background-position 2s;
-  border: 1px solid #ccc;
-  margin: 1rem 0;
-}
-.cover:hover {
-  background-position: right bottom;
-  border: 1px solid #999;
-}
+/*.cover {*/
+/*  width: 360px;*/
+/*  height: 140px;*/
+/*  background-size: cover;*/
+/*  background-position: left top;*/
+/*  overflow: hidden;*/
+/*  transition: background-position 2s;*/
+/*  border: 1px solid #ccc;*/
+/*  margin: 1rem 0;*/
+/*}*/
+/*.cover:hover {*/
+/*  background-position: right bottom;*/
+/*  border: 1px solid #999;*/
+/*}*/
 a.thumbnail:link {
   display: inline-block;
   padding: 1rem;
@@ -254,7 +243,7 @@ a.thumbnail > div {
   overflow: hidden;
   transition: background-position 2s;
   border: 1px solid #ccc;
-  margin: 0rem 0 0.3rem 0;
+  margin: 0 0 0.3rem 0;
 }
 a.thumbnail > div:hover {
   background-position: right bottom;
@@ -269,36 +258,30 @@ a.thumbnail > div:hover {
   background: #555;
   padding: 5px 10px;
 }
-.api__body {
-  margin: 0 0 0 1rem;
-}
-.api__description {
-  margin: 1rem 0;
-}
 
-.notice {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  background-color: #242526;
-  color: #fff;
-  padding: 6px 60px;
-  transition: opacity 0.5s;
-}
-.notice__close {
-  cursor: pointer;
-  margin: 0 40px;
-  padding: 3px 9px;
-  border: 1px solid #fff;
-}
-.notice p {
-  display: inline;
-}
-.notice a {
-  color: var(--h2o-accent-color);
-}
+/*.notice {*/
+/*  position: fixed;*/
+/*  bottom: 0;*/
+/*  left: 0;*/
+/*  right: 0;*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*  justify-content: center;*/
+/*  flex-wrap: wrap;*/
+/*  background-color: #242526;*/
+/*  color: #fff;*/
+/*  padding: 6px 60px;*/
+/*  transition: opacity 0.5s;*/
+/*}*/
+/*.notice__close {*/
+/*  cursor: pointer;*/
+/*  margin: 0 40px;*/
+/*  padding: 3px 9px;*/
+/*  border: 1px solid #fff;*/
+/*}*/
+/*.notice p {*/
+/*  display: inline;*/
+/*}*/
+/*.notice a {*/
+/*  color: var(--h2o-accent-color);*/
+/*}*/

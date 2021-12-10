@@ -35,19 +35,26 @@ def rel_refname(o, is_class_init=False, replace_dots=True):
         return res.replace('.', '-')
     else:
         return res
+
+# adapted from https://stackoverflow.com/a/2020083/1908499
+def fullname(klass):
+    module = klass.__module__
+    if module == 'builtins':
+        return klass.__qualname__  # avoid outputs like 'builtins.str'
+    return module + '.' + klass.__qualname__
 %>
 
 
 <%def name="get_links(d, is_class_init=False)">
   % if d.obj is not getattr(d.inherits, 'obj', None):
-  <div class="links-div">
-      <a href="#${rel_refname(d, is_class_init=is_class_init)}" class="direct-link">#</a>
-      <a href="${format_git_link(git_link_template, d)}" class="git-link">#</a>
+  <div className="links-div">
+      <a href="#${rel_refname(d, is_class_init=is_class_init)}" className="direct-link">#</a>
+      <a href="${format_git_link(git_link_template, d)}" className="git-link">#</a>
   </div>
   %endif
 </%def>
 
-<%def name="ident(name)"><span class="ident">${name}</span></%def>
+<%def name="ident(name)"><span className="ident">${name}</span></%def>
 
 <%def name="show_desc(d, short=False)">
 <%
@@ -66,7 +73,7 @@ ${docstring | to_html}
 </%def>
 
 <%def name="render_variable(var: pdoc.Variable)">
-<div class="class-variable"><code class="name">
+<div className="class-variable"><code className="name">
 ${ident('self' if var.instance_var else 'cls')}.${var.name}${get_annotation(var)}
 </code></div>
 </%def>
@@ -75,12 +82,13 @@ ${ident('self' if var.instance_var else 'cls')}.${var.name}${get_annotation(var)
 <%
 all_mro = c.mro(only_documented=False)
 direct_mro = c.mro(only_documented=True)
+base_classes = set(fullname(e) for e in c.obj.__bases__)
 mro = direct_mro if len(direct_mro) > 0 else all_mro
 %>
 % if len(mro) == 0:
 class ${ident(c.name)}()
 % else:
-class ${ident(c.name)}(${', '.join(link(e) for e in mro)})
+class ${ident(c.name)}(${', '.join(link(e) for e in mro if e.name in base_classes)})
 % endif
 </%def>
 
@@ -101,7 +109,7 @@ ${"###"} ${f.name} ${"{#"}${rel_refname(f)}${"}"}
 % endif
 <div className='api__signature'>
 % if annotation is not None:
-<div class="annotation">@${annotation}</div>
+<div className="annotation">@${annotation}</div>
 % endif
 % if len(f.params()) > 0:
 ${f.funcdef()} ${ident(f.name)}(<br/>
@@ -126,7 +134,7 @@ ${show_desc(f)}
 
 ${module.docstring | to_html}
 % if submodules:
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<h2 className="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
 % for m in submodules:
 % if not m.qualname == 'classy.version':
@@ -137,11 +145,11 @@ ${module.docstring | to_html}
 </dl>
 % endif
 % if variables:
-<h2 class="section-title" id="header-variables">Global variables</h2>
+<h2 className="section-title" id="header-variables">Global variables</h2>
 <dl>
 % for v in variables:
 <% return_type = get_annotation(v.type_annotation) %>
-<dt id="${v.refname}"><code class="name">var ${ident(v.name)}${return_type}</code></dt>
+<dt id="${v.refname}"><code className="name">var ${ident(v.name)}${return_type}</code></dt>
 <dd>${show_desc(v)}</dd>
 % endfor
 </dl>
@@ -153,7 +161,7 @@ ${show_func(f)}
 % endfor
 % endif
 % if classes:
-${"##"} Classes
+${"## Classes {#clzs}"}
 % for c in classes:
 <%
 ## class_vars = c.class_variables(False, sort=sort_identifiers)
