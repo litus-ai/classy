@@ -260,6 +260,9 @@ ${"####"} Inherited members
 title: ${module.name}
 toc_min_heading_level: 2
 toc_max_heading_level: 4
+
+pagination_next: null
+pagination_prev: null
 ---
 
 import '/src/css/api.css'
