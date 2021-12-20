@@ -106,7 +106,9 @@ class SequenceTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def ui_read_input(self, inference_message: str, inferred_examples: List[SequenceSample]) -> Optional[SequenceSample]:
+    def ui_read_input(
+        self, inference_message: str, inferred_examples: List[SequenceSample]
+    ) -> Optional[SequenceSample]:
         placeholder = st.selectbox(inference_message, options=[ie.sequence for ie in inferred_examples], index=0)
         input_text = st.text_area("Input sequence to classify", placeholder)
         if st.button("Classify", key="classify"):

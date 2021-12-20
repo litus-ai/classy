@@ -255,7 +255,6 @@ class GenerationSample(ClassySample):
 
 
 class DataDriver:
-
     def dataset_exists_at_path(self, path: str) -> bool:
         return Path(path).exists()
 

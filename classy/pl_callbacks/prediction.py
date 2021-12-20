@@ -130,7 +130,9 @@ class PredictionPLCallback(pl.Callback):
                 # if provided, apply the limit given
                 samples_it = itertools.islice(samples_it, limit)
                 samples_it, saving_samples_it = itertools.tee(samples_it)
-                path = self._get_sliced_path(saving_samples_it, data_driver, path=path, limit=limit, extension=extension)
+                path = self._get_sliced_path(
+                    saving_samples_it, data_driver, path=path, limit=limit, extension=extension
+                )
 
             predicted_samples = list(
                 model.predict(

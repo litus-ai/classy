@@ -46,6 +46,7 @@ class PredictionMixin:
                 assert sample._mixin_prediction_position is None
                 sample._mixin_prediction_position = i
                 yield sample
+
         next_prediction_position = 0
         position2predicted_sample = {}
 

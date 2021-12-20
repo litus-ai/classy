@@ -229,7 +229,7 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
             else:
                 if "_target_" in profile_node:
                     # discarded if _target_ is changed
-                    if prefix == '':
+                    if prefix == "":
                         cfg = profile_node
                         assert potential_defaults is not None
                         for k in potential_defaults:
@@ -258,10 +258,18 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
                                 apply_recursively(v, child_file, (prefix + "." + k).lstrip("."))
                         else:
                             # otherwise, standard recursion
-                            recurse_and_fix(k, v, target_node, (blame_prefix + "." + prefix).lstrip("."), path_to_target_config=None, defaults=None, potential_defaults=None)
+                            recurse_and_fix(
+                                k,
+                                v,
+                                target_node,
+                                (blame_prefix + "." + prefix).lstrip("."),
+                                path_to_target_config=None,
+                                defaults=None,
+                                potential_defaults=None,
+                            )
         elif OmegaConf.is_list(profile_node):
             # if profile overrides a list, the original list should be completely overwritten
-            if prefix == '':
+            if prefix == "":
                 cfg = profile_node
             else:
                 OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
@@ -301,7 +309,15 @@ def apply_profile_on_dir(profile: DictConfig, profile_name: str, config_name: st
         assert all(d in potential_defaults for d in defaults)
 
         # apply profile
-        cfg = recurse_and_fix('', profile_node, cfg, blame_prefix=prefix, path_to_target_config=path_to_target_config, defaults=defaults, potential_defaults=potential_defaults)
+        cfg = recurse_and_fix(
+            "",
+            profile_node,
+            cfg,
+            blame_prefix=prefix,
+            path_to_target_config=path_to_target_config,
+            defaults=defaults,
+            potential_defaults=potential_defaults,
+        )
 
         # update defaults
         if len(defaults) > 0:

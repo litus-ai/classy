@@ -14,11 +14,7 @@ class RougeEvaluation(Evaluation):
     def __init__(self):
         self.rouge = load_metric("rouge")
 
-    def __call__(
-        self,
-        path: str,
-        predicted_samples: List[GenerationSample]
-    ) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[GenerationSample]) -> Dict:
         assert all(sample.reference_annotation is not None for sample in predicted_samples)
 
         gold_summaries = [sample.reference_annotation for sample in predicted_samples]

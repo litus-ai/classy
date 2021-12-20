@@ -15,8 +15,13 @@ from classy.data.data_drivers import (
     GenerationSample,
     ClassySample,
 )
-from classy.pl_modules.mixins.task_serve import SequenceTaskServeMixin, SentencePairTaskServeMixin, TokenTaskServeMixin, \
-    QATaskServeMixin, GenerationTaskServeMixin
+from classy.pl_modules.mixins.task_serve import (
+    SequenceTaskServeMixin,
+    SentencePairTaskServeMixin,
+    TokenTaskServeMixin,
+    QATaskServeMixin,
+    GenerationTaskServeMixin,
+)
 from classy.pl_modules.mixins.task_ui import (
     SequenceTaskUIMixin,
     TokenTaskUIMixin,

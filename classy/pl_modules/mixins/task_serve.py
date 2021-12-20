@@ -6,25 +6,23 @@ from classy.data.data_drivers import (
     TokensSample,
     SentencePairSample,
     SequenceSample,
-    QASample, GenerationSample,
+    QASample,
+    GenerationSample,
 )
 
 
 class MarshalInputSample:
-
     def unmarshal(self) -> Union[SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample]:
         raise NotImplementedError
 
 
 class MarshalOutputSample:
-
     @classmethod
     def marshal(cls, sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample]):
         raise NotImplementedError
 
 
 class TaskServeMixin:
-
     @property
     def serve_input_class(self) -> Type[MarshalInputSample]:
         raise NotImplementedError
@@ -50,7 +48,6 @@ class MarshalOutputSequenceSample(MarshalInputSequenceSample, MarshalOutputSampl
 
 
 class SequenceTaskServeMixin(TaskServeMixin):
-
     @property
     def serve_input_class(self):
         return MarshalInputSequenceSample
@@ -77,7 +74,6 @@ class MarshalOutputSentencePairSample(MarshalInputSentencePairSample, MarshalOut
 
 
 class SentencePairTaskServeMixin(TaskServeMixin):
-
     @property
     def serve_input_class(self):
         return MarshalInputSentencePairSample
@@ -103,7 +99,6 @@ class MarshalOutputTokensSample(MarshalInputTokensSample, MarshalOutputSample):
 
 
 class TokenTaskServeMixin(TaskServeMixin):
-
     @property
     def serve_input_class(self):
         return MarshalInputTokensSample
@@ -119,7 +114,6 @@ class MarshalInputQASample(BaseModel, MarshalInputSample):
 
     def unmarshal(self) -> QASample:
         return QASample(context=self.context, question=self.question)
-
 
 
 class MarshalOutputQASample(MarshalInputQASample, MarshalOutputSample):
@@ -138,7 +132,6 @@ class MarshalOutputQASample(MarshalInputQASample, MarshalOutputSample):
 
 
 class QATaskServeMixin(TaskServeMixin):
-
     @property
     def serve_input_class(self):
         return MarshalInputQASample
@@ -157,7 +150,7 @@ class MarshalInputGenerationSample(BaseModel, MarshalInputSample):
         return GenerationSample(
             source_sequence=self.source_sequence,
             source_language=self.source_language,
-            target_language=self.target_language
+            target_language=self.target_language,
         )
 
 
@@ -175,7 +168,6 @@ class MarshalOutputGenerationSample(MarshalInputGenerationSample, MarshalOutputS
 
 
 class GenerationTaskServeMixin(TaskServeMixin):
-
     @property
     def serve_input_class(self):
         return MarshalInputGenerationSample

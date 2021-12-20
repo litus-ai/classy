@@ -23,10 +23,7 @@ def evaluate(
     prediction_params: Optional[str] = None,
     metrics_fn: Optional[
         Callable[
-            [
-                str,
-                List[ClassySample]
-            ],
+            [str, List[ClassySample]],
             Dict,
         ]
     ] = None,
