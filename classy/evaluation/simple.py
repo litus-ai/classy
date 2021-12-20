@@ -21,7 +21,7 @@ def p_r_f_support(gold, pred) -> Dict[str, float]:
 
 
 class SequenceSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[Tuple[SequenceSample, str]]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[Tuple[SequenceSample, str]]) -> Dict:
         gold, pred = [sample.get_current_classification() for sample, p in predicted_samples], [
             p for sample, p in predicted_samples
         ]
@@ -29,7 +29,7 @@ class SequenceSimpleEvaluation(Evaluation):
 
 
 class SentencePairSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[Tuple[SentencePairSample, str]]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[Tuple[SentencePairSample, str]]) -> Dict:
         gold, pred = [sample.get_current_classification() for sample, p in predicted_samples], [
             p for sample, p in predicted_samples
         ]
@@ -37,7 +37,7 @@ class SentencePairSimpleEvaluation(Evaluation):
 
 
 class TokenSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[Tuple[TokensSample, List[str]]]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[Tuple[TokensSample, List[str]]]) -> Dict:
         gold = [sample.get_current_classification() for sample, p in predicted_samples]
         pred = [p for sample, p in predicted_samples]
         gold, pred = flatten(gold), flatten(pred)
@@ -49,7 +49,7 @@ class QASimpleEvaluation(Evaluation):
     Computes a simple exact-match accuracy
     """
 
-    def __call__(self, predicted_samples: List[Tuple[QASample, Tuple[int, int]]]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[Tuple[QASample, Tuple[int, int]]]) -> Dict:
         n, d = 0, 0
         for sample, p in predicted_samples:
             d += 1
@@ -63,7 +63,7 @@ class GenerationSimpleEvaluation(Evaluation):
     Computes a simple full-text accuracy
     """
 
-    def __call__(self, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
         n, d = 0, 0
         for sample, p in predicted_samples:
             d += 1

@@ -1,4 +1,5 @@
 import itertools
+import tempfile
 from pathlib import Path
 from typing import Tuple, Union, List, Dict, Any
 
@@ -23,6 +24,7 @@ class PredictionCallback:
     def __call__(
         self,
         name: str,
+        path: str,
         predicted_samples: List[
             Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
         ],
@@ -39,6 +41,7 @@ class EvaluationPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
+        path: str,
         predicted_samples: List[
             Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
         ],
@@ -46,7 +49,7 @@ class EvaluationPredictionCallback(PredictionCallback):
         trainer: pl.Trainer,
     ):
         logger.info(f"Starting evaluation {self.__class__.__name__} with name {name}")
-        results = self.evaluation(predicted_samples)
+        results = self.evaluation(path, predicted_samples)
         for k, v in results.items():
             model.log(f"{name}_{k}", v, prog_bar=True, on_step=False, on_epoch=True)
         str_results = ", ".join([f"{k}={v}" for k, v in results.items()])
@@ -61,6 +64,7 @@ class FileDumperPredictionCallback(PredictionCallback):
     def __call__(
         self,
         name: str,
+        path: str,
         predicted_samples: List[
             Tuple[Union[SentencePairSample, SequenceSample, TokensSample], Union[str, List[str], Tuple[int, int]]]
         ],
@@ -91,9 +95,17 @@ class PredictionPLCallback(pl.Callback):
                     prediction_conf["token_batch_size"],
                     prediction_conf.get("prediction_param_conf_path", None),
                     prediction_conf["limit"],
-                    prediction_conf["on_result"] or list(self.on_result.keys()),
+                    prediction_conf.get("on_result", list(self.on_result.keys())),
                 )
             )
+
+        self.slicing_cache = {}
+
+    def _get_sliced_path(self, samples_it, data_driver, path, limit, extension):
+        if (path, limit) not in self.slicing_cache:
+            self.slicing_cache[(path, limit)] = tempfile.NamedTemporaryFile(suffix=f".{extension}")
+            data_driver.save(samples_it, self.slicing_cache[(path, limit)].name)
+        return self.slicing_cache[(path, limit)].name
 
     def on_validation_epoch_start(self, trainer: pl.Trainer, model: ClassyPLModule) -> None:
 
@@ -116,27 +128,35 @@ class PredictionPLCallback(pl.Callback):
             extension = path.split(".")[-1]
             data_driver = get_data_driver(model.task, extension)
 
-            with open(path) as f:
-                lines_it = map(lambda l: l.strip(), f)
-                # apply limits
-                if trainer.global_step == 0:
-                    # do only a dry run on first epoch (correspond to sanity check run)
-                    lines_it = itertools.islice(lines_it, 5)
-                elif limit != -1:
-                    lines_it = itertools.islice(lines_it, limit)
+            # build samples iterator
+            samples_it = data_driver.read_from_path(path)
 
-                predicted_samples = list(
-                    model.predict(
-                        data_driver.read(lines_it),
-                        dataset_conf=self.prediction_dataset_conf,
-                        token_batch_size=token_batch_size,
-                    )
+            # apply limits (changing path as well)
+            if trainer.global_step == 0:
+                # do only a dry run on first epoch (correspond to sanity check run)
+                samples_it = itertools.islice(samples_it, 5)
+                samples_it, saving_samples_it = itertools.tee(samples_it)
+                path = self._get_sliced_path(saving_samples_it, data_driver, path=path, limit=5, extension=extension)
+            elif limit != -1:
+                # if provided, apply the limit given
+                samples_it = itertools.islice(samples_it, limit)
+                samples_it, saving_samples_it = itertools.tee(samples_it)
+                path = self._get_sliced_path(saving_samples_it, data_driver, path=path, limit=limit, extension=extension)
+
+            predicted_samples = list(
+                model.predict(
+                    samples_it,
+                    dataset_conf=self.prediction_dataset_conf,
+                    token_batch_size=token_batch_size,
                 )
+            )
 
-                for callback in on_result:
-                    logger.info(f"Executing inner callback {callback}")
-                    self.on_result[callback](name, predicted_samples, model, trainer)
+            for callback in on_result:
+                logger.info(f"Executing inner callback {callback}")
+                self.on_result[callback](name, path, predicted_samples, model, trainer)
 
             logger.info(f"Prediction callback finished processing configuration {name}")
 
         logger.info("Prediction callback completed")
+
+

@@ -12,6 +12,7 @@ class SQuADV1Evaluation(Evaluation):
 
     def __call__(
         self,
+        path: str,
         predicted_samples: List[Tuple[QASample, str]],
     ):
 

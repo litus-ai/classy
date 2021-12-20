@@ -24,10 +24,13 @@ def evaluate(
     metrics_fn: Optional[
         Callable[
             [
-                List[
-                    Tuple[
-                        Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
-                        Union[str, List[str]],
+                Tuple[
+                    str,
+                    List[
+                        Tuple[
+                            Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
+                            Union[str, List[str]],
+                        ]
                     ]
                 ]
             ],
@@ -76,6 +79,6 @@ def evaluate(
                 f.write(sample.pretty_print(classification_result=p) + "\n")
 
     # run evaluation and print metrics
-    result = metrics_fn(predicted_samples)
+    result = metrics_fn(input_path, predicted_samples)
     for metric_name, metric_f in result.items():
         print(f"* {metric_name}: {metric_f}")

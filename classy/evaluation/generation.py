@@ -14,7 +14,11 @@ class RougeEvaluation(Evaluation):
     def __init__(self):
         self.rouge = load_metric("rouge")
 
-    def __call__(self, predicted_samples: List[Tuple[GenerationSample, str]]) -> Dict:
+    def __call__(
+        self,
+        path: str,
+        predicted_samples: List[Tuple[GenerationSample, str]]
+    ) -> Dict:
         assert all(sample.target_sequence is not None for sample, _ in predicted_samples)
 
         gold_summaries = [sample.target_sequence for sample, _ in predicted_samples]
@@ -40,6 +44,7 @@ class SacreBleuEvaluation(Evaluation):
 
     def __call__(
         self,
+        path: str,
         predicted_samples: List[Tuple[GenerationSample, str]],
     ):
 
