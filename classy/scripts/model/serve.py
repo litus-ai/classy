@@ -3,20 +3,9 @@ from typing import List, Optional
 
 import torch
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from omegaconf import OmegaConf
-from pydantic import BaseModel, Field
 
-from classy.data.data_drivers import (
-    SEQUENCE,
-    TOKEN,
-    SENTENCE_PAIR,
-    QA,
-    TokensSample,
-    SentencePairSample,
-    SequenceSample,
-    QASample,
-)
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 from classy.utils.log import get_project_logger

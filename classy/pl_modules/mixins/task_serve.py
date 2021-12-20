@@ -46,7 +46,7 @@ class MarshalOutputSequenceSample(MarshalInputSequenceSample, MarshalOutputSampl
 
     @classmethod
     def marshal(cls, sample: SequenceSample):
-        return cls(sequence=sample.sequence, label=sample.label)
+        return cls(sequence=sample.sequence, label=sample.predicted_annotation)
 
 
 class SequenceTaskServeMixin(TaskServeMixin):
@@ -73,7 +73,7 @@ class MarshalOutputSentencePairSample(MarshalInputSentencePairSample, MarshalOut
 
     @classmethod
     def marshal(cls, sample: SentencePairSample):
-        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.label)
+        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.predicted_annotation)
 
 
 class SentencePairTaskServeMixin(TaskServeMixin):
@@ -99,7 +99,7 @@ class MarshalOutputTokensSample(MarshalInputTokensSample, MarshalOutputSample):
 
     @classmethod
     def marshal(cls, sample: TokensSample):
-        return cls(tokens=sample.tokens, labels=sample.labels)
+        return cls(tokens=sample.tokens, labels=sample.predicted_annotation)
 
 
 class TokenTaskServeMixin(TaskServeMixin):
@@ -128,11 +128,12 @@ class MarshalOutputQASample(MarshalInputQASample, MarshalOutputSample):
 
     @classmethod
     def marshal(cls, sample: QASample):
+        char_start, char_end = sample.predicted_annotation
         return cls(
             context=sample.context,
             question=sample.question,
-            answer_char_start=sample.char_start,
-            answer_char_end=sample.char_end,
+            answer_char_start=char_start,
+            answer_char_end=char_end,
         )
 
 
@@ -169,7 +170,7 @@ class MarshalOutputGenerationSample(MarshalInputGenerationSample, MarshalOutputS
             source_sequence=sample.source_sequence,
             source_language=sample.source_language,
             target_language=sample.target_language,
-            target_sequence=sample.target_sequence,
+            target_sequence=sample.predicted_annotation,
         )
 
 

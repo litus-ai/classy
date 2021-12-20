@@ -64,11 +64,9 @@ class PredictionMixin:
                     # do batch predict
                     batch = move_data_to_device(batch, self.device)
                     batch_out = self.batch_predict(**batch)
-                    for sample in batch_out:
-                        yield sample
                     # update prediction position position
-                    for sample, prediction in batch_out:
-                        position2predicted_sample[sample._mixin_prediction_position] = (sample, prediction)
+                    for sample in batch_out:
+                        position2predicted_sample[sample._mixin_prediction_position] = sample
                     # yield
                     while next_prediction_position in position2predicted_sample:
                         yield position2predicted_sample[next_prediction_position]

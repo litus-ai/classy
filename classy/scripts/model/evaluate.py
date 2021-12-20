@@ -1,4 +1,4 @@
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Tuple
 
 import hydra
 import torch
@@ -24,10 +24,8 @@ def evaluate(
     metrics_fn: Optional[
         Callable[
             [
-                Tuple[
-                    str,
-                    List[ClassySample]
-                ]
+                str,
+                List[ClassySample]
             ],
             Dict,
         ]
