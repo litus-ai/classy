@@ -34,9 +34,18 @@ class PredictionMixin:
         None,
     ]:
 
+        # setup infrastructure to re-yield in order
+        def samples_it():
+            for i, sample in enumerate(samples):
+                assert sample._mixin_prediction_position is None
+                sample._mixin_prediction_position = i
+                yield sample
+        next_prediction_position = 0
+        position2predicted_sample = {}
+
         # instantiate dataset
         dataset_conf["tokens_per_batch"] = token_batch_size
-        dataset = hydra.utils.instantiate(dataset_conf, samples=samples, vocabulary=self.vocabulary)
+        dataset = hydra.utils.instantiate(dataset_conf, samples=samples_it(), vocabulary=self.vocabulary)
 
         # instantiate dataloader
         iterator = DataLoader(dataset, batch_size=None, num_workers=0)
@@ -46,10 +55,17 @@ class PredictionMixin:
         for batch in iterator:
             with autocast(enabled=True):  # todo: always enabled?
                 with torch.inference_mode():
+                    # do batch predict
                     batch = move_data_to_device(batch, self.device)
                     batch_out = self.batch_predict(**batch)
+                    # update prediction position position
                     for sample, prediction in batch_out:
-                        yield sample, prediction
+                        position2predicted_sample[sample._mixin_prediction_position] = (sample, prediction)
+                    # yield
+                    while next_prediction_position in position2predicted_sample:
+                        yield position2predicted_sample[next_prediction_position]
+                        del position2predicted_sample[next_prediction_position]
+                        next_prediction_position += 1
 
         if progress_bar:
             iterator.close()
