@@ -15,8 +15,9 @@ from classy.data.data_drivers import (
     GENERATION,
     GenerationSample,
 )
+from classy.pl_modules.mixins.task_serve import SequenceTaskServeMixin, SentencePairTaskServeMixin, TokenTaskServeMixin, \
+    QATaskServeMixin, GenerationTaskServeMixin
 from classy.pl_modules.mixins.task_ui import (
-    TaskUIMixin,
     SequenceTaskUIMixin,
     TokenTaskUIMixin,
     SentencePairTaskUIMixin,
@@ -25,7 +26,7 @@ from classy.pl_modules.mixins.task_ui import (
 )
 
 
-class TaskMixin(TaskUIMixin):
+class TaskMixin:
     def read_input_from_bash(
         self,
     ) -> Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]:
@@ -36,7 +37,7 @@ class TaskMixin(TaskUIMixin):
         raise NotImplementedError
 
 
-class SequenceTask(SequenceTaskUIMixin, TaskMixin):
+class SequenceTask(SequenceTaskServeMixin, SequenceTaskUIMixin, TaskMixin):
 
     __data_driver = get_data_driver(SEQUENCE, JSONL)
 
@@ -50,7 +51,7 @@ class SequenceTask(SequenceTaskUIMixin, TaskMixin):
         return SEQUENCE
 
 
-class TokensTask(TokenTaskUIMixin, TaskMixin):
+class TokensTask(TokenTaskServeMixin, TokenTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(TOKEN, JSONL)
 
     def read_input_from_bash(self) -> TokensSample:
@@ -63,7 +64,7 @@ class TokensTask(TokenTaskUIMixin, TaskMixin):
         return TOKEN
 
 
-class GenerationTask(GenerationTaskUIMixin, TaskMixin):
+class GenerationTask(GenerationTaskServeMixin, GenerationTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(GENERATION, JSONL)
 
     def read_input_from_bash(self) -> GenerationSample:
@@ -80,7 +81,7 @@ class GenerationTask(GenerationTaskUIMixin, TaskMixin):
         return GENERATION
 
 
-class SentencePairTask(SentencePairTaskUIMixin, TaskMixin):
+class SentencePairTask(SentencePairTaskServeMixin, SentencePairTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(SENTENCE_PAIR, JSONL)
 
     def read_input_from_bash(self) -> SentencePairSample:
@@ -94,7 +95,7 @@ class SentencePairTask(SentencePairTaskUIMixin, TaskMixin):
         return SENTENCE_PAIR
 
 
-class QATask(QATaskUIMixin, TaskMixin):
+class QATask(QATaskServeMixin, QATaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(QA, JSONL)
 
     def read_input_from_bash(self) -> QASample:

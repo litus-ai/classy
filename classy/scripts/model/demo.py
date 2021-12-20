@@ -126,7 +126,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
 
     st.sidebar.title("Classy Demo")
     with st.sidebar.expander(label="Task", expanded=True):
-        model.render_task_in_sidebar()
+        model.ui_render_task_in_sidebar()
 
     with st.sidebar.expander(label="Model Info"):
         st.markdown(
@@ -144,7 +144,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
 
     def render_model_demo():
         # read input
-        sample = model.read_input(inference_message=inference_message, inferred_examples=inferred_examples)
+        sample = model.ui_read_input(inference_message=inference_message, inferred_examples=inferred_examples)
 
         if sample is not None:
             # predict
@@ -154,7 +154,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
             sample.update_classification(prediction)
 
             # render output
-            model.render(sample, time=end - start)
+            model.ui_render(sample, time=end - start)
 
     tabs = dict(model=("Model demo", render_model_demo), config=("Config", render_config))
 
