@@ -14,7 +14,7 @@ logger = get_project_logger(__name__)
 class HFSequenceDataset(HFBaseDataset):
     @staticmethod
     def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
-        return Vocabulary.from_samples([{"labels": sample.label} for sample in samples])
+        return Vocabulary.from_samples([{"labels": sample.reference_annotation} for sample in samples])
 
     def init_fields_batcher(self) -> Dict:
         return {
@@ -32,8 +32,8 @@ class HFSequenceDataset(HFBaseDataset):
                 "input_ids": input_ids,
                 "attention_mask": torch.ones_like(input_ids),
             }
-            if sequence_sample.label is not None:
-                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
+            if sequence_sample.reference_annotation is not None:
+                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.reference_annotation)]
             elem_dict["samples"] = sequence_sample
             yield elem_dict
 
@@ -41,7 +41,9 @@ class HFSequenceDataset(HFBaseDataset):
 class HFTokenDataset(HFBaseDataset):
     @staticmethod
     def fit_vocabulary(samples: Iterator[TokensSample]) -> Vocabulary:
-        return Vocabulary.from_samples([{"labels": label} for sample in samples for label in sample.labels])
+        return Vocabulary.from_samples(
+            [{"labels": label} for sample in samples for label in sample.reference_annotation]
+        )
 
     def init_fields_batcher(self) -> Dict:
         return {
@@ -61,9 +63,12 @@ class HFTokenDataset(HFBaseDataset):
                 "attention_mask": torch.ones_like(input_ids),
                 "token_offsets": token_offsets,
             }
-            if token_sample.labels is not None:
+            if token_sample.reference_annotation is not None:
                 elem_dict["labels"] = torch.tensor(
-                    [self.vocabulary.get_idx(k="labels", elem=token_sample.labels[idx]) for idx in token_sample.target]
+                    [
+                        self.vocabulary.get_idx(k="labels", elem=token_sample.reference_annotation[idx])
+                        for idx in token_sample.target
+                    ]
                 )
 
             elem_dict["samples"] = token_sample
@@ -102,8 +107,8 @@ class HFSentencePairDataset(HFSequenceDataset):
             if "token_type_ids" in tokenization_output:
                 elem_dict["token_type_ids"] = tokenization_output["token_type_ids"].squeeze()
 
-            if sequence_sample.label is not None:
-                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.label)]
+            if sequence_sample.reference_annotation is not None:
+                elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.reference_annotation)]
 
             elem_dict["samples"] = sequence_sample
             yield elem_dict
@@ -178,9 +183,10 @@ class HFQADataset(HFBaseDataset):
                     for c in range(*cp):
                         char2token[c] = _t_idx
 
-            if qa_sample.char_start is not None and qa_sample.char_end is not None:
-                elem_dict["start_position"] = char2token[qa_sample.char_start]
-                elem_dict["end_position"] = char2token[qa_sample.char_end - 1]
+            if qa_sample.reference_annotation is not None:
+                char_start, char_end = qa_sample.reference_annotation
+                elem_dict["start_position"] = char2token[char_start]
+                elem_dict["end_position"] = char2token[char_end - 1]
                 if elem_dict["start_position"] is None or elem_dict["end_position"] is None:
                     continue
 

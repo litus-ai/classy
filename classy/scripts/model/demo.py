@@ -8,7 +8,7 @@ import streamlit as st
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver
+from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, ClassySample
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,
@@ -16,9 +16,7 @@ from classy.utils.lightning import (
 )
 
 
-def auto_infer_examples(
-    task: str, model_checkpoint_path: str
-) -> Tuple[str, List[Union[SentencePairSample, SequenceSample, TokensSample]]]:
+def auto_infer_examples(task: str, model_checkpoint_path: str) -> Tuple[str, List[ClassySample]]:
     experiment_folder = Path(model_checkpoint_path).parent.parent
     if (experiment_folder / "data" / "examples-test.jsonl").exists():
         return "Examples from test", list(
@@ -149,9 +147,8 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
         if sample is not None:
             # predict
             start = time.perf_counter()
-            _, prediction = next(model.predict(samples=[sample], dataset_conf=dataset_conf))
+            sample = next(model.predict(samples=[sample], dataset_conf=dataset_conf))
             end = time.perf_counter()
-            sample.update_classification(prediction)
 
             # render output
             model.ui_render(sample, time=end - start)

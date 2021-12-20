@@ -208,7 +208,7 @@ class ClassyDataModule(pl.LightningDataModule):
                 data_driver=self.data_driver,
             ).vocabulary
             if self.vocabulary is not None:
-                self.vocabulary.save("vocabulary/")
+                self.vocabulary.save("vocabulary")
 
     def setup(self, stage: Optional[str] = None) -> None:
 

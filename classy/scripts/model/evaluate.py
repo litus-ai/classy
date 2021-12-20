@@ -1,10 +1,10 @@
-from typing import Optional, List, Callable, Union, Tuple, Dict
+from typing import Optional, List, Callable, Dict
 
 import hydra
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample
+from classy.data.data_drivers import ClassySample
 from classy.data.data_drivers import get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
@@ -26,12 +26,7 @@ def evaluate(
             [
                 Tuple[
                     str,
-                    List[
-                        Tuple[
-                            Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample],
-                            Union[str, List[str]],
-                        ]
-                    ]
+                    List[ClassySample]
                 ]
             ],
             Dict,
@@ -75,8 +70,8 @@ def evaluate(
     # dump predictions if requested
     if output_path is not None:
         with open(output_path, "w") as f:
-            for sample, p in predicted_samples:
-                f.write(sample.pretty_print(classification_result=p) + "\n")
+            for sample in predicted_samples:
+                f.write(sample.pretty_print() + "\n")
 
     # run evaluation and print metrics
     result = metrics_fn(input_path, predicted_samples)
