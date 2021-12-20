@@ -1,5 +1,6 @@
 import functools
 import json
+from pathlib import Path
 from typing import List, Union, Optional, Iterator, Generator, Tuple, Dict, Any
 
 from classy.utils.log import get_project_logger
@@ -193,6 +194,10 @@ class GenerationSample(ClassyStruct):
 
 
 class DataDriver:
+
+    def dataset_exists_at_path(self, path: str) -> bool:
+        return Path(path).exists()
+
     def read_from_path(
         self, path: str
     ) -> Generator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample], None, None]:

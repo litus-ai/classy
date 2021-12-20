@@ -58,12 +58,6 @@ class BaseDataset(IterableDataset):
         return cls(samples_iterator=lambda: data_driver.read_from_path(path), vocabulary=vocabulary, **kwargs)
 
     @classmethod
-    def from_lines(
-        cls, lines: Iterator[str], data_driver: DataDriver, vocabulary: Vocabulary, **kwargs
-    ) -> "BaseDataset":
-        return cls(samples_iterator=lambda: data_driver.read(lines), vocabulary=vocabulary, **kwargs)
-
-    @classmethod
     def from_samples(
         cls,
         samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
