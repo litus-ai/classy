@@ -2,7 +2,7 @@ import collections
 import html
 import json
 import re
-from typing import Union, List, Optional
+from typing import List, Optional
 
 import streamlit as st
 from annotated_text import annotation
