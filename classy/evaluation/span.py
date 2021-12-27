@@ -10,7 +10,7 @@ class SeqEvalSpanEvaluation(Evaluation):
     def __init__(self):
         self.backend_metric = load_metric("seqeval")
 
-    def __call__(self, predicted_samples: List[TokensSample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[TokensSample]) -> Dict:
 
         metric_out = self.backend_metric.compute(
             predictions=[sample.predicted_annotation for sample in predicted_samples],

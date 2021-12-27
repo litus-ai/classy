@@ -2,13 +2,13 @@ import argparse
 import itertools
 import time
 from pathlib import Path
-from typing import List, Union, Tuple, Dict, Optional, Callable
+from typing import List, Tuple, Dict, Optional, Callable
 
 import streamlit as st
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import SentencePairSample, SequenceSample, TokensSample, get_data_driver, ClassySample
+from classy.data.data_drivers import get_data_driver, ClassySample
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,
@@ -124,7 +124,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
 
     st.sidebar.title("Classy Demo")
     with st.sidebar.expander(label="Task", expanded=True):
-        model.render_task_in_sidebar()
+        model.ui_render_task_in_sidebar()
 
     with st.sidebar.expander(label="Model Info"):
         st.markdown(
@@ -142,7 +142,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
 
     def render_model_demo():
         # read input
-        sample = model.read_input(inference_message=inference_message, inferred_examples=inferred_examples)
+        sample = model.ui_read_input(inference_message=inference_message, inferred_examples=inferred_examples)
 
         if sample is not None:
             # predict
@@ -151,7 +151,7 @@ def demo(model_checkpoint_path: str, cuda_device: int, prediction_params: Option
             end = time.perf_counter()
 
             # render output
-            model.render(sample, time=end - start)
+            model.ui_render(sample, time=end - start)
 
     tabs = dict(model=("Model demo", render_model_demo), config=("Config", render_config))
 

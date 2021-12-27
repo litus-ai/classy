@@ -2,7 +2,7 @@ import collections
 import html
 import json
 import re
-from typing import Union, List, Optional
+from typing import List, Optional
 
 import streamlit as st
 from annotated_text import annotation
@@ -26,17 +26,17 @@ from classy.utils.streamlit import get_md_200_random_color_generator
 
 
 class TaskUIMixin:
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         raise NotImplementedError
 
-    def read_input(
+    def ui_read_input(
         self,
         inference_message: str,
         inferred_examples: List[ClassySample],
     ) -> Optional[ClassySample]:
         raise NotImplementedError
 
-    def render(
+    def ui_render(
         self,
         predicted_sample: ClassySample,
         time: float,
@@ -49,7 +49,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(SENTENCE_PAIR, JSONL)
     truncate_k = 40
 
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         st.markdown(
             f"""
                 * **task**: Sentence-Pair Classification
@@ -57,7 +57,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def read_input(
+    def ui_read_input(
         self, inference_message: str, inferred_examples: List[SentencePairSample]
     ) -> Optional[SentencePairSample]:
         # tuple can't be used for selection boxes, let's use incipts
@@ -80,7 +80,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
             return next(self.__data_driver.read([sample]))
         return None
 
-    def render(self, predicted_sample: SentencePairSample, time: float):
+    def ui_render(self, predicted_sample: SentencePairSample, time: float):
         st.markdown(
             f"""
             <div>
@@ -98,7 +98,7 @@ class SentencePairTaskUIMixin(TaskUIMixin):
 class SequenceTaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(SEQUENCE, JSONL)
 
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         st.markdown(
             f"""
                 * **task**: Sequence Classification
@@ -106,7 +106,9 @@ class SequenceTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def read_input(self, inference_message: str, inferred_examples: List[SequenceSample]) -> Optional[SequenceSample]:
+    def ui_read_input(
+        self, inference_message: str, inferred_examples: List[SequenceSample]
+    ) -> Optional[SequenceSample]:
         placeholder = st.selectbox(inference_message, options=[ie.sequence for ie in inferred_examples], index=0)
         input_text = st.text_area("Input sequence to classify", placeholder)
         if st.button("Classify", key="classify"):
@@ -114,7 +116,7 @@ class SequenceTaskUIMixin(TaskUIMixin):
             return next(self.__data_driver.read([sample]))
         return None
 
-    def render(self, predicted_sample: SequenceSample, time: float):
+    def ui_render(self, predicted_sample: SequenceSample, time: float):
         st.markdown(
             f"""
             <div>
@@ -134,7 +136,7 @@ class TokenTaskUIMixin(TaskUIMixin):
     color_generator = get_md_200_random_color_generator()
     color_mapping = collections.defaultdict(lambda: TokenTaskUIMixin.color_generator())
 
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         st.markdown(
             f"""
                 * **task**: Token Classification
@@ -142,7 +144,7 @@ class TokenTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def read_input(self, inference_message: str, inferred_examples: List[TokensSample]) -> Optional[TokensSample]:
+    def ui_read_input(self, inference_message: str, inferred_examples: List[TokensSample]) -> Optional[TokensSample]:
         placeholder = st.selectbox(
             inference_message, options=[" ".join(ie.tokens) for ie in inferred_examples], index=0
         )
@@ -152,7 +154,7 @@ class TokenTaskUIMixin(TaskUIMixin):
             return next(self.__data_driver.read([sample]))
         return None
 
-    def render(self, predicted_sample: TokensSample, time: float):
+    def ui_render(self, predicted_sample: TokensSample, time: float):
 
         tokens, labels = predicted_sample.tokens, predicted_sample.predicted_annotation
 
@@ -194,7 +196,7 @@ class QATaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(QA, JSONL)
     truncate_k = 40
 
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         st.markdown(
             f"""
                 * **task**: QA
@@ -202,7 +204,7 @@ class QATaskUIMixin(TaskUIMixin):
             """
         )
 
-    def read_input(self, inference_message: str, inferred_examples: List[QASample]) -> Optional[QASample]:
+    def ui_read_input(self, inference_message: str, inferred_examples: List[QASample]) -> Optional[QASample]:
         # tuple can't be used for selection boxes, let's use incipts
         option2example = {}
         for ie in inferred_examples:
@@ -224,7 +226,7 @@ class QATaskUIMixin(TaskUIMixin):
             return next(self.__data_driver.read([sample]))
         return None
 
-    def render(self, predicted_sample: QASample, time: float):
+    def ui_render(self, predicted_sample: QASample, time: float):
         char_start, char_end = predicted_sample.predicted_annotation
         annotated_html_components = [
             str(html.escape(f"{predicted_sample.context[: char_start]} ")),
@@ -254,7 +256,7 @@ class QATaskUIMixin(TaskUIMixin):
 class GenerationTaskUIMixin(TaskUIMixin):
     __data_driver = get_data_driver(GENERATION, JSONL)
 
-    def render_task_in_sidebar(self):
+    def ui_render_task_in_sidebar(self):
         st.markdown(
             f"""
                 * **task**: QA
@@ -262,7 +264,7 @@ class GenerationTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def read_input(
+    def ui_read_input(
         self,
         inference_message: str,
         inferred_examples: List[GenerationSample],
@@ -295,7 +297,7 @@ class GenerationTaskUIMixin(TaskUIMixin):
             return next(self.__data_driver.read([sample]))
         return None
 
-    def render(self, predicted_sample: GenerationSample, time: float):
+    def ui_render(self, predicted_sample: GenerationSample, time: float):
         st.markdown(
             f"""
                     <div>

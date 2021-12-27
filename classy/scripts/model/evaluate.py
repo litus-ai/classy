@@ -1,4 +1,4 @@
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Tuple
 
 import hydra
 import torch
@@ -21,7 +21,12 @@ def evaluate(
     output_path: Optional[str] = None,
     evaluate_config_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
-    metrics_fn: Optional[Callable[[List[ClassySample]], Dict]] = None,
+    metrics_fn: Optional[
+        Callable[
+            [str, List[ClassySample]],
+            Dict,
+        ]
+    ] = None,
 ):
 
     # load model
@@ -64,6 +69,6 @@ def evaluate(
                 f.write(sample.pretty_print() + "\n")
 
     # run evaluation and print metrics
-    result = metrics_fn(predicted_samples)
+    result = metrics_fn(input_path, predicted_samples)
     for metric_name, metric_f in result.items():
         print(f"* {metric_name}: {metric_f}")

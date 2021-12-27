@@ -21,21 +21,21 @@ def p_r_f_support(gold, pred) -> Dict[str, float]:
 
 
 class SequenceSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[SequenceSample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[SequenceSample]) -> Dict:
         gold = [sample.reference_annotation for sample in predicted_samples]
         pred = [sample.predicted_annotation for sample in predicted_samples]
         return {"accuracy": accuracy(gold, pred), **p_r_f_support(gold, pred)}
 
 
 class SentencePairSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[SentencePairSample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[SentencePairSample]) -> Dict:
         gold = [sample.reference_annotation for sample in predicted_samples]
         pred = [sample.predicted_annotation for sample in predicted_samples]
         return {"accuracy": accuracy(gold, pred), **p_r_f_support(gold, pred)}
 
 
 class TokenSimpleEvaluation(Evaluation):
-    def __call__(self, predicted_samples: List[TokensSample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[TokensSample]) -> Dict:
         gold = [sample.reference_annotation for sample in predicted_samples]
         pred = [sample.predicted_annotation for sample in predicted_samples]
         gold, pred = flatten(gold), flatten(pred)
@@ -47,7 +47,7 @@ class QASimpleEvaluation(Evaluation):
     Computes a simple exact-match accuracy
     """
 
-    def __call__(self, predicted_samples: List[QASample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[QASample]) -> Dict:
         n, d = 0, 0
         for sample in predicted_samples:
             d += 1
@@ -61,7 +61,7 @@ class GenerationSimpleEvaluation(Evaluation):
     Computes a simple full-text accuracy
     """
 
-    def __call__(self, predicted_samples: List[GenerationSample]) -> Dict:
+    def __call__(self, path: str, predicted_samples: List[GenerationSample]) -> Dict:
         n, d = 0, 0
         for sample in predicted_samples:
             d += 1

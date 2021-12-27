@@ -3,94 +3,14 @@ from typing import List, Optional
 
 import torch
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from omegaconf import OmegaConf
-from pydantic import BaseModel, Field
 
-from classy.data.data_drivers import (
-    SEQUENCE,
-    TOKEN,
-    SENTENCE_PAIR,
-    QA,
-    TokensSample,
-    SentencePairSample,
-    SequenceSample,
-    QASample,
-)
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
-
-
-class MarshalInputSequenceSample(BaseModel):
-    sequence: str = Field(None, description="Input sequence")
-
-    def unmarshal(self) -> SequenceSample:
-        return SequenceSample(sequence=self.sequence)
-
-
-class MarshalInputSentencePairSample(BaseModel):
-    sentence1: str = Field(None, description="First input sentence")
-    sentence2: str = Field(None, description="Second input sentence")
-
-    def unmarshal(self) -> SentencePairSample:
-        return SentencePairSample(sentence1=self.sentence1, sentence2=self.sentence2)
-
-
-class MarshalInputTokensSample(BaseModel):
-    tokens: List[str] = Field(None, description="List of input tokens")
-
-    def unmarshal(self) -> TokensSample:
-        return TokensSample(tokens=self.tokens)
-
-
-class MarshalInputQASample(BaseModel):
-    context: str = Field(None, description="Input context")
-    question: str = Field(None, description="Input question")
-
-    def unmarshal(self) -> QASample:
-        return QASample(context=self.context, question=self.question)
-
-
-class MarshalOutputSequenceSample(MarshalInputSequenceSample):
-    label: str = Field(None, description="Label resulting from model classification")
-
-    @classmethod
-    def marshal(cls, sample: SequenceSample):
-        return cls(sequence=sample.sequence, label=sample.predicted_annotation)
-
-
-class MarshalOutputSentencePairSample(MarshalInputSentencePairSample):
-    label: str = Field(None, description="Label resulting from model classification")
-
-    @classmethod
-    def marshal(cls, sample: SentencePairSample):
-        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.predicted_annotation)
-
-
-class MarshalOutputTokensSample(MarshalInputTokensSample):
-    labels: List[str] = Field(None, description="List of labels the model assigned to each input token")
-
-    @classmethod
-    def marshal(cls, sample: TokensSample):
-        return cls(tokens=sample.tokens, labels=sample.predicted_annotation)
-
-
-class MarshalOutputQASample(MarshalInputQASample):
-    answer_char_start: int = Field(None, description="Answer starting char index")
-    answer_char_end: int = Field(None, description="Answer ending char index")
-
-    @classmethod
-    def marshal(cls, sample: QASample):
-        char_start, char_end = sample.predicted_annotation
-        return cls(
-            context=sample.context,
-            question=sample.question,
-            answer_char_start=char_start,
-            answer_char_end=char_end,
-        )
 
 
 def serve(
@@ -111,31 +31,16 @@ def serve(
 
     # load dataset conf
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    dataset_conf["_target_"] = dataset_conf["_target_"].replace(
-        ".from_lines", ".from_samples"
-    )  # todo can we do it better?
 
     # mock call to load resources
     next(model.predict(samples=[], dataset_conf=dataset_conf), None)
 
-    # compute dynamic type
-    if model.task == SEQUENCE:
-        i_type, o_type = MarshalInputSequenceSample, MarshalOutputSequenceSample
-    elif model.task == SENTENCE_PAIR:
-        i_type, o_type = MarshalInputSentencePairSample, MarshalOutputSentencePairSample
-    elif model.task == TOKEN:
-        i_type, o_type = MarshalInputTokensSample, MarshalOutputTokensSample
-    elif model.task == QA:
-        i_type, o_type = MarshalInputQASample, MarshalOutputQASample
-    else:
-        raise ValueError()
-
     # for better readability on the OpenAPI docs
     # why leak the inner confusing class names
-    class InputSample(i_type):
+    class InputSample(model.serve_input_class):
         pass
 
-    class OutputSample(o_type):
+    class OutputSample(model.serve_output_class):
         pass
 
     app = FastAPI(title="Classy Serve")
