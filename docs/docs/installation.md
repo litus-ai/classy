@@ -10,7 +10,7 @@ We strongly recommend using [Conda](https://conda.io/) as the environment manage
 `classy` requires Python 3.7 or later, and is built on [PyTorch Lightning](https://pytorchlightning.ai/).
 It's recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/).
 
-Or, simply put: 
+Or, simply put:
 ```yaml
 conda install pytorch cudatoolkit=CUDA_VERSION -c pytorch
 ```

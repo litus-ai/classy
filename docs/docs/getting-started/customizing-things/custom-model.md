@@ -22,7 +22,7 @@ For instance, considering Sequence Classification, you would need to implement t
 ```python
 # subclass your task and ClassyPLModule
 class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
-    
+
     def __init__(
         self,
         param1: Any,
@@ -43,17 +43,17 @@ class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
         # it emits tuples (sequence sample, predicted label)
         # decoding logic, such as converting labels from tensors to strings, goes here
         raise NotImplementedError
-    
+
     ###################
     # lightning hooks #
     ###################
-    
+
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         raise NotImplementedError
-    
+
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         raise NotImplementedError
-        
+
     def test_step(self, batch: dict, batch_idx: int) -> None:
         raise NotImplementedError
 ```
@@ -64,7 +64,7 @@ Practically, imagine you want to build a Sequence Classification model on top of
 
 ```python title="classy/pl_modules/custom_model.py"
 class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
-    pass 
+    pass
 ```
 
 You first implement its constructor:
@@ -108,7 +108,7 @@ def forward(
 ```
 
 There's nothing really special about this forward. `ClassificationOutput` is just a dataclass to conveniently store logits,
-probabilities, predictions and loss. The only important thing is the signature: it **must match** with the batches your 
+probabilities, predictions and loss. The only important thing is the signature: it **must match** with the batches your
 dataset emits (here, we are using *classy.data.dataset.hf.HFSequenceDataset*).
 
 Then, there's the batch predict method, which wraps your forward method to emit classified *SequenceSample*-s:

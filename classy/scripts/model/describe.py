@@ -94,7 +94,9 @@ class InputLenUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return len(self._input_lens) > 0
 
-    def update_metric(self, dataset_sample: Union[str, List[str], Tuple[List[str], ClassySample]]) -> None:
+    def update_metric(
+        self, dataset_sample: Union[str, List[str], Tuple[List[str], ClassySample]]
+    ) -> None:
         """
         Update the metrics lengths store
         Args:
@@ -120,12 +122,22 @@ class InputLenUIMetric(UIMetric):
         st.text("")
         c1, c2, c3, c4 = st.columns(4)
         unit = "tokens" if self.tokenized_input else "characters"
-        c1.metric(label=f"Avg len in {unit}", value="{:.2f}".format(sum(self._input_lens) / len(self._input_lens)))
-        c2.metric(label=f"Min len in {unit}", value="{:.2f}".format(min(self._input_lens)))
-        c3.metric(label=f"Max len in {unit}", value="{:.2f}".format(max(self._input_lens)))
+        c1.metric(
+            label=f"Avg len in {unit}",
+            value="{:.2f}".format(sum(self._input_lens) / len(self._input_lens)),
+        )
+        c2.metric(
+            label=f"Min len in {unit}", value="{:.2f}".format(min(self._input_lens))
+        )
+        c3.metric(
+            label=f"Max len in {unit}", value="{:.2f}".format(max(self._input_lens))
+        )
         c4.metric(label=f"Total number of samples", value=f"{len(self._input_lens)}")
         char_len_boxplot = boxplot(
-            y=np.array(self._input_lens), x_name=self.title(), y_name=f"length in {unit}", color=get_random_color()
+            y=np.array(self._input_lens),
+            x_name=self.title(),
+            y_name=f"length in {unit}",
+            color=get_random_color(),
         )
         st.write(char_len_boxplot)
 
@@ -167,7 +179,9 @@ class ClassSpecificInputLenUIMetric(UIMetric):
         if label is None:
             return
 
-        if type(label) != str:  # TODO: is it correct? does the string means that we have just one class
+        if (
+            type(label) != str
+        ):  # TODO: is it correct? does the string means that we have just one class
             print("Labels at this moment can only be classes.")
             raise NotImplementedError
 
@@ -239,7 +253,9 @@ class LabelsUIMetric(UIMetric):
     def is_writable(self) -> bool:
         return len(self.labels) > 0
 
-    def update_metric(self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample]) -> None:
+    def update_metric(
+        self, dataset_sample: Union[SequenceSample, SentencePairSample, TokensSample]
+    ) -> None:
         sample_labels = dataset_sample.get_current_classification()
         if type(sample_labels) == str:
             sample_labels = [sample_labels]
@@ -299,10 +315,17 @@ class AnswerPositionUIMetric(UIMetric):
     def write_body(self) -> None:
         c1, c2, c3 = st.columns(3)
         c1.metric(
-            label=f"Avg answer position in context", value="{:.1f}%".format(sum(self._positions) / len(self._positions))
+            label=f"Avg answer position in context",
+            value="{:.1f}%".format(sum(self._positions) / len(self._positions)),
         )
-        c2.metric(label=f"Min answer position in context", value="{:.1f}%".format(min(self._positions)))
-        c3.metric(label=f"Max position in context", value="{:.1f}%".format(max(self._positions)))
+        c2.metric(
+            label=f"Min answer position in context",
+            value="{:.1f}%".format(min(self._positions)),
+        )
+        c3.metric(
+            label=f"Max position in context",
+            value="{:.1f}%".format(max(self._positions)),
+        )
         histogram = px.histogram(
             x=self._positions,
             nbins=10,
@@ -467,7 +490,9 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                     description="Average, Min and Max answers length in terms of characters (Top). "
                     "Quartiles on a boxplot (Bottom)",
                 ),
-                lambda sample: sample.context[sample.reference_annotation[0] : sample.reference_annotation[1]]
+                lambda sample: sample.context[
+                    sample.reference_annotation[0] : sample.reference_annotation[1]
+                ]
                 if sample.reference_annotation is not None
                 else None,
             )
@@ -505,7 +530,11 @@ def get_ui_metrics(task: str, tokenize: Optional[str]) -> List[UIMetric]:
                         "Quartiles on a boxplot (Bottom)",
                     ),
                     lambda sample: tokenizer.tokenize(
-                        sample.context[sample.reference_annotation[0] : sample.reference_annotation[1]]
+                        sample.context[
+                            sample.reference_annotation[
+                                0
+                            ] : sample.reference_annotation[1]
+                        ]
                     )
                     if sample.reference_annotation is not None
                     else None,
@@ -671,7 +700,7 @@ def init_layout(task: str, dataset_path: str, metrics: Iterable[UIMetric]):
     st.sidebar.markdown(
         f"""
             * **task**: {task.upper()}
-            * **dataset path**: {dataset_path} 
+            * **dataset path**: {dataset_path}
         """
     )
     st.sidebar.markdown("### Metrics Index")

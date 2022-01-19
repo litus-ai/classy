@@ -11,7 +11,7 @@ class MyCustomDataset(BaseDataset):
 
     @staticmethod
     def requires_vocab() -> bool:
-       # returns true if the dataset requires fitting a vocabulary, false otherwise 
+       # returns true if the dataset requires fitting a vocabulary, false otherwise
         pass
 
     @staticmethod

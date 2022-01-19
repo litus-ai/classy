@@ -10,8 +10,8 @@ You can use `classy predict` to perform predictions with a trained model. Two mo
 * File-based prediction
 * Bash-interactive
 
-File-based prediction allows you to automatically tag files. Such files can be in any supported format and need not contain 
-label information: that is, the corresponding area, such as the second column for .tsv files in sequence classification, 
+File-based prediction allows you to automatically tag files. Such files can be in any supported format and need not contain
+label information: that is, the corresponding area, such as the second column for .tsv files in sequence classification,
 can be missing (if present, it will just be ignored).
 
 <ReactTermynal>

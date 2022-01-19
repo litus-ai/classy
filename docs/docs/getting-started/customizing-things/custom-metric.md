@@ -5,7 +5,7 @@ title: Custom Evaluation Metric
 
 import ReactTermynal from '/src/components/termynal';
 
-Adding a custom metric for evaluation is easy in `classy`, and you can use it for both `classy evaluate` and 
+Adding a custom metric for evaluation is easy in `classy`, and you can use it for both `classy evaluate` and
 `classy train` (to monitor performance or, perhaps, even early-stop). To do this, you just need to:
 
 1. Write your *Evaluation* class
@@ -52,7 +52,7 @@ class SeqEvalSpanEvaluation(Evaluation):
 
         return {"precision": p, "recall": r, "f1": f1}
 ```
-We use here the SpanF1 metric implemented in the HuggingFace *datasets* library (this is what *load_metric("seqeval")* 
+We use here the SpanF1 metric implemented in the HuggingFace *datasets* library (this is what *load_metric("seqeval")*
 does). Then, you write the corresponding config:
 ```yaml title="configurations/evaluation/span.yaml"
 _target_: 'classy.evaluation.span.SeqEvalSpanEvaluation'
@@ -128,9 +128,9 @@ provided, all callbacks will be used
 
 :::tip
 
-You can use your metric for early-stopping as well! Just add 
+You can use your metric for early-stopping as well! Just add
 `-c [...] callbacks_monitor=<setting-name>-<name-of-metric-returned-in-evaluation-dict> callbacks_mode=<max-or-min>`.
-For instance, in our example, to early-stop on SpanF1 on the validation set, 
+For instance, in our example, to early-stop on SpanF1 on the validation set,
 use `-c [...] callbacks_monitor=validation-f1 callbacks_mode=max`
 
 :::
@@ -138,9 +138,9 @@ use `-c [...] callbacks_monitor=validation-f1 callbacks_mode=max`
 ## Swapping Evaluation Metric
 
 `classy` also supports changing the evaluation metric directly when using `classy evaluate`, regardless of the config
-used in `classy train`. To do so, you can use the the `--evaluation-config` CLI parameter to `classy evaluate`. This 
-parameter specifies the configuration path (e.g. *configurations/evaluation/span.yaml*) where the config of the desired 
-evaluation metric is stored. 
+used in `classy train`. To do so, you can use the the `--evaluation-config` CLI parameter to `classy evaluate`. This
+parameter specifies the configuration path (e.g. *configurations/evaluation/span.yaml*) where the config of the desired
+evaluation metric is stored.
 
 <ReactTermynal>
   <span data-ty="input">classy train token DATA-PATH -n token</span>
@@ -163,4 +163,3 @@ evaluation metric is stored.
 Note that interpolation to other configs is currently not supported in this setting.
 
 :::
-

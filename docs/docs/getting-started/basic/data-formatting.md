@@ -16,10 +16,10 @@ That is, a TSV (tab-separated values) file which has a space-separated sequence 
 a space-separated sequence of labels as the second column (both sequences **must have** the same number of elements).
 
 :::tip
-`classy` by default supports `.tsv` and `.jsonl` as input formats (see [the documentation](/docs/reference-manual/tasks-and-formats)), 
+`classy` by default supports `.tsv` and `.jsonl` as input formats (see [the documentation](/docs/reference-manual/tasks-and-formats)),
 but you can [add custom formats](/docs/getting-started/customizing-things/custom-data-format/) as well.
 :::
 
 If your dataset is already formatted like this, great! Otherwise, this is the only bit where coding is required.
-You can either convert it yourself (via a python or bash script, whatever you're comfortable with), or you can register 
+You can either convert it yourself (via a python or bash script, whatever you're comfortable with), or you can register
 a [custom data reader](/docs/getting-started/customizing-things/custom-data-format/) to support your dataset format.

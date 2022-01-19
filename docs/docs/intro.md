@@ -8,7 +8,7 @@ import ReactTermynal from '/src/components/termynal';
 
 `classy` is a simple-to-use library for building high-performance Machine Learning models in NLP.
 It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/),
-[Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...) 
+[Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...)
 and offers them to users with a simple CLI interface.
 
 ## Installation
@@ -25,7 +25,7 @@ You have the following data at disposal:
 
 | User | Product-ID | Review | Overall Judgement |
 | ----------- | ----------- | ----------- | ----------- |
-| U1 | P1 | I really like this headphones | positive | 
+| U1 | P1 | I really like this headphones | positive |
 | U2 | P1 | Sound is terrible! I am returning these headphones right away. | negative |
 | ... | ... | ... | ... |
 
@@ -54,7 +54,7 @@ $ cut -f3,4 data/raw.tsv > data/classy-sentiment.tsv
 
 :::tip
 
-`classy` supports many [tasks and input formats](/docs/reference-manual/tasks-and-formats), and is independent of how you 
+`classy` supports many [tasks and input formats](/docs/reference-manual/tasks-and-formats), and is independent of how you
 convert your data to a `classy`-compatible format (i.e., `sed`, `awk`, and a `python` script are all viable options).
 
 :::
@@ -72,7 +72,7 @@ Now that our data is `classy`-compatible, we can train our model! Let us call it
 
 :::info
 
-`sequence` in the above command tells classy to train a **Sequence Classification** model. This is the only thing, beside 
+`sequence` in the above command tells classy to train a **Sequence Classification** model. This is the only thing, beside
 organizing data, that classy expects you to do. We'll go back to this later on.
 
 :::
@@ -85,4 +85,3 @@ Now that we have trained our model, `classy` offers a number of commands that le
 - `classy predict` lets you choose whether to use your model for file prediction or in bash-interactive mode (similarly to `demo`, but in the terminal);
 - `classy serve` spawns a REST API (through [FastAPI](https://fastapi.tiangolo.com/)) that you can query using any REST-compatible client (`requests`, `curl`, you name it);
 - `classy evaluate` runs your model on a given test set and reports metrics on the task.
-

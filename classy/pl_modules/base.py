@@ -21,7 +21,9 @@ class ClassificationOutput(NamedTuple):
 
 
 class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
-    def __init__(self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig):
+    def __init__(
+        self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig
+    ):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf

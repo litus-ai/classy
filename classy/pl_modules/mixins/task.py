@@ -74,10 +74,20 @@ class GenerationTask(GenerationTaskServeMixin, GenerationTaskUIMixin, TaskMixin)
 
     def read_input_from_bash(self) -> GenerationSample:
         source_sequence = input("Enter source sequence text: ").strip()
-        source_language = input("Enter source language (leave empty to set it to None): ").strip() or None
-        target_language = input("Enter target language (leave empty to set it to None): ").strip() or None
+        source_language = (
+            input("Enter source language (leave empty to set it to None): ").strip()
+            or None
+        )
+        target_language = (
+            input("Enter target language (leave empty to set it to None): ").strip()
+            or None
+        )
         sample = json.dumps(
-            dict(source_sequence=source_sequence, source_language=source_language, target_language=target_language)
+            dict(
+                source_sequence=source_sequence,
+                source_language=source_language,
+                target_language=target_language,
+            )
         )
         return next(self.__data_driver.read([sample]))
 

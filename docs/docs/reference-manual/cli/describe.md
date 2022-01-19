@@ -5,7 +5,7 @@ title: describe
 
 `classy describe` is a data analysis tool with general and task-specific stats over your dataset.
 
-Say that you have a Sequence Classification dataset, and you want some preliminary information about the data itself 
+Say that you have a Sequence Classification dataset, and you want some preliminary information about the data itself
 (for example the distribution of the number of characters in the sentences), `classy describe` is the tool for you!
 
 :::info
@@ -18,7 +18,7 @@ distribution of tokens in your dataset.
 :::tip
 
 `classy describe` has an optional parameter `--tokenize <lang>` that tokenizes your dataset using the `<lang>`-specific
-**moses tokenizer**. You can use it with every task except Token Classification! 
+**moses tokenizer**. You can use it with every task except Token Classification!
 
 :::
 

@@ -3,7 +3,7 @@ sidebar_position: 3
 title: Default Profiles
 ---
 
-As you have seen from the previous tutorials, your systems are fully customizable in `classy`. 
+As you have seen from the previous tutorials, your systems are fully customizable in `classy`.
 Even if we strongly encourage you to create you own configurations, we provide a set of predefined and well-established profiles
 that will work with competitive performances in almost all setting and scenarios.
 
@@ -486,7 +486,7 @@ classy train [sequence|sentence-pair|token|qa] my_dataset_path -n my_model --pro
 ```
 
 ##### When should I use this profile?
-- You want a state-of-the-art **multilingual model**, covering 25 languages and particularly suited for **generation tasks** (e.g. machine translation), with **no compromise** 
+- You want a state-of-the-art **multilingual model**, covering 25 languages and particularly suited for **generation tasks** (e.g. machine translation), with **no compromise**
 - You want to show how far you can go with the proper infrastructure
 - You want a **well-established model** used by thousands of users
 - You have at your disposal a GPU with at least 24GB of VRAM that supports fp16 precision

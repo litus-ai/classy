@@ -73,14 +73,14 @@ class Termynal {
      * Initialise the widget, get lines, clear container and start animation.
      */
     init() {
-        /** 
+        /**
          * Calculates width and height of Termynal container.
          * If container is empty and lines are dynamically loaded, defaults to browser `auto` or CSS.
-         */ 
+         */
         const containerStyle = getComputedStyle(this.container);
-        this.container.style.width = containerStyle.width !== '0px' ? 
+        this.container.style.width = containerStyle.width !== '0px' ?
             containerStyle.width : undefined;
-        this.container.style.minHeight = containerStyle.height !== '0px' ? 
+        this.container.style.minHeight = containerStyle.height !== '0px' ?
             containerStyle.height : undefined;
 
         this.container.setAttribute('data-termynal', '');
@@ -139,7 +139,7 @@ class Termynal {
         restart.innerHTML = "restart ↻"
         return restart
     }
-    
+
     generateFinish() {
         const finish = document.createElement('a')
         finish.onclick = (e) => {
@@ -216,7 +216,7 @@ class Termynal {
 
     /**
      * Converts line data objects into line elements.
-     * 
+     *
      * @param {Object[]} lineData - Dynamically loaded lines.
      * @param {Object} line - Line data object.
      * @returns {Element[]} - Array of line elements.
@@ -232,7 +232,7 @@ class Termynal {
 
     /**
      * Helper function for generating attributes string.
-     * 
+     *
      * @param {Object} line - Line data object.
      * @returns {string} - String of attributes.
      */

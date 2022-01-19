@@ -5,8 +5,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-CLASSY_HF_MODEL_URL = "https://huggingface.co/{user_name}/{model_name}/resolve/main/model.zip"
-CLASSY_HF_INFO_URL = "https://huggingface.co/{user_name}/{model_name}/raw/main/info.json"
+CLASSY_HF_MODEL_URL = (
+    "https://huggingface.co/{user_name}/{model_name}/resolve/main/model.zip"
+)
+CLASSY_HF_INFO_URL = (
+    "https://huggingface.co/{user_name}/{model_name}/raw/main/info.json"
+)
 CLASSY_MODELS_CACHE_DIR = ".cache/sunglasses-ai/classy"
 CLASSY_MODELS_CACHE_PATH = Path.home() / CLASSY_MODELS_CACHE_DIR
 CLASSY_DATE_FORMAT = "%Y-%m-%d %H-%M-%S"

@@ -43,7 +43,11 @@ class ClassyDataModule(pl.LightningDataModule):
         self.data_driver = None
 
         self.train_path, self.validation_path, self.test_path = None, None, None
-        self.train_dataset, self.validation_dataset, self.test_dataset = None, None, None
+        self.train_dataset, self.validation_dataset, self.test_dataset = (
+            None,
+            None,
+            None,
+        )
         self.train_dataset_conf = train_dataset
         self.validation_dataset_conf = validation_dataset or train_dataset
         self.test_dataset_conf = test_dataset or validation_dataset or train_dataset
@@ -68,7 +72,9 @@ class ClassyDataModule(pl.LightningDataModule):
                 self.train_path = possible_train_paths[0]
 
             # check if the previous run stored a validation file
-            possible_validation_paths = [fp for fp in files_in_dir if "validation" in fp]
+            possible_validation_paths = [
+                fp for fp in files_in_dir if "validation" in fp
+            ]
             if len(possible_validation_paths) == 1:
                 self.validation_path = possible_validation_paths[0]
 
@@ -87,10 +93,20 @@ class ClassyDataModule(pl.LightningDataModule):
     def prepare_data(self) -> None:
 
         # TODO: we should improve the flow of this code
-        if self.train_path is not None and self.validation_path is not None and self.test_path is not None:
-            logger.info("Using train dev and test splits produced by the run being resumed")
-        elif Path(self.dataset_path).is_dir():  # the user provided a directory containing the datasets
-            dir_train_files = [fp for fp in os.listdir(self.dataset_path) if "train" in fp]
+        if (
+            self.train_path is not None
+            and self.validation_path is not None
+            and self.test_path is not None
+        ):
+            logger.info(
+                "Using train dev and test splits produced by the run being resumed"
+            )
+        elif Path(
+            self.dataset_path
+        ).is_dir():  # the user provided a directory containing the datasets
+            dir_train_files = [
+                fp for fp in os.listdir(self.dataset_path) if "train" in fp
+            ]
 
             assert (
                 len(dir_train_files) == 1
@@ -100,26 +116,39 @@ class ClassyDataModule(pl.LightningDataModule):
             self.file_extension = train_file.split(".")[-1]
             self.data_driver = get_data_driver(self.task, self.file_extension)
 
-            if self.train_path is None:  # does not belong to the train shuffling of a resume run
+            if (
+                self.train_path is None
+            ):  # does not belong to the train shuffling of a resume run
                 self.train_path = path_if_exists(
-                    os.path.join(self.dataset_path, f"train.{self.file_extension}"), self.data_driver
+                    os.path.join(self.dataset_path, f"train.{self.file_extension}"),
+                    self.data_driver,
                 )
 
             if self.validation_path is None:
                 self.validation_path = path_if_exists(
-                    os.path.join(self.dataset_path, f"validation.{self.file_extension}"), self.data_driver
+                    os.path.join(
+                        self.dataset_path, f"validation.{self.file_extension}"
+                    ),
+                    self.data_driver,
                 )
 
             self.test_path = path_if_exists(
-                os.path.join(self.dataset_path, f"test.{self.file_extension}"), self.data_driver
+                os.path.join(self.dataset_path, f"test.{self.file_extension}"),
+                self.data_driver,
             )
 
-            assert self.train_path is not None, f"Cannot find the training file '{self.train_path}'"
+            assert (
+                self.train_path is not None
+            ), f"Cannot find the training file '{self.train_path}'"
 
             must_shuffle_dataset = (
                 self.shuffle_dataset
-                and not self.data_driver.dataset_exists_at_path(f"data/train.shuffled.{self.file_extension}")
-                and not self.data_driver.dataset_exists_at_path(f"data/dataset.shuffled.{self.file_extension}")
+                and not self.data_driver.dataset_exists_at_path(
+                    f"data/train.shuffled.{self.file_extension}"
+                )
+                and not self.data_driver.dataset_exists_at_path(
+                    f"data/dataset.shuffled.{self.file_extension}"
+                )
             )
 
             if must_shuffle_dataset:
@@ -131,7 +160,9 @@ class ClassyDataModule(pl.LightningDataModule):
                     f"Shuffling training dataset. The shuffled dataset "
                     f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
                 )
-                shuffle_and_store_dataset(self.train_path, self.data_driver, output_path=shuffled_dataset_path)
+                shuffle_and_store_dataset(
+                    self.train_path, self.data_driver, output_path=shuffled_dataset_path
+                )
                 self.train_path = shuffled_dataset_path
 
             if self.validation_path is None:
@@ -143,7 +174,9 @@ class ClassyDataModule(pl.LightningDataModule):
 
                 # if we must split the shuffled train dataset in two, then we must change its name
                 if must_shuffle_dataset:
-                    shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
+                    shuffled_dataset_path = (
+                        f"data/dataset.shuffled.{self.file_extension}"
+                    )
                     os.rename(self.train_path, shuffled_dataset_path)
                     self.train_path = shuffled_dataset_path  # will be modified in the next lines of code
 
@@ -155,7 +188,9 @@ class ClassyDataModule(pl.LightningDataModule):
                     data_max_split=self.max_nontrain_split_size,
                     shuffle=False,
                 )
-                logger.info(f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'")
+                logger.info(
+                    f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'"
+                )
 
         else:  # the user provided just one file that must be split in train, dev and test
             self.file_extension = self.dataset_path.split(".")[-1]
@@ -172,7 +207,11 @@ class ClassyDataModule(pl.LightningDataModule):
                     f"Shuffling input dataset. The shuffled dataset "
                     f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
                 )
-                shuffle_and_store_dataset(self.dataset_path, self.data_driver, output_path=shuffled_dataset_path)
+                shuffle_and_store_dataset(
+                    self.dataset_path,
+                    self.data_driver,
+                    output_path=shuffled_dataset_path,
+                )
                 self.dataset_path = shuffled_dataset_path
 
             # splitting dataset in train, validation and test
@@ -238,11 +277,17 @@ class ClassyDataModule(pl.LightningDataModule):
                 vocabulary=self.vocabulary,
             )
 
-    def train_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
+    def train_dataloader(
+        self,
+    ) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
         return DataLoader(self.train_dataset, batch_size=None, num_workers=0)
 
-    def val_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
+    def val_dataloader(
+        self,
+    ) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
         return DataLoader(self.validation_dataset, batch_size=None, num_workers=0)
 
-    def test_dataloader(self) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
+    def test_dataloader(
+        self,
+    ) -> Union[DataLoader, List[DataLoader], Dict[str, DataLoader]]:
         return DataLoader(self.test_dataset, batch_size=None, num_workers=0)

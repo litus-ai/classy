@@ -8,13 +8,28 @@ from classy.scripts.cli.utils import import_module_and_submodules, maybe_find_di
 
 def get_commands():
     from classy.scripts.cli.train import get_parser as train_parser, main as train_main
-    from classy.scripts.cli.predict import get_parser as predict_parser, main as predict_main
-    from classy.scripts.cli.evaluate import get_parser as evaluate_parser, main as evaluate_main
+    from classy.scripts.cli.predict import (
+        get_parser as predict_parser,
+        main as predict_main,
+    )
+    from classy.scripts.cli.evaluate import (
+        get_parser as evaluate_parser,
+        main as evaluate_main,
+    )
     from classy.scripts.cli.serve import get_parser as serve_parser, main as serve_main
     from classy.scripts.cli.demo import get_parser as demo_parser, main as demo_main
-    from classy.scripts.cli.describe import get_parser as describe_parser, main as describe_main
-    from classy.scripts.cli.download import get_parser as download_parser, main as download_main
-    from classy.scripts.cli.upload import get_parser as upload_parser, main as upload_main
+    from classy.scripts.cli.describe import (
+        get_parser as describe_parser,
+        main as describe_main,
+    )
+    from classy.scripts.cli.download import (
+        get_parser as download_parser,
+        main as download_main,
+    )
+    from classy.scripts.cli.upload import (
+        get_parser as upload_parser,
+        main as upload_main,
+    )
 
     return dict(
         train=dict(
@@ -69,7 +84,9 @@ def parse_args(commands: dict):
         cmd_parser = action_data["parser"](subcmds)
         cmd_parser.add_argument("-pd", "--package-dir", default=None)
 
-    argcomplete.autocomplete(parser, default_completer=None, always_complete_options="long")
+    argcomplete.autocomplete(
+        parser, default_completer=None, always_complete_options="long"
+    )
 
     return parser.parse_args()
 
@@ -79,12 +96,16 @@ def install_autocomplete():
 
     prefix = os.getenv("CONDA_PREFIX")
     if prefix is None:
-        print("CONDA_PREFIX unset. Are you sure you are executing this within a conda environment?")
+        print(
+            "CONDA_PREFIX unset. Are you sure you are executing this within a conda environment?"
+        )
         return
 
     if "envs" not in prefix:
         print("CONDA_PREFIX does not appear to be an environment of conda.")
-        print("Are you sure you are executing this within a conda environment (not the base env)?")
+        print(
+            "Are you sure you are executing this within a conda environment (not the base env)?"
+        )
         print(f"   CONDA_PREFIX={prefix}")
         return
 

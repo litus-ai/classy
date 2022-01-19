@@ -9,7 +9,7 @@ In the following tutorial, we are going to go over a standard `classy` example, 
 ## The Task
 
 *Named Entity Recognition* is the task of identifying Named Entities (from a predefined set, e.g., **ORG**, **LOC** and **PER**) in a text.
-For instance, consider what will be our running example for this whole tutorial: 
+For instance, consider what will be our running example for this whole tutorial:
 
 
 <table>
@@ -31,7 +31,7 @@ For instance, consider what will be our running example for this whole tutorial:
 </tr>
 </table>
 
-Our goal is to train a classification model that, given a sequence of tokens as input, 
+Our goal is to train a classification model that, given a sequence of tokens as input,
 outputs a sequence of Named Entity tags corresponding to each token in the sequence.
 
 

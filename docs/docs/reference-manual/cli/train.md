@@ -7,7 +7,7 @@ import ReactTermynal from '/src/components/termynal';
 
 The core syntax of the train command is the following:
 ```bash
-classy train 
+classy train
     <task>                # any in {sequence,token,sentence-pair}
     <path-to-dataset>     # path to your dataset
     -n <exp-name>         # name you want to give to your model
@@ -25,7 +25,7 @@ Your model and experiment data will be saved in *experiments/*&lt;exp-name&gt;*/
 
 :::tip
 
-If you want to transfer your model to a different pc, the simplest way is to transfer the entire 
+If you want to transfer your model to a different pc, the simplest way is to transfer the entire
 *experiments/*&lt;exp-name&gt;*/current-day/current-time/* folder. However, multiple checkpoints, i.e. the model at different
 moments in the training, might be present in the *checkpoints/* folder; to speed up the transfer, you might want to
 consider moving only one of them, for instance the best one, *checkpoints/best.ckpt*.
@@ -33,11 +33,11 @@ consider moving only one of them, for instance the best one, *checkpoints/best.c
 :::
 
 Note that *&lt;path-to-dataset&gt;* is a bit of a special parameter and can be either:
-* a **folder**, or, actually, a *ML-ready* folder: that is, it must contain a training file, named *train.#* 
+* a **folder**, or, actually, a *ML-ready* folder: that is, it must contain a training file, named *train.#*
   (# denotes a classy supported extension), and, optionally, a validation file and a test file, *validation.#* and *test.#*
 * a **file**: classy uses the file provided to automatically generate an ML-ready folder for you, storing it in the
   *data/* folder inside the current experiment
-  
+
 :::info
 
 In the folder case, if *validation.#* is not present, classy automatically generates it by reserving some samples
@@ -73,11 +73,11 @@ This does not hold for *test.#* and, if not present, classy **will not** create 
 For all CLI commands that involve using a trained model, you can use 4 ways to specify it:
 ```bash
 # the <exp-name> you used at training time (classy will search in the experiments/ folder and use the latest best.ckpt)
-classy <cmd> sequence-example ... 
+classy <cmd> sequence-example ...
 # path to model folder
-classy <cmd> experiments/sequence-example/ ... 
-# path to specific model experiment <day>/<time> 
-classy <cmd> experiments/sequence-example/<day>/<time> ... 
+classy <cmd> experiments/sequence-example/ ...
+# path to specific model experiment <day>/<time>
+classy <cmd> experiments/sequence-example/<day>/<time> ...
 # path to checkpoint inside a model experiment folder
 classy <cmd> experiments/sequence-example/<day>/<time>/checkpoints/epoch=00-val_loss=0.51.ckpt
 ```
@@ -91,9 +91,8 @@ For all CLI commands, you can execute `classy <command> -h` for additional infor
 
 ## Visualizing your Configuration
 
-`classy train` has an option that lets you visualize the full materialized configuration in your terminal, showing you 
-where each component comes from (including overridden configuration groups, overrides, profiles, etc.). 
+`classy train` has an option that lets you visualize the full materialized configuration in your terminal, showing you
+where each component comes from (including overridden configuration groups, overrides, profiles, etc.).
 To print it, simply append `--print` to your current `classy train` command!
 
 ![Classy Train Print - Token](/img/intro/classy-train-print-tok.png)
-

@@ -42,14 +42,21 @@ def autocomplete_model_path(prefix: str, **kwargs):
         # then iteratively go from most to least specific path
         # so we start when checkpoints is in the prefix
         if "checkpoints" in prefix:
-            res = [name[len("experiments/") :] for name in fc("experiments/" + prefix) if name.endswith("ckpt")]
+            res = [
+                name[len("experiments/") :]
+                for name in fc("experiments/" + prefix)
+                if name.endswith("ckpt")
+            ]
             return res
 
         # maybe the user has entered
         tentative_path = Path(f"experiments/{prefix}/.hydra/config.yaml")
         if tentative_path.exists():
             run = Run.from_hydra_config(tentative_path)
-            return [str(run.relative_directory / "checkpoints" / name) for name in run.checkpoint_names]
+            return [
+                str(run.relative_directory / "checkpoints" / name)
+                for name in run.checkpoint_names
+            ]
 
         exp_name = prefix.split("/")[0]
 
@@ -59,14 +66,20 @@ def autocomplete_model_path(prefix: str, **kwargs):
             return [str(run.relative_directory) for run in candidates]
         elif len(candidates) == 1:
             run = candidates[0]
-            checkpoints = [str(run.relative_directory / "checkpoints" / name) for name in run.checkpoint_names]
+            checkpoints = [
+                str(run.relative_directory / "checkpoints" / name)
+                for name in run.checkpoint_names
+            ]
             # warn(checkpoints)
             checkpoints.insert(0, str(run.relative_directory))
             return checkpoints
         else:
             return []
     else:
-        exps = Experiment.list_available_experiments() + Experiment.list_downloaded_experiments()
+        exps = (
+            Experiment.list_available_experiments()
+            + Experiment.list_downloaded_experiments()
+        )
 
         # give the user the option to continue with a specific path of the experiment
         if os.path.exists("experiments") and os.path.isdir("experiments"):
@@ -83,7 +96,9 @@ def checkpoint_path_from_user_input(model_path: str) -> str:
             f" (`{model_path}`) to an actual checkpoint"
         )
         print("Exception:", e)
-        print("If you have trouble understanding where this may come from, open a new issue on GitHub.")
+        print(
+            "If you have trouble understanding where this may come from, open a new issue on GitHub."
+        )
         print("https://github.com/sunglasses-ai/classy/issues/new")
         exit(1)
 
@@ -105,14 +120,20 @@ def try_get_checkpoint_path_from_user_input(model_path: str) -> Optional[str]:
         exp = Experiment.from_name(model_path, CLASSY_MODELS_CACHE_PATH)
 
         if exp is None:
-            print(f"No pretrained model called {model_path} was found! Available pretrained models:")
+            print(
+                f"No pretrained model called {model_path} was found! Available pretrained models:"
+            )
             print(f"[{', '.join(Experiment.list_downloaded_experiments())}]")
             return None
 
         return str(exp.default_checkpoint)
 
     model_path = model_path.rstrip("/")
-    model_name = model_path[len("experiments/") :] if model_path.startswith("experiments/") else model_path
+    model_name = (
+        model_path[len("experiments/") :]
+        if model_path.startswith("experiments/")
+        else model_path
+    )
 
     available_exps = Experiment.list_available_experiments()
     if model_name in available_exps:
@@ -150,7 +171,9 @@ def push_python_path(path):
 
 
 # from https://github.com/allenai/allennlp/blob/dcd8d9e9671da5a87de51f2bb42ceb3abdce8b3b/allennlp/common/util.py#L334
-def import_module_and_submodules(package_name: str, exclude: Optional[Set[str]] = None) -> None:
+def import_module_and_submodules(
+    package_name: str, exclude: Optional[Set[str]] = None
+) -> None:
     """
     Import all submodules under the given package.
     Primarily useful so that people using classy as a library

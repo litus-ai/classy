@@ -52,7 +52,9 @@ class PredictionMixin:
 
         # instantiate dataset
         dataset_conf["tokens_per_batch"] = token_batch_size
-        dataset = hydra.utils.instantiate(dataset_conf, samples=samples_it(), vocabulary=self.vocabulary)
+        dataset = hydra.utils.instantiate(
+            dataset_conf, samples=samples_it(), vocabulary=self.vocabulary
+        )
 
         # instantiate dataloader
         iterator = DataLoader(dataset, batch_size=None, num_workers=0)
@@ -67,7 +69,9 @@ class PredictionMixin:
                     batch_out = self.batch_predict(**batch)
                     # update prediction position position
                     for sample in batch_out:
-                        position2predicted_sample[sample._mixin_prediction_position] = sample
+                        position2predicted_sample[
+                            sample._mixin_prediction_position
+                        ] = sample
                     # yield
                     while next_prediction_position in position2predicted_sample:
                         yield position2predicted_sample[next_prediction_position]

@@ -55,19 +55,27 @@ class WeightDecayOptimizer(Factory, ABC):
             optimizer_grouped_parameters = [
                 {
                     "params": [
-                        p for n, p in module.named_parameters() if not any(nd in n for nd in self.no_decay_params)
+                        p
+                        for n, p in module.named_parameters()
+                        if not any(nd in n for nd in self.no_decay_params)
                     ],
                     "weight_decay": self.weight_decay,
                 },
                 {
-                    "params": [p for n, p in module.named_parameters() if any(nd in n for nd in self.no_decay_params)],
+                    "params": [
+                        p
+                        for n, p in module.named_parameters()
+                        if any(nd in n for nd in self.no_decay_params)
+                    ],
                     "weight_decay": 0.0,
                 },
             ]
 
         else:
 
-            optimizer_grouped_parameters = [{"params": module.parameters(), "weight_decay": self.weight_decay}]
+            optimizer_grouped_parameters = [
+                {"params": module.parameters(), "weight_decay": self.weight_decay}
+            ]
 
         return optimizer_grouped_parameters
 
@@ -79,7 +87,12 @@ class AdagradWithWarmupFactory(WeightDecayOptimizer):
     """
 
     def __init__(
-        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+        self,
+        lr: float,
+        warmup_steps: int,
+        total_steps: int,
+        weight_decay: float,
+        no_decay_params: Optional[List[str]],
     ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
@@ -88,9 +101,20 @@ class AdagradWithWarmupFactory(WeightDecayOptimizer):
 
     def __call__(self, module: torch.nn.Module):
         optimizer_grouped_parameters = self.group_params(module)
-        optimizer = Adagrad(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
-        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+        optimizer = Adagrad(
+            optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay
+        )
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, self.warmup_steps, self.total_steps
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
 
 
 class AdafactorWithWarmupFactory(WeightDecayOptimizer):
@@ -100,7 +124,12 @@ class AdafactorWithWarmupFactory(WeightDecayOptimizer):
     """
 
     def __init__(
-        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+        self,
+        lr: float,
+        warmup_steps: int,
+        total_steps: int,
+        weight_decay: float,
+        no_decay_params: Optional[List[str]],
     ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
@@ -117,8 +146,17 @@ class AdafactorWithWarmupFactory(WeightDecayOptimizer):
             relative_step=False,
             scale_parameter=False,
         )
-        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
-        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, self.warmup_steps, self.total_steps
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
 
 
 class AdamWWithWarmupFactory(WeightDecayOptimizer):
@@ -128,7 +166,12 @@ class AdamWWithWarmupFactory(WeightDecayOptimizer):
     """
 
     def __init__(
-        self, lr: float, warmup_steps: int, total_steps: int, weight_decay: float, no_decay_params: Optional[List[str]]
+        self,
+        lr: float,
+        warmup_steps: int,
+        total_steps: int,
+        weight_decay: float,
+        no_decay_params: Optional[List[str]],
     ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
@@ -137,9 +180,20 @@ class AdamWWithWarmupFactory(WeightDecayOptimizer):
 
     def __call__(self, module: torch.nn.Module):
         optimizer_grouped_parameters = self.group_params(module)
-        optimizer = AdamW(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
-        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+        optimizer = AdamW(
+            optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay
+        )
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, self.warmup_steps, self.total_steps
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
 
 
 class RAdamFactory(WeightDecayOptimizer):
@@ -148,11 +202,15 @@ class RAdamFactory(WeightDecayOptimizer):
     reference paper for RAdam: https://arxiv.org/abs/1908.03265
     """
 
-    def __init__(self, lr: float, weight_decay: float, no_decay_params: Optional[List[str]]):
+    def __init__(
+        self, lr: float, weight_decay: float, no_decay_params: Optional[List[str]]
+    ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
 
     def __call__(self, module: torch.nn.Module):
         optimizer_grouped_parameters = self.group_params(module)
-        optimizer = RAdam(optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay)
+        optimizer = RAdam(
+            optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay
+        )
         return optimizer

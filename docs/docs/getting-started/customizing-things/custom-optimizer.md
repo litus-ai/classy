@@ -83,11 +83,11 @@ class AdagradWithWarmup(TorchFactory):
     """
 
     def __init__(
-        self, 
-        lr: float, 
-        warmup_steps: int, 
-        total_steps: int, 
-        weight_decay: float, 
+        self,
+        lr: float,
+        warmup_steps: int,
+        total_steps: int,
+        weight_decay: float,
         no_decay_params: Optional[List[str]]
     ):
         super().__init__(weight_decay, no_decay_params)

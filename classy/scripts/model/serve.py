@@ -7,7 +7,10 @@ from fastapi import FastAPI
 from omegaconf import OmegaConf
 
 from classy.utils.commons import get_local_ip_address
-from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
+from classy.utils.lightning import (
+    load_classy_module_from_checkpoint,
+    load_prediction_dataset_conf_from_checkpoint,
+)
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
@@ -80,11 +83,19 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
-    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
-    parser.add_argument("-p", type=int, default=8000, help="Port on which to expose the model")
+    parser.add_argument(
+        "model_checkpoint", type=str, help="Path to pl_modules checkpoint"
+    )
+    parser.add_argument(
+        "--prediction-params", type=str, default=None, help="Path to prediction params"
+    )
+    parser.add_argument(
+        "-p", type=int, default=8000, help="Port on which to expose the model"
+    )
     parser.add_argument("--cuda-device", type=int, default=-1, help="Cuda device")
-    parser.add_argument("--token-batch-size", type=int, default=128, help="Token batch size")
+    parser.add_argument(
+        "--token-batch-size", type=int, default=128, help="Token batch size"
+    )
     return parser.parse_args()
 
 

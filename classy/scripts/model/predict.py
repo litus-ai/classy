@@ -4,7 +4,10 @@ import torch
 from omegaconf import OmegaConf
 
 from classy.data.data_drivers import get_data_driver
-from classy.utils.lightning import load_classy_module_from_checkpoint, load_prediction_dataset_conf_from_checkpoint
+from classy.utils.lightning import (
+    load_classy_module_from_checkpoint,
+    load_prediction_dataset_conf_from_checkpoint,
+)
 
 
 def interactive_main(
@@ -52,7 +55,10 @@ def file_main(
         model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    input_extension, output_extension = input_path.split(".")[-1], output_path.split(".")[-1]
+    input_extension, output_extension = (
+        input_path.split(".")[-1],
+        output_path.split(".")[-1],
+    )
     assert input_extension == output_extension, (
         f"Having different input and output extensions is not currently a supported use case: "
         f"input {input_extension} != output {output_extension}"
@@ -93,15 +99,21 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("model_checkpoint", type=str, help="Path to pl_modules checkpoint")
-    parser.add_argument("--prediction-params", type=str, default=None, help="Path to prediction params")
+    parser.add_argument(
+        "model_checkpoint", type=str, help="Path to pl_modules checkpoint"
+    )
+    parser.add_argument(
+        "--prediction-params", type=str, default=None, help="Path to prediction params"
+    )
     parser.add_argument("--cuda-device", type=int, default=-1, help="Cuda device")
     # interactive params
     parser.add_argument("-t", action="store_true", help="Interactive mode")
     # file params
     parser.add_argument("-f", type=str, default=None, help="Input file")
     parser.add_argument("-o", type=str, default=None, help="Output file")
-    parser.add_argument("--token-batch-size", type=int, default=128, help="Token batch size")
+    parser.add_argument(
+        "--token-batch-size", type=int, default=128, help="Token batch size"
+    )
     # return
     return parser.parse_args()
 

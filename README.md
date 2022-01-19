@@ -2,7 +2,7 @@
     <br>
     <img alt="classy logo" src="https://github.com/sunglasses-ai/classy/raw/main/img/logo.png" width="400"/>
     <p>
-    A PyTorch-based library for fast prototyping and sharing of deep neural network models. 
+    A PyTorch-based library for fast prototyping and sharing of deep neural network models.
     </p>
     <hr/>
 </div>
@@ -44,7 +44,7 @@
 
 ## Quick Links
 
-<!-- - [💻 Demo (TODO?)](https://TODO/) 
+<!-- - [💻 Demo (TODO?)](https://TODO/)
 - [🔦 Guide (TODO)](https://TODO/)
 - [📓 Versioned Documentation](http://sunglasses-ai.github.io/classy/docs/intro) ( [latest](http://sunglasses-ai.github.io/classy/docs/intro) | [stable](http://sunglasses-ai.github.io/classy/docs/intro) | [commit](http://sunglasses-ai.github.io/classy/docs/intro) )
 - [⚙️ Continuous Build (TODO)](https://TODO)-->
@@ -79,7 +79,7 @@ If this is your first time meeting `classy`, don't worry! We have plenty of reso
 
 For starters, have a look at our [amazing website](http://sunglasses-ai.github.io/classy) and [our documentation](http://sunglasses-ai.github.io/classy/docs/intro)!
 
-If you want to get your hands dirty right away, have a look at our [base classy template](https://github.com/sunglasses-ai/classy-template). 
+If you want to get your hands dirty right away, have a look at our [base classy template](https://github.com/sunglasses-ai/classy-template).
 Also, we have [a few examples](https://github.com/sunglasses-ai/classy-examples) that you can look at to get to know `classy`!
 
 ## Installation
@@ -124,7 +124,7 @@ and voilà! You're all set.
 
 
 ## Running `classy`
-Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/cli/). 
+Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/cli/).
 Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
 
 ### `classy train`
@@ -136,7 +136,7 @@ classy train sentence-pair path/to/dataset/folder-or-file -n my-model
 The command above will train a model to predict a label given a pair of sentences as input (e.g., Natural Language Inference or NLI) and save it under `experiments/my-model`. This same model can be further used by all other `classy` commands which require a `classy` model (`predict`, `evaluate`, `serve`, `demo`, `upload`).
 
 ### `classy predict`
-`classy predict` actually has two subcommands: `interactive` and `file`. 
+`classy predict` actually has two subcommands: `interactive` and `file`.
 
 The first loads the model in memory and lets you try it out through the shell directly, so that you can test the model you trained and see what it predicts given some input. It is particularly useful when your machine cannot open a port for [`classy demo`](#classy-demo).
 
@@ -160,9 +160,9 @@ The second, instead, works on a file and produces an output where, for each inpu
 Models uploaded via `classy upload` will be available for download by other classy users by simply executing `classy download username@model`.
 
 ### `classy download`
-`classy download <model>` downloads a previously uploaded `classy`-trained model from the [HuggingFace Hub](https://huggingface.co) and stores it on your machine so that it is usable with any other `classy` command which requires a trained model (`predict`, `evaluate`, `serve`, `demo`, `upload`). 
+`classy download <model>` downloads a previously uploaded `classy`-trained model from the [HuggingFace Hub](https://huggingface.co) and stores it on your machine so that it is usable with any other `classy` command which requires a trained model (`predict`, `evaluate`, `serve`, `demo`, `upload`).
 
-You can find [SunglassesAI](http://sunglasses-ai.github.io/)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai). 
+You can find [SunglassesAI](http://sunglasses-ai.github.io/)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai).
 
 Models uploaded via `classy upload` are available by doing `classy download username@model`.
 
@@ -182,5 +182,5 @@ We warmly welcome contributions from the community. If it is your first time as 
 
 Small contributions can be made directly in a pull request. For contributing major features, we recommend you first create a issue proposing a design, so that it can be discussed before you risk wasting time.
 
-Pull requests (PRs) must have one approving review and no requested changes before they are merged. 
+Pull requests (PRs) must have one approving review and no requested changes before they are merged.
 As `classy` is primarily driven by SunglassesAI, we reserve the right to reject or revert contributions that we don't think are good additions or might not fit into our roadmap.

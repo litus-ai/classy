@@ -6,7 +6,7 @@ title: Tasks and Input Formats
 import ReactTermynal from '/src/components/termynal';
 
 In its simplest flavor, `classy` lets **you focus entirely on your data** and automatically handles the development
-of full-fledged models for you, with no ML knowledge or additional line of code required. To achieve this, `classy` only 
+of full-fledged models for you, with no ML knowledge or additional line of code required. To achieve this, `classy` only
 asks you to specify the task you wish to tackle and to organize your data into suitable formats.
 
 export const ButtonWithBackdrop = ({children, title}) => {
@@ -43,7 +43,7 @@ These tasks cover the vast majority of NLP problems.
 
 #### Data Formats
 
-Once you have realized which task you are dealing with, you have to organize your data. Currently, for each of 
+Once you have realized which task you are dealing with, you have to organize your data. Currently, for each of
 these tasks, `classy` supports two possible input formats:
 * `.tsv`: files are expected to be standard TSV (tab-separated values) files.
 * `.jsonl`: files are expected to contain, **for each line**, a JSON object representing a sample.
@@ -75,7 +75,7 @@ An example is *Sentiment Analysis*:
 
 ```bash
 # two columns per line:
-# * input text 
+# * input text
 # * corresponding label
 $ cat seq.tsv | head -1
 I love these headphones!    <tab>   positive
@@ -84,11 +84,11 @@ I love these headphones!    <tab>   positive
 #### JSONL
 
 ```bash
-# object with fields: 
+# object with fields:
 # * sequence (string)
 # * label (string)
 $ cat seq.jsonl | head -1
-{"sequence": "I love these headphones!", "label": "positive"}   
+{"sequence": "I love these headphones!", "label": "positive"}
 ```
 
 ### Sentence-Pair Classification
@@ -112,18 +112,18 @@ An example is *Paraphrasis Detection*:
 # * second input text
 # * label
 $ cat sent-p.tsv | head -1
-I love these headphones!    <tab>   I love these headphones!    <tab>   equivalent  
+I love these headphones!    <tab>   I love these headphones!    <tab>   equivalent
 ```
 
 #### JSONL
 
 ```bash
-# object with fields: 
+# object with fields:
 # * sentence1 (string)
 # * sentence2 (string)
-# * label (string)   
+# * label (string)
 $ cat sent-p.jsonl | head -1
-{"sentence1": "I love these headphones!", "sentence2": "I love these headphones!", "label": "equivalent"}  
+{"sentence1": "I love these headphones!", "sentence2": "I love these headphones!", "label": "equivalent"}
 ```
 
 ## Token Classification
@@ -151,7 +151,7 @@ I love these headphones !   <tab>   PRON VERB DET NOUN PUNCT
 #### JSONL
 
 ```bash
-# object with fields: 
+# object with fields:
 # * tokens (list of strings)
 # * labels (list of strings)
 $ cat tok.jsonl | head -1
@@ -186,7 +186,7 @@ I love these headphones!    <tab>   What do you love?           <tab>   7  <tab>
 #### JSONL
 
 ```bash
-# object with fields: 
+# object with fields:
 # * context (string)
 # * query (string)
 # * answer_start (int) as a char offset
@@ -248,7 +248,7 @@ $ cat lm.jsonl | head -1
 
 :::tip
 
-In several generation problems such as multilingual machine translation, depending on the chosen model, beside the source (and target) sequence, 
+In several generation problems such as multilingual machine translation, depending on the chosen model, beside the source (and target) sequence,
 you also want to specify the source (and target) language. To do so, just add the string fields *source_language* and *target_language* on each json object:
 
 ```bash

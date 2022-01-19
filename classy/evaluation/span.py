@@ -16,6 +16,10 @@ class SeqEvalSpanEvaluation(Evaluation):
             predictions=[sample.predicted_annotation for sample in predicted_samples],
             references=[sample.reference_annotation for sample in predicted_samples],
         )
-        p, r, f1 = metric_out["overall_precision"], metric_out["overall_recall"], metric_out["overall_f1"]
+        p, r, f1 = (
+            metric_out["overall_precision"],
+            metric_out["overall_recall"],
+            metric_out["overall_f1"],
+        )
 
         return {"precision": p, "recall": r, "f1": f1}

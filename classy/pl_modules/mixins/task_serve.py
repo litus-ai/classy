@@ -12,13 +12,22 @@ from classy.data.data_drivers import (
 
 
 class MarshalInputSample:
-    def unmarshal(self) -> Union[SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample]:
+    def unmarshal(
+        self,
+    ) -> Union[
+        SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample
+    ]:
         raise NotImplementedError
 
 
 class MarshalOutputSample:
     @classmethod
-    def marshal(cls, sample: Union[SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample]):
+    def marshal(
+        cls,
+        sample: Union[
+            SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample
+        ],
+    ):
         raise NotImplementedError
 
 
@@ -65,12 +74,18 @@ class MarshalInputSentencePairSample(BaseModel, MarshalInputSample):
         return SentencePairSample(sentence1=self.sentence1, sentence2=self.sentence2)
 
 
-class MarshalOutputSentencePairSample(MarshalInputSentencePairSample, MarshalOutputSample):
+class MarshalOutputSentencePairSample(
+    MarshalInputSentencePairSample, MarshalOutputSample
+):
     label: str = Field(None, description="Label resulting from model classification")
 
     @classmethod
     def marshal(cls, sample: SentencePairSample):
-        return cls(sentence1=sample.sentence1, sentence2=sample.sentence2, label=sample.predicted_annotation)
+        return cls(
+            sentence1=sample.sentence1,
+            sentence2=sample.sentence2,
+            label=sample.predicted_annotation,
+        )
 
 
 class SentencePairTaskServeMixin(TaskServeMixin):
@@ -91,7 +106,9 @@ class MarshalInputTokensSample(BaseModel, MarshalInputSample):
 
 
 class MarshalOutputTokensSample(MarshalInputTokensSample, MarshalOutputSample):
-    labels: List[str] = Field(None, description="List of labels the model assigned to each input token")
+    labels: List[str] = Field(
+        None, description="List of labels the model assigned to each input token"
+    )
 
     @classmethod
     def marshal(cls, sample: TokensSample):
@@ -155,7 +172,9 @@ class MarshalInputGenerationSample(BaseModel, MarshalInputSample):
 
 
 class MarshalOutputGenerationSample(MarshalInputGenerationSample, MarshalOutputSample):
-    target_sequence: str = Field(None, description="Target sequence resulting from model classification")
+    target_sequence: str = Field(
+        None, description="Target sequence resulting from model classification"
+    )
 
     @classmethod
     def marshal(cls, sample: GenerationSample):
