@@ -1,7 +1,6 @@
 import collections
 from pathlib import Path
-from typing import Iterable, Dict
-
+from typing import Dict, Iterable
 
 FIELDS_VOCABULARY_PATH = "fields_vocabulary_path.tsv"
 LABELS_VOCABULARY_PATH = "labels_vocabulary_path.tsv"

@@ -1,12 +1,12 @@
-from typing import Optional, Iterable, Dict, Any, Tuple, Iterator, List
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 import torch
 
 from classy.data.data_drivers import (
+    QASample,
+    SentencePairSample,
     SequenceSample,
     TokensSample,
-    SentencePairSample,
-    QASample,
 )
 from classy.data.dataset.base import batchify
 from classy.data.dataset.hf.base import HFBaseDataset

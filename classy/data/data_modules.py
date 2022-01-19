@@ -1,19 +1,17 @@
 import itertools
 import os
 from pathlib import Path
-from typing import Optional, Union, List, Dict, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import hydra.utils
 import omegaconf
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from classy.data.data_drivers import get_data_driver, DataDriver
-from classy.utils.data import split_dataset, create_data_dir, shuffle_and_store_dataset
-
+from classy.data.data_drivers import DataDriver, get_data_driver
+from classy.utils.data import create_data_dir, shuffle_and_store_dataset, split_dataset
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
-
 
 logger = get_project_logger(__name__)
 

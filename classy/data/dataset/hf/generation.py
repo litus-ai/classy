@@ -1,15 +1,15 @@
 import collections
 import re
 from typing import (
-    Optional,
-    Callable,
-    Iterable,
-    Dict,
     Any,
-    Iterator,
-    Union,
-    List,
+    Callable,
+    Dict,
     Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Union,
 )
 
 import torch
@@ -17,14 +17,14 @@ from transformers import AutoTokenizer, MBartTokenizerFast
 from transformers.models.mbart.tokenization_mbart_fast import FAIRSEQ_LANGUAGE_CODES
 
 from classy.data.data_drivers import (
+    ClassySample,
+    GenerationSample,
+    QASample,
+    SentencePairSample,
     SequenceSample,
     TokensSample,
-    SentencePairSample,
-    QASample,
-    GenerationSample,
-    ClassySample,
 )
-from classy.data.dataset.base import batchify, BaseDataset
+from classy.data.dataset.base import BaseDataset, batchify
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 

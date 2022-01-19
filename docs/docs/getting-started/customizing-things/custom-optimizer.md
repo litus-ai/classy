@@ -88,7 +88,7 @@ class AdagradWithWarmup(TorchFactory):
         warmup_steps: int,
         total_steps: int,
         weight_decay: float,
-        no_decay_params: Optional[List[str]]
+        no_decay_params: Optional[List[str]],
     ):
         super().__init__(weight_decay, no_decay_params)
         self.lr = lr
@@ -96,9 +96,20 @@ class AdagradWithWarmup(TorchFactory):
         self.total_steps = total_steps
 
     def __call__(self, module: torch.nn.Module):
-        optimizer = Adagrad(module.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = transformers.get_linear_schedule_with_warmup(optimizer, self.warmup_steps, self.total_steps)
-        return {"optimizer": optimizer, "lr_scheduler": {"scheduler": scheduler, "interval": "step", "frequency": 1}}
+        optimizer = Adagrad(
+            module.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, self.warmup_steps, self.total_steps
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
 ```
 
 This ```__call__``` method should return any of the possible return types from the [```configure_optimizers```](https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.core.lightning.html#pytorch_lightning.core.lightning.LightningModule.configure_optimizers) method of pytorch_lightning. But if you don't have to do fancy stuff this piece of code is everything you'll need :).

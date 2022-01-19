@@ -1,16 +1,14 @@
+import logging
 from pathlib import Path
-from typing import Dict, Callable
-
-import omegaconf
+from typing import Callable, Dict
 
 import hydra
-from omegaconf import OmegaConf, DictConfig
+import omegaconf
+from omegaconf import DictConfig, OmegaConf
 
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.hydra import fix_paths
 from classy.utils.vocabulary import Vocabulary
-
-import logging
 
 logger = logging.getLogger(__name__)
 

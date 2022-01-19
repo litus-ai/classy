@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 import nltk
 from datasets import load_metric

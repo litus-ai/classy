@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Tuple, List, Optional, Any
+from typing import Any, List, Optional, Tuple
 
-from omegaconf import DictConfig, OmegaConf, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from classy.utils.hydra_patch import ConfigBlame
 

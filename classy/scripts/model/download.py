@@ -3,22 +3,20 @@ import json
 import logging
 import shutil
 import tempfile
-
 from datetime import datetime
 from pathlib import Path
 
 import requests
 
-from classy.utils.file import (
-    CLASSY_HF_INFO_URL,
-    CLASSY_DATE_FORMAT,
-    CLASSY_MODELS_CACHE_PATH,
-    CLASSY_HF_MODEL_URL,
-    get_md5,
-    ensure_dir,
-)
 from classy.utils.experiment import Experiment
-
+from classy.utils.file import (
+    CLASSY_DATE_FORMAT,
+    CLASSY_HF_INFO_URL,
+    CLASSY_HF_MODEL_URL,
+    CLASSY_MODELS_CACHE_PATH,
+    ensure_dir,
+    get_md5,
+)
 
 logger = logging.getLogger(__name__)
 

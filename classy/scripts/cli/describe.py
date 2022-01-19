@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from classy.data.data_drivers import SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION
+from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.utils.help_cli import HELP_TASKS
 
 
@@ -53,6 +53,7 @@ def parse_args():
 def main(args):
     # import here to avoid importing before needed
     import sys
+
     from streamlit.cli import main as st_main
 
     # script params

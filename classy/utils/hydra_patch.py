@@ -1,7 +1,7 @@
 import copy
 import sys
 from dataclasses import dataclass
-from typing import List, Any
+from typing import Any, List
 
 from hydra._internal.config_loader_impl import ConfigLoaderImpl
 from hydra._internal.config_repository import IConfigRepository
@@ -9,7 +9,7 @@ from hydra.core.default_element import ResultDefault
 from hydra.core.override_parser.types import Override
 from hydra.errors import ConfigCompositionException
 from hydra.plugins.config_source import ConfigResult
-from omegaconf import DictConfig, OmegaConf, flag_override, ValidationError, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf, ValidationError, flag_override
 
 
 class ConfigBlame:

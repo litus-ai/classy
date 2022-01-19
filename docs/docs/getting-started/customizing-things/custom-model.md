@@ -22,7 +22,6 @@ For instance, considering Sequence Classification, you would need to implement t
 ```python
 # subclass your task and ClassyPLModule
 class MyCustomClassyPLModule(SequenceTask, ClassyPLModule):
-
     def __init__(
         self,
         param1: Any,
@@ -78,8 +77,12 @@ def __init__(
     super().__init__(vocabulary=vocabulary, optim_conf=optim_conf)
     self.save_hyperparameters(ignore="vocabulary")
     num_classes = vocabulary.get_size(k="labels")  # number of target classes
-    self.classifier = AutoModelForSequenceClassification.from_pretrained(transformer_model, num_labels=num_classes)  # underlying classifier
-    self.accuracy_metric = torchmetrics.Accuracy()  # metric to track your model performance
+    self.classifier = AutoModelForSequenceClassification.from_pretrained(
+        transformer_model, num_labels=num_classes
+    )  # underlying classifier
+    self.accuracy_metric = (
+        torchmetrics.Accuracy()
+    )  # metric to track your model performance
 ```
 
 Then, you need to implement the PyTorch forward:
@@ -114,7 +117,9 @@ dataset emits (here, we are using *classy.data.dataset.hf.HFSequenceDataset*).
 Then, there's the batch predict method, which wraps your forward method to emit classified *SequenceSample*-s:
 
 ```python
-def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
+def batch_predict(
+    self, *args, **kwargs
+) -> Iterator[Tuple[Union[SequenceSample, SentencePairSample], str]]:
     samples = kwargs.get("samples")
     classification_output = self.forward(*args, **kwargs)
     for sample, prediction in zip(samples, classification_output.predictions):
@@ -131,11 +136,13 @@ def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
     self.log("loss", classification_output.loss)
     return classification_output.loss
 
+
 def validation_step(self, batch: dict, batch_idx: int) -> None:
     classification_output = self.forward(**batch)
     self.accuracy_metric(classification_output.predictions, batch["labels"].squeeze(-1))
     self.log("val_loss", classification_output.loss)
     self.log("val_accuracy", self.accuracy_metric, prog_bar=True)
+
 
 def test_step(self, batch: dict, batch_idx: int) -> None:
     classification_output = self.forward(**batch)

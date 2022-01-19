@@ -1,7 +1,7 @@
 import functools
 import json
 from pathlib import Path
-from typing import List, Union, Optional, Iterator, Generator, Tuple, Dict, Any
+from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Union
 
 from classy.utils.log import get_project_logger
 

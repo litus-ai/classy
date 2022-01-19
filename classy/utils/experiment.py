@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Union, Iterator
+from typing import Iterator, List, Optional, Union
 
 from classy.utils.file import CLASSY_MODELS_CACHE_PATH
 

@@ -2,13 +2,13 @@ import argparse
 import itertools
 import time
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional, Callable
+from typing import Callable, Dict, List, Optional, Tuple
 
 import streamlit as st
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import get_data_driver, ClassySample
+from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,

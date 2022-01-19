@@ -1,13 +1,11 @@
 import itertools
-import subprocess
-
-import numpy as np
 import socket
-
+import subprocess
 from typing import Iterable, Optional, Tuple
 
-from classy.utils.log import get_project_logger
+import numpy as np
 
+from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
 

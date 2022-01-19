@@ -1,4 +1,4 @@
-from typing import Union, Iterator, Dict
+from typing import Dict, Iterator, Union
 
 import hydra
 import torch

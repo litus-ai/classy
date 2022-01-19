@@ -3,11 +3,11 @@ from typing import Dict, List, Tuple
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 from classy.data.data_drivers import (
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
-    GenerationSample,
 )
 from classy.evaluation.base import Evaluation
 from classy.utils.commons import flatten

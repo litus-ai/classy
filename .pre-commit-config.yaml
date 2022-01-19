@@ -3,11 +3,37 @@ repos:
     rev: v2.3.0
     hooks:
       - id: check-yaml
+      - id: check-case-conflict
+      - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
+#  - repo: https://github.com/PyCQA/pydocstyle todo decomment and add api docs
+#    rev: 6.1.1
+#    hooks:
+#      - id: pydocstyle
+#        name: Check docs
+#        files: ^classy/
+#        language_version: python3.8
+#        args: ["--convention=google"]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: Format imports
+        files: ^classy/
+        language_version: python3.8
+        args: ["--profile", "black"]
   - repo: https://github.com/psf/black
     rev: 21.12b0
     hooks:
       - id: black
+        name: Format code
         files: ^classy/
-        language_version: python3.9
+        language_version: python3.8
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.0
+    hooks:
+      - id: blacken-docs
+        name: Format code in docs
+        language_version: python3.8
+        additional_dependencies: [ black==21.12b0 ]

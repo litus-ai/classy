@@ -8,24 +8,33 @@ Implementing your custom dataset with classy is easy. You just need to subclass 
 
 ```python
 class MyCustomDataset(BaseDataset):
-
     @staticmethod
     def requires_vocab() -> bool:
-       # returns true if the dataset requires fitting a vocabulary, false otherwise
+        # returns true if the dataset requires fitting a vocabulary, false otherwise
         pass
 
     @staticmethod
-    def fit_vocabulary(samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]) -> Vocabulary:
-       # fits the vocabulary
+    def fit_vocabulary(
+        samples: Iterator[
+            Union[
+                SentencePairSample,
+                SequenceSample,
+                TokensSample,
+                QASample,
+                GenerationSample,
+            ]
+        ]
+    ) -> Vocabulary:
+        # fits the vocabulary
         pass
 
     def __init__(self, *args, **kwargs):
         # construct fields batchers
-        fields_batchers = {..}
+        fields_batchers = {...}
         super().__init__(*args, fields_batchers=fields_batchers, **kwargs)
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-       # yields a sequence of dictionaries, each representing a sample
+        # yields a sequence of dictionaries, each representing a sample
         pass
 ```
 
@@ -56,69 +65,79 @@ class MyBertSequenceDataset(BaseDataset):
 You first deal with the vocabulary methods. As you are doing sequence classification, you need to fit the label vocabulary:
 
 ```python
-    @staticmethod
+@staticmethod
 def requires_vocab() -> bool:
     return True
 
 
 @staticmethod
 def fit_vocabulary(samples: Iterator[SequenceSample]) -> Vocabulary:
-    return Vocabulary.from_samples([{"labels": sample.reference_annotation} for sample in samples])
+    return Vocabulary.from_samples(
+        [{"labels": sample.reference_annotation} for sample in samples]
+    )
 ```
 
 Then, define your constructor and, in particular, your *fields_batchers*:
 
 ```python
-    def __init__(
-        self,
-        samples_iterator: Callable[[], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]],
-        vocabulary: Vocabulary,
-        transformer_model: str,
-        tokens_per_batch: int,
-        max_batch_size: Optional[int],
-        section_size: int,
-        prebatch: bool,
-        materialize: bool,
-        min_length: int,
-        max_length: int,
-        for_inference: bool,
-    ):
+def __init__(
+    self,
+    samples_iterator: Callable[
+        [], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]
+    ],
+    vocabulary: Vocabulary,
+    transformer_model: str,
+    tokens_per_batch: int,
+    max_batch_size: Optional[int],
+    section_size: int,
+    prebatch: bool,
+    materialize: bool,
+    min_length: int,
+    max_length: int,
+    for_inference: bool,
+):
 
-        # load bert tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer_model, use_fast=True, add_prefix_space=True)
+    # load bert tokenizer
+    self.tokenizer = AutoTokenizer.from_pretrained(
+        transformer_model, use_fast=True, add_prefix_space=True
+    )
 
-        # define fields_batchers
-        fields_batcher = {
-            "input_ids": lambda lst: batchify(lst, padding_value=self.tokenizer.pad_token_id),
-            "attention_mask": lambda lst: batchify(lst, padding_value=0),
-            "labels": lambda lst: torch.tensor(lst, dtype=torch.long),
-            "samples": None,
-        }
+    # define fields_batchers
+    fields_batcher = {
+        "input_ids": lambda lst: batchify(
+            lst, padding_value=self.tokenizer.pad_token_id
+        ),
+        "attention_mask": lambda lst: batchify(lst, padding_value=0),
+        "labels": lambda lst: torch.tensor(lst, dtype=torch.long),
+        "samples": None,
+    }
 
-        super().__init__(
-            samples_iterator=samples_iterator,
-            vocabulary=vocabulary,
-            batching_fields=["input_ids"],
-            tokens_per_batch=tokens_per_batch,
-            max_batch_size=max_batch_size,
-            fields_batchers=fields_batcher,
-            section_size=section_size,
-            prebatch=prebatch,
-            materialize=materialize,
-            min_length=min_length,
-            max_length=max_length if max_length != -1 else self.tokenizer.model_max_length,
-            for_inference=for_inference,
-        )
+    super().__init__(
+        samples_iterator=samples_iterator,
+        vocabulary=vocabulary,
+        batching_fields=["input_ids"],
+        tokens_per_batch=tokens_per_batch,
+        max_batch_size=max_batch_size,
+        fields_batchers=fields_batcher,
+        section_size=section_size,
+        prebatch=prebatch,
+        materialize=materialize,
+        min_length=min_length,
+        max_length=max_length if max_length != -1 else self.tokenizer.model_max_length,
+        for_inference=for_inference,
+    )
 ```
 
 Finally, you need to implement the *dataset_iterator_func*:
 
 ```python
-    def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
+def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
     # iterate on samples
     for sequence_sample in self.samples_iterator():
         # invoke tokenizer
-        input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")["input_ids"][0]
+        input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")[
+            "input_ids"
+        ][0]
         # build dict
         elem_dict = {
             "input_ids": input_ids,
@@ -126,7 +145,11 @@ Finally, you need to implement the *dataset_iterator_func*:
         }
         if sequence_sample.reference_annotation is not None:
             # use vocabulary to convert string labels to int labels
-            elem_dict["labels"] = [self.vocabulary.get_idx(k="labels", elem=sequence_sample.reference_annotation)]
+            elem_dict["labels"] = [
+                self.vocabulary.get_idx(
+                    k="labels", elem=sequence_sample.reference_annotation
+                )
+            ]
         elem_dict["samples"] = sequence_sample
         yield elem_dict
 ```

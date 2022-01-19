@@ -1,13 +1,13 @@
-from typing import List, Union, Type
+from typing import List, Type, Union
 
 from pydantic import BaseModel, Field
 
 from classy.data.data_drivers import (
-    TokensSample,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
-    QASample,
-    GenerationSample,
+    TokensSample,
 )
 
 

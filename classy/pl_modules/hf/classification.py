@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, List, Iterator, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 import omegaconf
 import torch
@@ -8,23 +8,23 @@ from torch import nn
 from transformers import (
     AutoConfig,
     AutoModel,
-    AutoModelForSequenceClassification,
     AutoModelForQuestionAnswering,
+    AutoModelForSequenceClassification,
     AutoTokenizer,
 )
 
 from classy.data.data_drivers import (
+    QASample,
+    SentencePairSample,
     SequenceSample,
     TokensSample,
-    SentencePairSample,
-    QASample,
 )
-from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
+from classy.pl_modules.base import ClassificationOutput, ClassyPLModule
 from classy.pl_modules.mixins.task import (
-    TokensTask,
-    SequenceTask,
-    SentencePairTask,
     QATask,
+    SentencePairTask,
+    SequenceTask,
+    TokensTask,
 )
 from classy.utils.vocabulary import Vocabulary
 

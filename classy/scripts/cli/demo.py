@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 
 from classy.scripts.cli.utils import (
-    get_device,
     autocomplete_model_path,
     checkpoint_path_from_user_input,
+    get_device,
 )
 from classy.utils.help_cli import HELP_MODEL_PATH, HELP_PREDICTION_PARAMS
 
@@ -56,6 +56,7 @@ def parse_args():
 def main(args):
     # import here to avoid importing before needed
     import sys
+
     from streamlit.cli import main as st_main
 
     device = get_device(args.device)

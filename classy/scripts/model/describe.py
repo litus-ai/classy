@@ -1,31 +1,29 @@
 import argparse
 import collections
-from typing import Iterable, List, Union, Optional, Tuple, Dict
-
-import streamlit as st
-import plotly.express as px
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
-
+import plotly.express as px
+import streamlit as st
 from sacremoses import MosesTokenizer
 
 from classy.data.data_drivers import (
-    get_data_driver,
-    SEQUENCE,
-    SENTENCE_PAIR,
-    TOKEN,
-    QA,
     GENERATION,
+    QA,
+    SENTENCE_PAIR,
+    SEQUENCE,
+    TOKEN,
     ClassySample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
+    get_data_driver,
 )
+from classy.utils.plotly import boxplot
 
 # colors
 from classy.utils.streamlit import get_md_400_random_color_generator
-from classy.utils.plotly import boxplot
 
 colors_iter = get_md_400_random_color_generator()
 

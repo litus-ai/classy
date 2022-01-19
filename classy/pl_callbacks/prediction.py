@@ -1,13 +1,13 @@
 import itertools
 import tempfile
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 
-from classy.data.data_drivers import get_data_driver, ClassySample
+from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.evaluation.base import Evaluation
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.log import get_project_logger

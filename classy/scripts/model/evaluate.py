@@ -1,11 +1,10 @@
-from typing import Optional, List, Callable, Dict, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import hydra
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import ClassySample
-from classy.data.data_drivers import get_data_driver
+from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,

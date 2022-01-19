@@ -1,11 +1,10 @@
 import collections
-import torch
-
-from typing import Optional, NamedTuple, Any, Dict
+from typing import Any, Dict, NamedTuple, Optional
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
+import torch
 import torchmetrics
 
 from classy.pl_modules.mixins.prediction import PredictionMixin

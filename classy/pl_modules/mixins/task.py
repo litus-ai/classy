@@ -1,33 +1,33 @@
 import json
 
 from classy.data.data_drivers import (
-    SENTENCE_PAIR,
+    GENERATION,
+    JSONL,
     QA,
-    TOKEN,
+    SENTENCE_PAIR,
     SEQUENCE,
+    TOKEN,
+    ClassySample,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
     get_data_driver,
-    JSONL,
-    GENERATION,
-    GenerationSample,
-    ClassySample,
 )
 from classy.pl_modules.mixins.task_serve import (
-    SequenceTaskServeMixin,
-    SentencePairTaskServeMixin,
-    TokenTaskServeMixin,
-    QATaskServeMixin,
     GenerationTaskServeMixin,
+    QATaskServeMixin,
+    SentencePairTaskServeMixin,
+    SequenceTaskServeMixin,
+    TokenTaskServeMixin,
 )
 from classy.pl_modules.mixins.task_ui import (
+    GenerationTaskUIMixin,
+    QATaskUIMixin,
+    SentencePairTaskUIMixin,
     SequenceTaskUIMixin,
     TokenTaskUIMixin,
-    SentencePairTaskUIMixin,
-    QATaskUIMixin,
-    GenerationTaskUIMixin,
 )
 
 

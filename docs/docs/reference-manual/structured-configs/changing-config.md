@@ -34,6 +34,7 @@ To actually instantiate configs, you can use Hydra `instantiate` method:
 
 ```python
 import hydra
+
 # conf is expected to be a DictConfig object (essentially a more powerful Python Dict loaded via OmegaConf); you don't need to care about this detail
 hydra.utils.instantiate(conf)
 ```

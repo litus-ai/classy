@@ -1,16 +1,14 @@
 import re
-from typing import Optional, Iterator, Tuple, Dict, List
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import omegaconf
 import torch
 from torch import nn
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 
 from classy.data.data_drivers import GenerationSample
-from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
-from classy.pl_modules.mixins.task import (
-    GenerationTask,
-)
+from classy.pl_modules.base import ClassificationOutput, ClassyPLModule
+from classy.pl_modules.mixins.task import GenerationTask
 
 
 class HFGenerationPLModule(GenerationTask, ClassyPLModule):

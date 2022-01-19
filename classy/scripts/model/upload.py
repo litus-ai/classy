@@ -3,16 +3,14 @@ import json
 import logging
 import tempfile
 import zipfile
-
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import huggingface_hub
 
-from classy.utils.experiment import Run, Experiment
-from classy.scripts.model.download import get_md5, CLASSY_DATE_FORMAT
-
+from classy.scripts.model.download import CLASSY_DATE_FORMAT, get_md5
+from classy.utils.experiment import Experiment, Run
 
 logger = logging.getLogger(__name__)
 

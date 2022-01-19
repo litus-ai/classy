@@ -10,9 +10,9 @@ except ImportError:
     print("classy train [...] --print requires `pip install rich`")
     exit()
 
-from typing import Union, Iterable, List, Tuple, Optional
+from typing import Iterable, List, Optional, Tuple, Union
 
-from omegaconf import OmegaConf, DictConfig, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from classy.utils.config import ExplainableConfig, NodeInfo
 from classy.utils.hydra_patch import ConfigBlame, NormalConfigBlame

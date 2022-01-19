@@ -3,14 +3,14 @@ from argparse import ArgumentParser
 from argcomplete import FilesCompleter
 
 from classy.scripts.cli.utils import (
-    get_device,
     autocomplete_model_path,
     checkpoint_path_from_user_input,
+    get_device,
 )
 from classy.utils.help_cli import (
     HELP_MODEL_PATH,
-    HELP_TOKEN_BATCH_SIZE,
     HELP_PREDICTION_PARAMS,
+    HELP_TOKEN_BATCH_SIZE,
 )
 
 

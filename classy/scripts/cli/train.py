@@ -5,10 +5,10 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import List, Optional
 
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 import classy
-from classy.data.data_drivers import SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION
+from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.help_cli import HELP_TASKS
 from classy.utils.hydra_patch import ConfigBlame
@@ -179,6 +179,7 @@ def _main_mock(cfg, blames: Optional[List] = None):
 
     # import here to avoid importing torch before it's actually needed
     import hydra
+
     from classy.scripts.model.train import fix_paths, train
 
     if "supported_tasks" in cfg and cfg.task not in cfg.supported_tasks:
@@ -219,8 +220,9 @@ def _main_resume(model_dir: str):
         exit(1)
 
     # import here to avoid importing torch before it's actually needed
-    import hydra
     import sys
+
+    import hydra
     from omegaconf import OmegaConf
 
     from classy.utils.lightning import load_training_conf_from_checkpoint
@@ -594,8 +596,9 @@ def main(args):
         # at this point, streamlit's is the only handler added, so we can safely reset the handlers
         logging.getLogger().handlers = []
 
-        import hydra
         import sys
+
+        import hydra
 
         # we are basically mocking the normal python script invocation by setting the argv to those we want
         # unfortunately there is no better way to do this at this moment in time :(

@@ -1,21 +1,20 @@
-from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
+from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
 import numpy as np
-
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
 from classy.data.data_drivers import (
+    ClassySample,
     DataDriver,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
-    GenerationSample,
-    ClassySample,
 )
-from classy.utils.commons import chunks, flatten, add_noise_to_value
+from classy.utils.commons import add_noise_to_value, chunks, flatten
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 

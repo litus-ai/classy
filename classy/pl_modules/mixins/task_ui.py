@@ -8,19 +8,19 @@ import streamlit as st
 from annotated_text import annotation
 
 from classy.data.data_drivers import (
+    GENERATION,
+    JSONL,
+    QA,
+    SENTENCE_PAIR,
+    SEQUENCE,
+    TOKEN,
+    ClassySample,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
     get_data_driver,
-    QASample,
-    GenerationSample,
-    SEQUENCE,
-    JSONL,
-    SENTENCE_PAIR,
-    TOKEN,
-    GENERATION,
-    QA,
-    ClassySample,
 )
 from classy.utils.streamlit import get_md_200_random_color_generator
 

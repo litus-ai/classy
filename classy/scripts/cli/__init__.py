@@ -7,29 +7,22 @@ from classy.scripts.cli.utils import import_module_and_submodules, maybe_find_di
 
 
 def get_commands():
-    from classy.scripts.cli.train import get_parser as train_parser, main as train_main
-    from classy.scripts.cli.predict import (
-        get_parser as predict_parser,
-        main as predict_main,
-    )
-    from classy.scripts.cli.evaluate import (
-        get_parser as evaluate_parser,
-        main as evaluate_main,
-    )
-    from classy.scripts.cli.serve import get_parser as serve_parser, main as serve_main
-    from classy.scripts.cli.demo import get_parser as demo_parser, main as demo_main
-    from classy.scripts.cli.describe import (
-        get_parser as describe_parser,
-        main as describe_main,
-    )
-    from classy.scripts.cli.download import (
-        get_parser as download_parser,
-        main as download_main,
-    )
-    from classy.scripts.cli.upload import (
-        get_parser as upload_parser,
-        main as upload_main,
-    )
+    from classy.scripts.cli.demo import get_parser as demo_parser
+    from classy.scripts.cli.demo import main as demo_main
+    from classy.scripts.cli.describe import get_parser as describe_parser
+    from classy.scripts.cli.describe import main as describe_main
+    from classy.scripts.cli.download import get_parser as download_parser
+    from classy.scripts.cli.download import main as download_main
+    from classy.scripts.cli.evaluate import get_parser as evaluate_parser
+    from classy.scripts.cli.evaluate import main as evaluate_main
+    from classy.scripts.cli.predict import get_parser as predict_parser
+    from classy.scripts.cli.predict import main as predict_main
+    from classy.scripts.cli.serve import get_parser as serve_parser
+    from classy.scripts.cli.serve import main as serve_main
+    from classy.scripts.cli.train import get_parser as train_parser
+    from classy.scripts.cli.train import main as train_main
+    from classy.scripts.cli.upload import get_parser as upload_parser
+    from classy.scripts.cli.upload import main as upload_main
 
     return dict(
         train=dict(

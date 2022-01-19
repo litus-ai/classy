@@ -1,9 +1,8 @@
 import os
 import shutil
-
-import pytorch_lightning as pl
 from pathlib import Path
 
+import pytorch_lightning as pl
 from omegaconf import DictConfig
 
 from classy.data.data_drivers import get_data_driver
