@@ -27,3 +27,11 @@ classy --install-autocomplete
 
 echo "Classy successfully installed. Don't forget to activate your environment!"
 echo "$> conda activate ${env_name}"
+
+# install contributor dependencies
+read -p "Install contributor dependencies? [y/N] "
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  pip install black
+  pip install pre-commit
+fi
