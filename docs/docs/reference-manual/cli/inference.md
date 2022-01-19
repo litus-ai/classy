@@ -24,8 +24,8 @@ provided, classy will try to locate the test set provided to `classy train` (if 
 
 :::caution
 
-If you move your model to a different pc, automatically inferring the location of the test set will fail 
-unless it was also moved (and placed in a symmetric location in the file-system). Should it fail, providing the 
+If you move your model to a different pc, automatically inferring the location of the test set will fail
+unless it was also moved (and placed in a symmetric location in the file-system). Should it fail, providing the
 path explicitly should solve the issue.
 
 :::

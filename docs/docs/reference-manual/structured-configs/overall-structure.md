@@ -4,16 +4,16 @@ title: Overall Structure
 ---
 
 In `classy`, we specify every detail of training and model configurations through nice `.yaml` files,
-using the amazing [Hydra](https://hydra.cc/) library. 
+using the amazing [Hydra](https://hydra.cc/) library.
 
-:::info 
+:::info
 
 While you can read this section and work with classy config structure, without knowing Hydra, we recommend
 going through its [tutorial](https://hydra.cc/docs/tutorials/intro) before proceeding.
 
 :::
 
-This allows you to change and swap parts easily. For instance, imagine you have been fine-tuning BERT on some Token 
+This allows you to change and swap parts easily. For instance, imagine you have been fine-tuning BERT on some Token
 Classification task, with this configuration:
 
 ```yaml
@@ -46,7 +46,7 @@ the model in the experiment folder.
 ## A Minimal Example
 
 However, if you were to specify every aspect of your experiment in a single `.yaml` file, it would eventually become gigantic
-and pretty much useless. To avoid this, we use Hydra *config groups*, which is just a fancy name to say that the 
+and pretty much useless. To avoid this, we use Hydra *config groups*, which is just a fancy name to say that the
 experiment details are grouped by functionality and stored inside dedicated folders. That is:
 
 ```bash

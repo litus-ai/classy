@@ -3,8 +3,7 @@ from pathlib import Path
 
 import hydra
 import pytorch_lightning as pl
-
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from classy.data.data_modules import ClassyDataModule
 from classy.utils.hydra import fix_paths
@@ -17,7 +16,9 @@ def train(conf: DictConfig) -> None:
 
     # data module declaration
     pl_data_module: ClassyDataModule = hydra.utils.instantiate(
-        conf.data.datamodule, external_vocabulary_path=getattr(conf.data, "vocabulary_dir", None), _recursive_=False
+        conf.data.datamodule,
+        external_vocabulary_path=getattr(conf.data, "vocabulary_dir", None),
+        _recursive_=False,
     )
     pl_data_module.prepare_data()
 
@@ -45,7 +46,8 @@ def train(conf: DictConfig) -> None:
     # model callbacks
     for callback in conf.callbacks:
         if (
-            callback["_target_"] == "classy.pl_callbacks.prediction.PredictionPLCallback"
+            callback["_target_"]
+            == "classy.pl_callbacks.prediction.PredictionPLCallback"
             and callback.get("path", None) is None
         ):
             callback["path"] = pl_data_module.validation_path
@@ -66,7 +68,13 @@ def train(conf: DictConfig) -> None:
         )
 
         allowed_additional_params = {"entity", "group", "tags"}
-        wandb_params.update({k: v for k, v in conf.logging.wandb.items() if k in allowed_additional_params})
+        wandb_params.update(
+            {
+                k: v
+                for k, v in conf.logging.wandb.items()
+                if k in allowed_additional_params
+            }
+        )
 
         if conf.logging.wandb.anonymous is not None:
             wandb_params["anonymous"] = "allow"
@@ -77,7 +85,9 @@ def train(conf: DictConfig) -> None:
             conf.logging.wandb.run_id = logger.experiment.id
 
         # learning rate monitor
-        learning_rate_monitor = pl.callbacks.LearningRateMonitor(logging_interval="step")
+        learning_rate_monitor = pl.callbacks.LearningRateMonitor(
+            logging_interval="step"
+        )
         callbacks_store.append(learning_rate_monitor)
 
     # trainer

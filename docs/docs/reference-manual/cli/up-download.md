@@ -7,10 +7,10 @@ import ReactTermynal from '/src/components/termynal';
 
 ### Upload
 
-You can use `classy upload` to save a trained model on the [HuggingFace Model Hub](https://huggingface.co/models). 
+You can use `classy upload` to save a trained model on the [HuggingFace Model Hub](https://huggingface.co/models).
 
 :::note
-Uploading to the HF Hub **requires** a HuggingFace account. 
+Uploading to the HF Hub **requires** a HuggingFace account.
 
 You can create one [here](https://huggingface.co/join) and then run
 `huggingface-cli login` to perform the login from your machine.
@@ -29,9 +29,9 @@ You can create one [here](https://huggingface.co/join) and then run
 You can use `classy download` to download a model previously uploaded by someone else with `classy upload`.
 
 :::caution
-`classy download` currently **only** works with models trained with the base `classy` library. 
+`classy download` currently **only** works with models trained with the base `classy` library.
 
-Support for user-defined models is being discussed internally. 
+Support for user-defined models is being discussed internally.
 :::
 
 <ReactTermynal>

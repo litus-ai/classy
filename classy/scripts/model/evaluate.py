@@ -1,11 +1,10 @@
-from typing import Optional, List, Callable, Dict, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import hydra
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import ClassySample
-from classy.data.data_drivers import get_data_driver
+from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,
@@ -44,11 +43,15 @@ def evaluate(
 
     # load evaluation metric
     if metrics_fn is not None:
-        assert evaluate_config_path is None, "At most one between metrics_fn and evaluate_config_path can be provided"
+        assert (
+            evaluate_config_path is None
+        ), "At most one between metrics_fn and evaluate_config_path can be provided"
     elif evaluate_config_path is not None:
         metrics_fn = hydra.utils.instantiate(OmegaConf.load(evaluate_config_path))
     else:
-        evaluation_conf = load_training_conf_from_checkpoint(model_checkpoint_path).evaluation
+        evaluation_conf = load_training_conf_from_checkpoint(
+            model_checkpoint_path
+        ).evaluation
         metrics_fn = hydra.utils.instantiate(evaluation_conf)
 
     # predict

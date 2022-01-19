@@ -1,7 +1,6 @@
 import collections
 from pathlib import Path
-from typing import Iterable, Dict
-
+from typing import Dict, Iterable
 
 FIELDS_VOCABULARY_PATH = "fields_vocabulary_path.tsv"
 LABELS_VOCABULARY_PATH = "labels_vocabulary_path.tsv"
@@ -14,7 +13,9 @@ class Vocabulary:
 
     @classmethod
     def from_samples(cls, samples: Iterable[Dict[str, str]]):
-        backend_vocab = collections.defaultdict(lambda: {Vocabulary.PAD: 0, Vocabulary.UNK: 1})
+        backend_vocab = collections.defaultdict(
+            lambda: {Vocabulary.PAD: 0, Vocabulary.UNK: 1}
+        )
         for sample in samples:
             for k, v in sample.items():
                 elem2idx = backend_vocab[k]
@@ -38,7 +39,9 @@ class Vocabulary:
 
     def __init__(self, backend_vocab: Dict[str, Dict[str, int]]):
         self.backend_vocab = backend_vocab
-        self.reverse_backend_vocab = {k: {_v: _k for _k, _v in v.items()} for k, v in backend_vocab.items()}
+        self.reverse_backend_vocab = {
+            k: {_v: _k for _k, _v in v.items()} for k, v in backend_vocab.items()
+        }
 
     def get_size(self, k: str) -> int:
         return len(self.backend_vocab[k])

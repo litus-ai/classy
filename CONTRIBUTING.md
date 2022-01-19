@@ -12,7 +12,7 @@ Everything you do for the community of `classy` is a valuable contribution! This
 
 First, please [quickly search](https://github.com/sunglasses-ai/classy/issues) our issues to see whether it was already reported, in which case you could comment on the existing issue.
 
-Otherwise, open [a new GitHub issue](https://github.com/sunglasses-ai/classy/issues/new). 
+Otherwise, open [a new GitHub issue](https://github.com/sunglasses-ai/classy/issues/new).
 
 Ideally, your issue's title should briefly describe the bug, while the description should contain as much relevant information as possible:
 - a minimal example to reproduce the issue
@@ -23,7 +23,7 @@ Ideally, your issue's title should briefly describe the bug, while the descripti
 
 ### :zap: Do you have a suggestion for an enhancement?
 
-We track enhancement requests via GitHub issues. Similarly as for bugs, **before you create a new issue**, please [quickly search](https://github.com/sunglasses-ai/classy/issues) our issues to see whether it was suggested already, in which case you would comment on the existing issue (even to suggest improvement / changes or to help us with reviewing the code!). 
+We track enhancement requests via GitHub issues. Similarly as for bugs, **before you create a new issue**, please [quickly search](https://github.com/sunglasses-ai/classy/issues) our issues to see whether it was suggested already, in which case you would comment on the existing issue (even to suggest improvement / changes or to help us with reviewing the code!).
 
 When creating your enhancement request, please:
 

@@ -17,7 +17,7 @@ refers to the instantiation of the following object:
 
 ```python title="classy/pl_modules/hf/classification.py"
 class HFTokensPLModule(...):
-    
+
     def __init__(
         self,
         transformer_model: str,
@@ -34,8 +34,9 @@ To actually instantiate configs, you can use Hydra `instantiate` method:
 
 ```python
 import hydra
+
 # conf is expected to be a DictConfig object (essentially a more powerful Python Dict loaded via OmegaConf); you don't need to care about this detail
-hydra.utils.instantiate(conf) 
+hydra.utils.instantiate(conf)
 ```
 
 :::tip
@@ -61,7 +62,7 @@ and this will reflect automatically on your instantiated HFTokensPLModule.
 :::tip
 
 Having to enter the configuration folder, open the yaml file, edit the desired field and start the run every time
-can be a bit of a nuisance, especially if you then have to revert your changes if you get worse results. 
+can be a bit of a nuisance, especially if you then have to revert your changes if you get worse results.
 To avoid this, for simple modifications, you can use the `-c` option of classy train, to provide Hydra CLI overrides on params. For
 instance, to change the fine-tuning strategy, ```classy train ... -c model.fine_tune=False```.
 
@@ -88,7 +89,7 @@ editing `classy` configs for the moment.
 
 :::
 
-Things are usually as simple as described above. However, actual instantiation sometimes requires resources that you 
+Things are usually as simple as described above. However, actual instantiation sometimes requires resources that you
 cannot specify in the `.yaml` config. For instance, the actual configuration and code of `HFTokensPLModule` is the following:
 
 ```yaml title="configurations/model/token.yaml"
@@ -107,7 +108,7 @@ optim_conf:
 
 ```python title="classy/pl_modules/hf/token.py"
 class HFTokensPLModule(...):
-    
+
     def __init__(
         self,
         transformer_model: str,
@@ -123,7 +124,7 @@ with `__init__` having two additional *problematic* parameters:
 * `vocabulary`
 * `optim_conf`
 
-On the one hand, `vocabulary` is not something you usually know beforehand, as it will be automatically built by `classy` itself. 
+On the one hand, `vocabulary` is not something you usually know beforehand, as it will be automatically built by `classy` itself.
 On the other hand, `optim_conf` is your optimizer configuration, whose instantiation involves instantiating a PyTorch optimizer;
 however, this latter operation is impossible as PyTorch optimizers take model parameters as input to their constructors,
 which you don't have yet as the model and its weights are exactly what you are trying to instantiate.

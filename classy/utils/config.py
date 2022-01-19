@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Tuple, List, Optional, Any
+from typing import Any, List, Optional, Tuple
 
-from omegaconf import DictConfig, OmegaConf, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from classy.utils.hydra_patch import ConfigBlame
 
@@ -36,7 +36,11 @@ class ConfigBlamer:
                 seen.add(k)
 
     def children(self, key):
-        return [item for item in self.key2blame if item.startswith(key) and item.count(".") - 1 == key.count(".")]
+        return [
+            item
+            for item in self.key2blame
+            if item.startswith(key) and item.count(".") - 1 == key.count(".")
+        ]
 
     def solve_unseen(self, key):
         children = self.children(key)
@@ -130,7 +134,11 @@ class NodeInfo:
 
 
 class ExplainableConfig:
-    def __init__(self, config: DictConfig, additional_blames: List[Tuple[List[str], ConfigBlame]] = ()):
+    def __init__(
+        self,
+        config: DictConfig,
+        additional_blames: List[Tuple[List[str], ConfigBlame]] = (),
+    ):
         self.cfg = config
 
         blame = config.__dict__.pop("_blame", None)

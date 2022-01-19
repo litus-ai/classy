@@ -3,22 +3,20 @@ import json
 import logging
 import shutil
 import tempfile
-
 from datetime import datetime
 from pathlib import Path
 
 import requests
 
-from classy.utils.file import (
-    CLASSY_HF_INFO_URL,
-    CLASSY_DATE_FORMAT,
-    CLASSY_MODELS_CACHE_PATH,
-    CLASSY_HF_MODEL_URL,
-    get_md5,
-    ensure_dir,
-)
 from classy.utils.experiment import Experiment
-
+from classy.utils.file import (
+    CLASSY_DATE_FORMAT,
+    CLASSY_HF_INFO_URL,
+    CLASSY_HF_MODEL_URL,
+    CLASSY_MODELS_CACHE_PATH,
+    ensure_dir,
+    get_md5,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +52,9 @@ def download_resource(resource_url: str, output_path: Path) -> int:
         file_size = int(req.headers.get("content-length"))
         default_chunk_size = 131072
         desc = "Downloading " + resource_url
-        with tqdm(total=file_size, unit="B", unit_scale=True, desc=desc) as progress_bar:
+        with tqdm(
+            total=file_size, unit="B", unit_scale=True, desc=desc
+        ) as progress_bar:
             for chunk in req.iter_content(chunk_size=default_chunk_size):
                 if chunk:
                     f.write(chunk)
@@ -84,7 +84,9 @@ def download(model_name: str, force_download: bool = False):
     model_qualifier = f"{user_name}@{model_name}"
 
     # download model information
-    model_info_url = CLASSY_HF_INFO_URL.format(user_name=user_name, model_name=model_name)
+    model_info_url = CLASSY_HF_INFO_URL.format(
+        user_name=user_name, model_name=model_name
+    )
 
     # no need to remove any file under the tmp directory as it is automatically removed upon exiting this block
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -96,7 +98,9 @@ def download(model_name: str, force_download: bool = False):
         try:
             request_file(model_info_url, tmp_info_path)
         except requests.exceptions.HTTPError:
-            logger.error(f"{model_name} cannot be found in the Hugging Face model hub classy section")
+            logger.error(
+                f"{model_name} cannot be found in the Hugging Face model hub classy section"
+            )
             return
 
         # load model information
@@ -110,44 +114,60 @@ def download(model_name: str, force_download: bool = False):
             # we treat it as an Experiment whose creation date is the actual download date
             # the creation date is stored in the info file, we compare the two and decide whether the
             # downloaded model is still valid or if it has to be re-downloaded
-            exp = Experiment.from_name(model_qualifier, exp_dir=CLASSY_MODELS_CACHE_PATH)
+            exp = Experiment.from_name(
+                model_qualifier, exp_dir=CLASSY_MODELS_CACHE_PATH
+            )
 
             if exp is not None:
                 run = exp.last_run
                 downloaded_date = run.date
-                upload_date = datetime.strptime(model_info_dict["upload_date"], CLASSY_DATE_FORMAT)
+                upload_date = datetime.strptime(
+                    model_info_dict["upload_date"], CLASSY_DATE_FORMAT
+                )
 
                 if downloaded_date <= upload_date:
                     # model needs to be re-downloaded as a new version is on the hub
                     to_download = True
-                    logger.info("Found an older version of the model in the cache, re-downloading...")
+                    logger.info(
+                        "Found an older version of the model in the cache, re-downloading..."
+                    )
                 else:
                     # check files' correctness
-                    logger.info("Found a model in the cache with the same name, checking their equivalence")
+                    logger.info(
+                        "Found a model in the cache with the same name, checking their equivalence"
+                    )
 
                     with (run.directory / "info.json").open() as f:
                         cached_model_info_dict = json.load(f)
 
                     if model_info_dict["md5"] == cached_model_info_dict["md5"]:
-                        logger.info("The models have the same md5, thus they should be equal. Returning...")
+                        logger.info(
+                            "The models have the same md5, thus they should be equal. Returning..."
+                        )
                         return
                     else:
                         to_download = True
-                        logger.info("Found an older version of the model in cache. Downloading the new one")
+                        logger.info(
+                            "Found an older version of the model in cache. Downloading the new one"
+                        )
             else:
                 to_download = True
 
             if not to_download:
                 return
         else:
-            logger.info("Skipping existence / sanity checks as --force-download was provided")
+            logger.info(
+                "Skipping existence / sanity checks as --force-download was provided"
+            )
 
         # model directory is cache_dir/model_name/date/time, to follow the experiments' convention
         now = datetime.now().strftime(CLASSY_DATE_FORMAT.replace(" ", "/"))
         model_cache_path = ensure_dir(CLASSY_MODELS_CACHE_PATH / model_qualifier / now)
 
         # downloading the actual model
-        model_url = CLASSY_HF_MODEL_URL.format(user_name=user_name, model_name=model_name)
+        model_url = CLASSY_HF_MODEL_URL.format(
+            user_name=user_name, model_name=model_name
+        )
         tmp_model_path = tmp_path / "model.zip"
         request_file(model_url, tmp_model_path)
 
@@ -171,7 +191,10 @@ def download(model_name: str, force_download: bool = False):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("model_name", help="The model you want to download (use user@model for a specific model)")
+    parser.add_argument(
+        "model_name",
+        help="The model you want to download (use user@model for a specific model)",
+    )
     parser.add_argument(
         "--force-download",
         action="store_true",

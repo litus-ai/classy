@@ -1,16 +1,14 @@
 import re
-from typing import Optional, Iterator, Tuple, Dict, List
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import omegaconf
 import torch
 from torch import nn
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 
 from classy.data.data_drivers import GenerationSample
-from classy.pl_modules.base import ClassyPLModule, ClassificationOutput
-from classy.pl_modules.mixins.task import (
-    GenerationTask,
-)
+from classy.pl_modules.base import ClassificationOutput, ClassyPLModule
+from classy.pl_modules.mixins.task import GenerationTask
 
 
 class HFGenerationPLModule(GenerationTask, ClassyPLModule):
@@ -46,13 +44,25 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
     def validation_step(self, batch: dict, batch_idx: int) -> None:
         forward_output = self.forward(**batch)
         self.log("val_loss", forward_output.loss)
-        self.log("val_ppl", torch.exp(forward_output.loss), prog_bar=True, on_step=False, on_epoch=True)
+        self.log(
+            "val_ppl",
+            torch.exp(forward_output.loss),
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
         return forward_output.loss
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         forward_output = self.forward(**batch)
         self.log("test_loss", forward_output.loss)
-        self.log("test_ppl", torch.exp(forward_output.loss), prog_bar=True, on_step=False, on_epoch=True)
+        self.log(
+            "test_ppl",
+            torch.exp(forward_output.loss),
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
         return forward_output.loss
 
     def batch_predict(self, *args, **kwargs) -> Iterator[GenerationSample]:
@@ -72,7 +82,10 @@ class HFGenerativeModel(nn.Module):
             raise ValueError
 
     def __init__(
-        self, transformer_model: str, decoding_skip_special_tokens: bool, decoding_clean_up_tokenization_spaces: bool
+        self,
+        transformer_model: str,
+        decoding_skip_special_tokens: bool,
+        decoding_clean_up_tokenization_spaces: bool,
     ):
         super().__init__()
         self.generation_params = {}
@@ -95,7 +108,11 @@ class BartGenerativeModule(HFGenerativeModel):
         decoding_clean_up_tokenization_spaces: bool,
         additional_special_tokens: Optional[List[str]] = None,
     ):
-        super().__init__(transformer_model, decoding_skip_special_tokens, decoding_clean_up_tokenization_spaces)
+        super().__init__(
+            transformer_model,
+            decoding_skip_special_tokens,
+            decoding_clean_up_tokenization_spaces,
+        )
         self.tokenizer = AutoTokenizer.from_pretrained(
             transformer_model,
             additional_special_tokens=list(additional_special_tokens)
@@ -108,7 +125,9 @@ class BartGenerativeModule(HFGenerativeModel):
         if additional_special_tokens is not None and len(additional_special_tokens) > 0:
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
-        self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces
+        self.decoding_clean_up_tokenization_spaces = (
+            decoding_clean_up_tokenization_spaces
+        )
         self.forced_bos_token_id = self.tokenizer.bos_token_id
 
     def forward(
@@ -177,7 +196,11 @@ class GPT2GenerativeModule(HFGenerativeModel):
         decoding_clean_up_tokenization_spaces: bool,
         additional_special_tokens: Optional[List[str]] = None,
     ):
-        super().__init__(transformer_model, decoding_skip_special_tokens, decoding_clean_up_tokenization_spaces)
+        super().__init__(
+            transformer_model,
+            decoding_skip_special_tokens,
+            decoding_clean_up_tokenization_spaces,
+        )
         self.tokenizer = AutoTokenizer.from_pretrained(
             transformer_model,
             additional_special_tokens=list(additional_special_tokens)
@@ -188,9 +211,13 @@ class GPT2GenerativeModule(HFGenerativeModel):
         )
         self.model = AutoModelForCausalLM.from_pretrained(transformer_model)
         if additional_special_tokens is not None and len(additional_special_tokens) > 0:
-            self.model.model.shared = self.model.resize_token_embeddings(len(self.tokenizer))
+            self.model.model.shared = self.model.resize_token_embeddings(
+                len(self.tokenizer)
+            )
         self.decoding_skip_special_tokens = decoding_skip_special_tokens
-        self.decoding_clean_up_tokenization_spaces = decoding_clean_up_tokenization_spaces
+        self.decoding_clean_up_tokenization_spaces = (
+            decoding_clean_up_tokenization_spaces
+        )
 
     def forward(
         self,

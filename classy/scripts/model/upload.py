@@ -3,22 +3,22 @@ import json
 import logging
 import tempfile
 import zipfile
-
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import huggingface_hub
 
-from classy.utils.experiment import Run, Experiment
-from classy.scripts.model.download import get_md5, CLASSY_DATE_FORMAT
-
+from classy.scripts.model.download import CLASSY_DATE_FORMAT, get_md5
+from classy.utils.experiment import Experiment, Run
 
 logger = logging.getLogger(__name__)
 
 
 def strip_checkpoint(
-    checkpoint_path: Path, destination: Path, keys_to_remove=("callbacks", "optimizer_states", "lr_schedulers")
+    checkpoint_path: Path,
+    destination: Path,
+    keys_to_remove=("callbacks", "optimizer_states", "lr_schedulers"),
 ):
     import torch
 
@@ -74,11 +74,16 @@ def create_info_file(tmpdir: Path):
 
 
 def upload(
-    model_name, organization: Optional[str] = None, repo_name: Optional[str] = None, commit: Optional[str] = None
+    model_name,
+    organization: Optional[str] = None,
+    repo_name: Optional[str] = None,
+    commit: Optional[str] = None,
 ):
     token = huggingface_hub.HfFolder.get_token()
     if token is None:
-        print("No HuggingFace token found. You need to execute `huggingface-cli login` first!")
+        print(
+            "No HuggingFace token found. You need to execute `huggingface-cli login` first!"
+        )
         return
 
     exp = Experiment.from_name(model_name)
@@ -93,8 +98,15 @@ def upload(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         api = huggingface_hub.hf_api.HfApi()
-        repo_url = api.create_repo(token=token, name=repo_name or model_name, organization=organization, exist_ok=True)
-        repo = huggingface_hub.Repository(str(tmpdir), clone_from=repo_url, use_auth_token=token)
+        repo_url = api.create_repo(
+            token=token,
+            name=repo_name or model_name,
+            organization=organization,
+            exist_ok=True,
+        )
+        repo = huggingface_hub.Repository(
+            str(tmpdir), clone_from=repo_url, use_auth_token=token
+        )
 
         tmp_path = Path(tmpdir)
         zip_run(run, tmp_path)
@@ -108,10 +120,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_name", help="The model you want to upload")
     parser.add_argument(
-        "--organization", help="[optional] the name of the organization where you want to upload the model"
+        "--organization",
+        help="[optional] the name of the organization where you want to upload the model",
     )
-    parser.add_argument("--name", help="Optional name to use when uploading to the HuggingFace repository")
-    parser.add_argument("--commit", help="Commit message to use when pushing to the HuggingFace Hub")
+    parser.add_argument(
+        "--name",
+        help="Optional name to use when uploading to the HuggingFace repository",
+    )
+    parser.add_argument(
+        "--commit", help="Commit message to use when pushing to the HuggingFace Hub"
+    )
     return parser.parse_args()
 
 

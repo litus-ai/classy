@@ -8,19 +8,19 @@ import streamlit as st
 from annotated_text import annotation
 
 from classy.data.data_drivers import (
+    GENERATION,
+    JSONL,
+    QA,
+    SENTENCE_PAIR,
+    SEQUENCE,
+    TOKEN,
+    ClassySample,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
     get_data_driver,
-    QASample,
-    GenerationSample,
-    SEQUENCE,
-    JSONL,
-    SENTENCE_PAIR,
-    TOKEN,
-    GENERATION,
-    QA,
-    ClassySample,
 )
 from classy.utils.streamlit import get_md_200_random_color_generator
 
@@ -63,7 +63,9 @@ class SentencePairTaskUIMixin(TaskUIMixin):
         # tuple can't be used for selection boxes, let's use incipts
         option2example = {}
         for ie in inferred_examples:
-            option2example[f"({ie.sentence1[: self.truncate_k]}, {ie.sentence2[: self.truncate_k]})"] = (
+            option2example[
+                f"({ie.sentence1[: self.truncate_k]}, {ie.sentence2[: self.truncate_k]})"
+            ] = (
                 ie.sentence1,
                 ie.sentence2,
             )
@@ -72,9 +74,15 @@ class SentencePairTaskUIMixin(TaskUIMixin):
             inference_message.rstrip(".")
             + f". Examples are in the format (<sentence1>, <sentence2>); for space constraints, only the first {self.truncate_k} characters of each sentence are shown."
         )
-        selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
-        sentence1 = st.text_area("First input sequence", option2example[selected_option][0])
-        sentence2 = st.text_area("Second input sequence", option2example[selected_option][1])
+        selected_option = st.selectbox(
+            selection_message, options=list(option2example.keys()), index=0
+        )
+        sentence1 = st.text_area(
+            "First input sequence", option2example[selected_option][0]
+        )
+        sentence2 = st.text_area(
+            "Second input sequence", option2example[selected_option][1]
+        )
         if st.button("Classify", key="classify"):
             sample = json.dumps({"sentence1": sentence1, "sentence2": sentence2})
             return next(self.__data_driver.read([sample]))
@@ -109,7 +117,11 @@ class SequenceTaskUIMixin(TaskUIMixin):
     def ui_read_input(
         self, inference_message: str, inferred_examples: List[SequenceSample]
     ) -> Optional[SequenceSample]:
-        placeholder = st.selectbox(inference_message, options=[ie.sequence for ie in inferred_examples], index=0)
+        placeholder = st.selectbox(
+            inference_message,
+            options=[ie.sequence for ie in inferred_examples],
+            index=0,
+        )
         input_text = st.text_area("Input sequence to classify", placeholder)
         if st.button("Classify", key="classify"):
             sample = json.dumps({"sequence": input_text})
@@ -144,11 +156,17 @@ class TokenTaskUIMixin(TaskUIMixin):
             """
         )
 
-    def ui_read_input(self, inference_message: str, inferred_examples: List[TokensSample]) -> Optional[TokensSample]:
+    def ui_read_input(
+        self, inference_message: str, inferred_examples: List[TokensSample]
+    ) -> Optional[TokensSample]:
         placeholder = st.selectbox(
-            inference_message, options=[" ".join(ie.tokens) for ie in inferred_examples], index=0
+            inference_message,
+            options=[" ".join(ie.tokens) for ie in inferred_examples],
+            index=0,
         )
-        input_text = st.text_area("Space-separeted list of tokens to classify", placeholder)
+        input_text = st.text_area(
+            "Space-separeted list of tokens to classify", placeholder
+        )
         if st.button("Classify", key="classify"):
             sample = json.dumps({"tokens": input_text.split(" ")})
             return next(self.__data_driver.read([sample]))
@@ -159,7 +177,10 @@ class TokenTaskUIMixin(TaskUIMixin):
         tokens, labels = predicted_sample.tokens, predicted_sample.predicted_annotation
 
         # check if any token encodings (e.g. bio) are used
-        if all(l == "O" or re.fullmatch("^[BI]-.*$", l) for l in predicted_sample.predicted_annotation):
+        if all(
+            l == "O" or re.fullmatch("^[BI]-.*$", l)
+            for l in predicted_sample.predicted_annotation
+        ):
             _tokens, _labels = [], []
             for t, l in zip(tokens, labels):
                 if l.startswith("I"):
@@ -176,7 +197,9 @@ class TokenTaskUIMixin(TaskUIMixin):
             if l is None:
                 annotated_html_components.append(str(html.escape(f" {t} ")))
             else:
-                annotated_html_components.append(str(annotation(*(t, l, self.color_mapping[l]))))
+                annotated_html_components.append(
+                    str(annotation(*(t, l, self.color_mapping[l])))
+                )
 
         st.markdown(
             "\n".join(
@@ -204,11 +227,15 @@ class QATaskUIMixin(TaskUIMixin):
             """
         )
 
-    def ui_read_input(self, inference_message: str, inferred_examples: List[QASample]) -> Optional[QASample]:
+    def ui_read_input(
+        self, inference_message: str, inferred_examples: List[QASample]
+    ) -> Optional[QASample]:
         # tuple can't be used for selection boxes, let's use incipts
         option2example = {}
         for ie in inferred_examples:
-            option2example[f"({ie.question[: self.truncate_k]}, {ie.context[: self.truncate_k]})"] = (
+            option2example[
+                f"({ie.question[: self.truncate_k]}, {ie.context[: self.truncate_k]})"
+            ] = (
                 ie.question,
                 ie.context,
             )
@@ -217,7 +244,9 @@ class QATaskUIMixin(TaskUIMixin):
             inference_message.rstrip(".")
             + f". Examples are in the format (<question>, <context>); for space constraints, only the first {self.truncate_k} characters of both are shown."
         )
-        selected_option = st.selectbox(selection_message, options=list(option2example.keys()), index=0)
+        selected_option = st.selectbox(
+            selection_message, options=list(option2example.keys()), index=0
+        )
         # build input area
         question = st.text_area("Question", option2example[selected_option][0])
         context = st.text_area("Context", option2example[selected_option][1])
@@ -278,13 +307,19 @@ class GenerationTaskUIMixin(TaskUIMixin):
                 ie.target_language if ie.target_language is not None else "",
             )
         # actual reading
-        selected_option = st.selectbox(inference_message, options=list(option2example.keys()), index=0)
-        source_sequence = st.text_area("Source sequence", option2example[selected_option][0])
+        selected_option = st.selectbox(
+            inference_message, options=list(option2example.keys()), index=0
+        )
+        source_sequence = st.text_area(
+            "Source sequence", option2example[selected_option][0]
+        )
         source_language = st.text_input(
-            "Source language (empty to set it to None)", option2example[selected_option][1]
+            "Source language (empty to set it to None)",
+            option2example[selected_option][1],
         ).strip()
         target_language = st.text_input(
-            "Target language (empty to set it to None)", option2example[selected_option][2]
+            "Target language (empty to set it to None)",
+            option2example[selected_option][2],
         ).strip()
         if st.button("Classify", key="classify"):
             sample = json.dumps(

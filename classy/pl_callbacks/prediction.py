@@ -1,13 +1,13 @@
 import itertools
 import tempfile
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 
-from classy.data.data_drivers import get_data_driver, ClassySample
+from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.evaluation.base import Evaluation
 from classy.pl_modules.base import ClassyPLModule
 from classy.utils.log import get_project_logger
@@ -44,12 +44,16 @@ class EvaluationPredictionCallback(PredictionCallback):
         for k, v in results.items():
             model.log(f"{name}_{k}", v, prog_bar=True, on_step=False, on_epoch=True)
         str_results = ", ".join([f"{k}={v}" for k, v in results.items()])
-        logger.info(f"Evaluation {self.__class__.__name__} with name {name} completed with results: ({str_results})")
+        logger.info(
+            f"Evaluation {self.__class__.__name__} with name {name} completed with results: ({str_results})"
+        )
 
 
 class FileDumperPredictionCallback(PredictionCallback):
     def __init__(self):
-        self.folder = Path("file-dumped-prediction-callback")  # hydra takes care of dedicated path in the exp folder
+        self.folder = Path(
+            "file-dumped-prediction-callback"
+        )  # hydra takes care of dedicated path in the exp folder
         self.folder.mkdir(exist_ok=True)
 
     def __call__(
@@ -60,7 +64,9 @@ class FileDumperPredictionCallback(PredictionCallback):
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
-        with open(str(self.folder.joinpath(f"{name}.{trainer.global_step}.tsv")), "w") as f:
+        with open(
+            str(self.folder.joinpath(f"{name}.{trainer.global_step}.tsv")), "w"
+        ) as f:
             for sample in predicted_samples:
                 f.write(sample.pretty_print() + "\n")
 
@@ -92,11 +98,15 @@ class PredictionPLCallback(pl.Callback):
 
     def _get_sliced_path(self, samples_it, data_driver, path, limit, extension):
         if (path, limit) not in self.slicing_cache:
-            self.slicing_cache[(path, limit)] = tempfile.NamedTemporaryFile(suffix=f".{extension}")
+            self.slicing_cache[(path, limit)] = tempfile.NamedTemporaryFile(
+                suffix=f".{extension}"
+            )
             data_driver.save(samples_it, self.slicing_cache[(path, limit)].name)
         return self.slicing_cache[(path, limit)].name
 
-    def on_validation_epoch_start(self, trainer: pl.Trainer, model: ClassyPLModule) -> None:
+    def on_validation_epoch_start(
+        self, trainer: pl.Trainer, model: ClassyPLModule
+    ) -> None:
 
         logger.info("Executing prediction callback")
 
@@ -109,10 +119,14 @@ class PredictionPLCallback(pl.Callback):
             on_result,
         ) in self.settings:
 
-            logger.info(f"Prediction callback processing setting {name} with path={path}")
+            logger.info(
+                f"Prediction callback processing setting {name} with path={path}"
+            )
 
             if prediction_param_conf_path is not None:
-                model.load_prediction_params(dict(OmegaConf.load(prediction_param_conf_path)))
+                model.load_prediction_params(
+                    dict(OmegaConf.load(prediction_param_conf_path))
+                )
 
             extension = path.split(".")[-1]
             data_driver = get_data_driver(model.task, extension)
@@ -125,13 +139,23 @@ class PredictionPLCallback(pl.Callback):
                 # do only a dry run on first epoch (correspond to sanity check run)
                 samples_it = itertools.islice(samples_it, 5)
                 samples_it, saving_samples_it = itertools.tee(samples_it)
-                path = self._get_sliced_path(saving_samples_it, data_driver, path=path, limit=5, extension=extension)
+                path = self._get_sliced_path(
+                    saving_samples_it,
+                    data_driver,
+                    path=path,
+                    limit=5,
+                    extension=extension,
+                )
             elif limit != -1:
                 # if provided, apply the limit given
                 samples_it = itertools.islice(samples_it, limit)
                 samples_it, saving_samples_it = itertools.tee(samples_it)
                 path = self._get_sliced_path(
-                    saving_samples_it, data_driver, path=path, limit=limit, extension=extension
+                    saving_samples_it,
+                    data_driver,
+                    path=path,
+                    limit=limit,
+                    extension=extension,
                 )
 
             predicted_samples = list(
