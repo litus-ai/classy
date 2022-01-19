@@ -1,3 +1,11 @@
+default_language_version:
+  python: python3.8
+
+ci:
+  autofix_prs: true
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'
+  autoupdate_schedule: quarterly
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.3.0
@@ -21,7 +29,6 @@ repos:
       - id: isort
         name: Format imports
         files: ^classy/
-        language_version: python3.8
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
     rev: 21.12b0
@@ -29,11 +36,9 @@ repos:
       - id: black
         name: Format code
         files: ^classy/
-        language_version: python3.8
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.12.0
     hooks:
       - id: blacken-docs
         name: Format code in docs
-        language_version: python3.8
         additional_dependencies: [ black==21.12b0 ]
