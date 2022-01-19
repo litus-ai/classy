@@ -29,13 +29,13 @@ def interactive_main(
     next(model.predict(samples=[], dataset_conf=dataset_conf), None)
 
     while True:
-        _, prediction = next(
+        predicted_sample = next(
             model.predict(
                 [model.read_input_from_bash()],
                 dataset_conf=dataset_conf,
             )
         )
-        print(f"\t# prediction: \t{prediction}")
+        print(f"\t# prediction: \t{predicted_sample.predicted_annotation}")
 
 
 def file_main(
@@ -65,17 +65,16 @@ def file_main(
     )
     data_driver = get_data_driver(model.task, input_extension)
 
-    def it():
-        for source, prediction in model.predict(
+    data_driver.save(
+        model.predict(
             data_driver.read_from_path(input_path),
             token_batch_size=token_batch_size,
             dataset_conf=dataset_conf,
             progress_bar=True,
-        ):
-            source.predicted_annotation = prediction
-            yield source
-
-    data_driver.save(it(), output_path, use_predicted_annotation=True)
+        ),
+        output_path,
+        use_predicted_annotation=True,
+    )
 
 
 def main():
