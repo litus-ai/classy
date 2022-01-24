@@ -28,7 +28,7 @@ class Vocabulary:
         backend_vocab = {}
         folder = Path(path)
         for f in folder.iterdir():
-            k = f.name.rstrip(".txt")
+            k = f.name[: f.name.rindex(".txt")]
             elem2idx = {}
             with open(f) as _f:
                 for line in _f:
