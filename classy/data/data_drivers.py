@@ -526,7 +526,7 @@ class JSONLTokensDataDriver(TokensDataDriver):
                     assert len(sample.target) == len(
                         sample.reference_annotation
                     ), f"Token Classification requires as many targets as labels: found {len(sample.target)} targets != {len(sample.reference_annotation)} labels at line {line}"
-            yield TokensSample(**json.loads(line))
+            yield sample
 
     def save(
         self,
@@ -543,7 +543,6 @@ class JSONLTokensDataDriver(TokensDataDriver):
                 )
                 d = {
                     "tokens": sample.tokens,
-                    "target": list(sample.target),
                     **sample.get_additional_attributes(),
                     "labels": used_annotation,
                 }
