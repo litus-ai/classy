@@ -47,7 +47,7 @@ class SequenceTask(SequenceTaskServeMixin, SequenceTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(SEQUENCE, JSONL)
 
     def read_input_from_bash(self) -> SequenceSample:
-        sequence = input("Enter sequence text: ")
+        sequence = input("Enter sequence text: ").strip()
         sample = json.dumps({"sequence": sequence})
         return next(self.__data_driver.read([sample]))
 
@@ -60,7 +60,7 @@ class TokensTask(TokenTaskServeMixin, TokenTaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(TOKEN, JSONL)
 
     def read_input_from_bash(self) -> TokensSample:
-        tokens = input("Enter space-separated tokens: ")
+        tokens = input("Enter space-separated tokens: ").strip()
         sample = json.dumps({"tokens": tokens.split(" ")})
         return next(self.__data_driver.read([sample]))
 
@@ -100,8 +100,8 @@ class SentencePairTask(SentencePairTaskServeMixin, SentencePairTaskUIMixin, Task
     __data_driver = get_data_driver(SENTENCE_PAIR, JSONL)
 
     def read_input_from_bash(self) -> SentencePairSample:
-        sentence1 = input("Enter first sentence: ")
-        sentence2 = input("Enter second sentence: ")
+        sentence1 = input("Enter first sentence: ").strip()
+        sentence2 = input("Enter second sentence: ").strip()
         sample = json.dumps({"sentence1": sentence1, "sentence2": sentence2})
         return next(self.__data_driver.read([sample]))
 
@@ -114,8 +114,8 @@ class QATask(QATaskServeMixin, QATaskUIMixin, TaskMixin):
     __data_driver = get_data_driver(QA, JSONL)
 
     def read_input_from_bash(self) -> QASample:
-        question = input("Enter question: ")
-        context = input("Enter context: ")
+        question = input("Enter question: ").strip()
+        context = input("Enter context: ").strip()
         sample = json.dumps({"question": question, "context": context})
         return next(self.__data_driver.read([sample]))
 
