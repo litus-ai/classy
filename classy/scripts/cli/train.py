@@ -37,8 +37,10 @@ def populate_parser(parser: ArgumentParser):
         type=str,
         default=None,
         help="""
-            Can be either the name of a profile you created (i.e. the file name without the .yaml) or a predefined
-            profile. For a complete list of classy predefined profiles, please refer to the documentation.
+            Can be either a path to a profile (e.g. "/my-project/profiles/my-profile.yaml"), the name of a profile you
+            created (i.e. the file name without the .yaml such as "my-profile") located in the "configurations/profiles"
+            folder from your current path or a predefined profile. For a complete list of classy predefined profiles,
+            please refer to the documentation.
         """,
     )
     parser.add_argument(
@@ -450,7 +452,11 @@ def main(args):
 
         # apply profile on config dir
         if args.profile is not None:
-            profile_path = Path(tmp_dir) / "profiles" / (args.profile + ".yaml")
+            if args.profile.endswith(".yaml") or args.profile.endswith(".yml"):
+                logger.info(f"Passed profile {args.profile} was detected to be a path")
+                profile_path = Path(args.profile)
+            else:
+                profile_path = Path(tmp_dir) / "profiles" / (args.profile + ".yaml")
             assert profile_path.exists(), f"No profile found at {profile_path}"
             blames += apply_profile_on_dir(
                 OmegaConf.load(profile_path), args.profile, config_name, tmp_dir
