@@ -453,7 +453,7 @@ def main(args):
         # apply profile on config dir
         if args.profile is not None:
             if args.profile.endswith(".yaml") or args.profile.endswith(".yml"):
-                logger.error(f"Passed profile {args.profile} was detected to be a path")
+                logger.info(f"Passed profile {args.profile} was detected to be a path")
                 profile_path = Path(args.profile)
             else:
                 profile_path = Path(tmp_dir) / "profiles" / (args.profile + ".yaml")
