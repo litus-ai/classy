@@ -53,14 +53,13 @@ def serve(
 
         output_samples = []
 
-        for source, prediction in model.predict(
+        for predicted_sample in model.predict(
             model=model,
             samples=[input_sample.unmarshal() for input_sample in input_samples],
             dataset_conf=dataset_conf,
             token_batch_size=token_batch_size,
         ):
-            source.predicted_annotation = prediction
-            output_samples.append(OutputSample.marshal(source))
+            output_samples.append(OutputSample.marshal(predicted_sample))
 
         return output_samples
 
