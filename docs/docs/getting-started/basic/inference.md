@@ -15,7 +15,7 @@ Use *fast-ner* to perform Named Entity Recognition on every sentence stored in a
 
 :::info
 
-Recall that `classy predict` has two modes: `interactive`, which lets you query the model from the shell, and `file`, 
+Recall that `classy predict` has two modes: `interactive`, which lets you query the model from the shell, and `file`,
 which instead reads the dataset items from the specified file.
 
 :::
