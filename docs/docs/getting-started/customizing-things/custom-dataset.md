@@ -14,17 +14,7 @@ class MyCustomDataset(BaseDataset):
         pass
 
     @staticmethod
-    def fit_vocabulary(
-        samples: Iterator[
-            Union[
-                SentencePairSample,
-                SequenceSample,
-                TokensSample,
-                QASample,
-                GenerationSample,
-            ]
-        ]
-    ) -> Vocabulary:
+    def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         # fits the vocabulary
         pass
 
@@ -82,9 +72,7 @@ Then, define your constructor and, in particular, your *fields_batchers*:
 ```python
 def __init__(
     self,
-    samples_iterator: Callable[
-        [], Iterator[Union[SequenceSample, SentencePairSample, TokensSample, QASample]]
-    ],
+    samples_iterator: Callable[[], Iterator[SequenceSample]],
     vocabulary: Vocabulary,
     transformer_model: str,
     tokens_per_batch: int,

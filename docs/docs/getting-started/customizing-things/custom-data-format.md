@@ -9,28 +9,12 @@ You just need to implement your own data driver and register it:
 ```python
 # implement your data driver
 class CustomDataDriver(DataDriver):
-    def read(
-        self, lines: Iterator[str]
-    ) -> Generator[
-        Union[
-            SequenceSample, SentencePairSample, TokensSample, QASample, GenerationSample
-        ],
-        None,
-        None,
-    ]:
+    def read(self, lines: Iterator[str]) -> Iterator[ClassySample]:
         raise NotImplementedError
 
     def save(
         self,
-        samples: Iterator[
-            Union[
-                SequenceSample,
-                SentencePairSample,
-                TokensSample,
-                QASample,
-                GenerationSample,
-            ]
-        ],
+        samples: Iterator[ClassySample],
         path: str,
     ):
         raise NotImplementedError
@@ -65,7 +49,7 @@ SequenceDataDriver is just a subclass of DataDriver where the sample types have 
 You would first implement the read method:
 
 ```python
-def read(self, lines: Iterator[str]) -> Generator[SequenceSample, None, None]:
+def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
     # iterate on lines
     for line in lines:
         # read json object and instantiate sequence sample

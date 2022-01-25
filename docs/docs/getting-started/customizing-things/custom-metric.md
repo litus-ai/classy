@@ -14,18 +14,7 @@ Adding a custom metric for evaluation is easy in `classy`, and you can use it fo
 class Evaluation:
     def __call__(
         self,
-        predicted_samples: List[
-            Tuple[
-                Union[
-                    SentencePairSample,
-                    SequenceSample,
-                    TokensSample,
-                    QASample,
-                    GenerationSample,
-                ],
-                Union[str, List[str]],
-            ]
-        ],
+        predicted_samples: List[ClassySample],
     ) -> Dict:
         raise NotImplementedError
 ```
@@ -47,7 +36,7 @@ class SeqEvalSpanEvaluation(Evaluation):
 
     def __call__(
         self,
-        predicted_samples: List[Tuple[TokensSample, List[str]]],
+        predicted_samples: List[TokensSample],
     ) -> Dict:
 
         metric_out = self.backend_metric.compute(
