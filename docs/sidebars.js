@@ -32,7 +32,8 @@ module.exports = {
         dirName: 'reference-manual'
       }]
     },
-  ]
+  ],
+  apiSidebar: require('./generated/api-sidebar.json')
   // But you can create a sidebar manually
   /*
   tutorialSidebar: [

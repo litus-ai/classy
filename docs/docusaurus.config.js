@@ -22,7 +22,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: 'https://github.com/sunglasses-ai/classy/edit/docs/docs/',
+          editUrl: ({docPath}) => docPath.startsWith('api/') ? undefined : `https://github.com/sunglasses-ai/classy/edit/main/docs/${docPath}`,
+          // editUrl: 'https://github.com/sunglasses-ai/classy/edit/main/docs/',
           include: [
             "/glossary/*.md",
             "**/*.md"
@@ -61,6 +62,12 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
               docId: 'intro',
               position: 'left',
               label: 'Tutorial',
+            },
+            {
+              type: 'doc',
+              docId: 'api/main',
+              position: 'left',
+              label: 'Reference API',
             },
             {
               href: 'https://github.com/sunglasses-ai/classy',

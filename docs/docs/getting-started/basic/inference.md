@@ -13,6 +13,13 @@ Now that we have our trained model called `fast-ner`, stored under `experiments/
 
 Use *fast-ner* to perform Named Entity Recognition on every sentence stored in a target file:
 
+:::info
+
+Recall that `classy predict` has two modes: `interactive`, which lets you query the model from the shell, and `file`,
+which instead reads the dataset items from the specified file.
+
+:::
+
 <ReactTermynal>
   <span data-ty="input">cat target.tsv | head -1</span>
   <span data-ty>Google 's headquarters are in California .</span>

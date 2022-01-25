@@ -1,0 +1,287 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css");
+
+.api p {
+    margin: 0;
+}
+
+.api h3 {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+}
+
+.api h3 .hash-link {
+    display: none;
+}
+
+.api h4 {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+}
+
+.api h4 .hash-link {
+    display: none;
+}
+
+.api__signature {
+    position: relative;
+    overflow: auto;
+    padding: 5px 10px;
+    font-weight: bold;
+    font-family: var(--ifm-font-family-monospace);
+    font-size: var(--ifm-code-font-size);
+    background-color: var(--ifm-code-background);
+}
+
+.api__body {
+  margin: 0 0 0 1rem;
+}
+
+.api__description {
+  margin: 1rem 0;
+}
+
+.links-div {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    font-family: system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+}
+
+.api__signature .annotation {
+    color: #f4c025;
+}
+
+.api__signature .links-div {
+    position: absolute;
+    top: 4px;
+    right: 10px;
+    margin-left: auto;
+}
+
+.api__signature .git-link::after {
+    top: 10px;
+    right: 10px;
+    background-image: url("https://raw.githubusercontent.com/gilbarbara/logos/f4c8e8b933aa80ce83b6d6d387e016bf4cb4e376/logos/github-icon.svg");
+    background-size: 12px 12px;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    content:"";
+    visibility: visible;
+}
+
+.api__signature .git-link {
+    visibility: hidden;
+    width: 0;
+}
+
+.api__signature .direct-link::after {
+    /*position: absolute;*/
+    visibility: visible;
+    top: 10px;
+    right: 10px;
+    background-image: url("/img/hyperlink.svg");
+    background-size: 12px 12px;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin: 0 0 0 5px;
+    content:"";
+}
+
+.api__signature .direct-link {
+    visibility: hidden;
+}
+
+.ident {
+    color: #900;
+}
+
+.class-variable .ident {
+    color: #8b008b;
+}
+
+.api details {
+    background-color: unset;
+    border-width: 0;
+    border-left-width: 5px;
+    border-left-color: darkgray;
+    padding: 5px 16px;
+    --docusaurus-details-decoration-color: darkgray;
+}
+
+.api details a:link {
+    text-decoration-color: var(--ifm-link-decoration);
+}
+
+.api details a:link:hover {
+    border-bottom: 0;
+}
+
+div.class-variable + .api__body {
+    margin-top: 15px;
+}
+
+/*.menu__list {*/
+/*    font-size: 1em;*/
+/*    font-weight: 500;*/
+/*    font-family: monospace;*/
+/*}*/
+
+/*.menu__link--sublist:after {*/
+/*    background: var(--ifm-menu-link-sublist-icon) 50% / 1.5rem 1.5rem;*/
+/*}*/
+
+/* ********************************************************* */
+/* ********************************************************* */
+/* * FROM THIS POINT FORWARD THE STYLES HAVE BEEN IMPORTED * */
+/* ********************************************************* */
+/* ********************************************************* */
+
+:root {
+  /*--h2o-accent-color: #ffe52b;*/
+
+/*  --ifm-color-primary: #000000;*/
+/*  --ifm-color-primary-dark: #000000;*/
+/*  --ifm-color-primary-darker: #000000;*/
+/*  --ifm-color-primary-darkest: #000000;*/
+/*  --ifm-color-primary-light: #000000;*/
+/*  --ifm-color-primary-lighter: #000000;*/
+/*  --ifm-color-primary-lightest: #000000;*/
+/*  --ifm-code-font-size: 95%;*/
+/*  --ifm-font-family-base: "Inter";*/
+/*  --ifm-button-background-color: var(--h2o-accent-color);*/
+/*  --ifm-button-border-radius: 50px;*/
+/*  --ifm-heading-font-weight: 800;*/
+}
+/*html[data-theme="dark"] {*/
+/*  --ifm-color-primary: #ffe52b;*/
+/*}*/
+/*.hero--primary {*/
+/*  --ifm-hero-background-color: #fff;*/
+/*  --ifm-hero-text-color: #000;*/
+/*}*/
+/*.hero .button--outline {*/
+/*  --ifm-button-background-color: var(--h2o-accent-color);*/
+/*  --ifm-button-border-color: var(--h2o-accent-color);*/
+/*  box-shadow: 0 4px 14px 0 rgba(255, 255, 0, 0.39);*/
+/*}*/
+/*.hero h1 {*/
+/*  font-size: 5em;*/
+/*  font-weight: 800;*/
+/*  line-height: 1;*/
+/*  letter-spacing: -0.07em;*/
+/*}*/
+/*.hero p {*/
+/*  font-weight: 800;*/
+/*  letter-spacing: -0.03em;*/
+/*}*/
+/*.docusaurus-highlight-code-line {*/
+/*  background-color: rgb(72, 77, 91);*/
+/*  display: block;*/
+/*  margin: 0 calc(-1 * var(--ifm-pre-padding));*/
+/*  padding: 0 var(--ifm-pre-padding);*/
+/*}*/
+/*.markdown h1,*/
+/*h1 {*/
+/*  letter-spacing: -0.05em;*/
+/*}*/
+/*h2 a {*/
+/*  !* Blog post title *!*/
+/*  letter-spacing: -0.05em;*/
+/*}*/
+/*.markdown h2 {*/
+/*  letter-spacing: -0.04em;*/
+/*}*/
+/*.markdown h3 {*/
+/*  letter-spacing: -0.03em;*/
+/*}*/
+/*.markdown a {*/
+/*  text-decoration: none;*/
+/*}*/
+/*.markdown a:link {*/
+/*  border-bottom: 1px solid var(--ifm-color-primary);*/
+/*}*/
+/*.markdown a:hover {*/
+/*  border-bottom: none;*/
+/*}*/
+
+/* Custom */
+
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/*.cover {*/
+/*  width: 360px;*/
+/*  height: 140px;*/
+/*  background-size: cover;*/
+/*  background-position: left top;*/
+/*  overflow: hidden;*/
+/*  transition: background-position 2s;*/
+/*  border: 1px solid #ccc;*/
+/*  margin: 1rem 0;*/
+/*}*/
+/*.cover:hover {*/
+/*  background-position: right bottom;*/
+/*  border: 1px solid #999;*/
+/*}*/
+a.thumbnail:link {
+  display: inline-block;
+  padding: 1rem;
+  font-size: 0.75rem;
+  border: none;
+}
+a.thumbnail > div {
+  width: 160px;
+  height: 120px;
+  background-size: cover;
+  background-position: left top;
+  overflow: hidden;
+  transition: background-position 2s;
+  border: 1px solid #ccc;
+  margin: 0 0 0.3rem 0;
+}
+a.thumbnail > div:hover {
+  background-position: right bottom;
+  border: 1px solid #999;
+}
+
+.api {
+  margin-bottom: 4rem;
+}
+.api h3 {
+  color: #fff;
+  background: #555;
+  padding: 5px 10px;
+}
+
+/*.notice {*/
+/*  position: fixed;*/
+/*  bottom: 0;*/
+/*  left: 0;*/
+/*  right: 0;*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*  justify-content: center;*/
+/*  flex-wrap: wrap;*/
+/*  background-color: #242526;*/
+/*  color: #fff;*/
+/*  padding: 6px 60px;*/
+/*  transition: opacity 0.5s;*/
+/*}*/
+/*.notice__close {*/
+/*  cursor: pointer;*/
+/*  margin: 0 40px;*/
+/*  padding: 3px 9px;*/
+/*  border: 1px solid #fff;*/
+/*}*/
+/*.notice p {*/
+/*  display: inline;*/
+/*}*/
+/*.notice a {*/
+/*  color: var(--h2o-accent-color);*/
+/*}*/

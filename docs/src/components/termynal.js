@@ -24,7 +24,7 @@ class Termynal {
      * @param {string} options.progressChar – Character to use for progress bar, defaults to █.
 	 * @param {number} options.progressPercent - Max percent of progress.
      * @param {string} options.cursor – Character to use for cursor, defaults to ▋.
-     * @param {Object[]} lineData - Dynamically loaded line data objects.
+     * @param {Object[]} options.lineData - Dynamically loaded line data objects.
      * @param {boolean} options.noInit - Don't initialise the animation.
      */
     constructor(container = '#termynal', options = {}) {
@@ -102,13 +102,13 @@ class Termynal {
             const type = line.getAttribute(this.pfx);
             const delay = line.getAttribute(`${this.pfx}-delay`) || this.lineDelay;
 
-            if (type == 'input') {
+            if (type === 'input') {
                 line.setAttribute(`${this.pfx}-cursor`, this.cursor);
                 await this.type(line);
                 await this._wait(delay);
             }
 
-            else if (type == 'progress') {
+            else if (type === 'progress') {
                 await this.progress(line);
                 await this._wait(delay);
             }
@@ -218,7 +218,6 @@ class Termynal {
      * Converts line data objects into line elements.
      *
      * @param {Object[]} lineData - Dynamically loaded lines.
-     * @param {Object} line - Line data object.
      * @returns {Element[]} - Array of line elements.
      */
     lineDataToElements(lineData) {

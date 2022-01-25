@@ -1,11 +1,9 @@
-import collections
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
 import torch
-import torchmetrics
 
 from classy.pl_modules.mixins.prediction import PredictionMixin
 from classy.pl_modules.mixins.saving import SavingMixin
@@ -34,4 +32,5 @@ class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
         raise NotImplementedError
 
     def configure_optimizers(self):
+        """ """
         return hydra.utils.instantiate(self._optim_conf, _recursive_=False)(module=self)
