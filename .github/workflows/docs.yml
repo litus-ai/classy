@@ -21,7 +21,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install pdoc3
-          pdoc -f --template-dir docs/pdoc-templates -o docs/docs classy
+          pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy
           mv docs/docs/classy docs/docs/api
           python docs/pdoc/pdoc_postprocess.py
 
