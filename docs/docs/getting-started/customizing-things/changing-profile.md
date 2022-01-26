@@ -29,8 +29,8 @@ Then, to train using your model, you just run `classy train token data/ner -n cu
 :::info
 
 This kind of composition is very similar to `hydra`'s default behaviour, but with an important difference: when using
-profiles, configurations are not additive but exclusive (if they have a `_target_` property): for example, 
-if your `model` defines an `optim_conf`, such configuration will **entirely replace** the previously existing 
+profiles, configurations are not additive but exclusive (if they have a `_target_` property): for example,
+if your `model` defines an `optim_conf`, such configuration will **entirely replace** the previously existing
 `optim_conf`, instead of adding its config parameters to it.
 
 :::
@@ -38,7 +38,7 @@ if your `model` defines an `optim_conf`, such configuration will **entirely repl
 ## Exploiting config groups
 
 Single file configs are prone to become very large very quickly. Thus, we extend `hydra`'s behaviour to support config
-groups specification even outside the `defaults` list. In a nutshell, this means that you can have a config file under 
+groups specification even outside the `defaults` list. In a nutshell, this means that you can have a config file under
 `configurations/models/custom-model.yaml` that is referred by `configurations/profiles/grouped.yaml`.
 
 ```yaml title=configurations/models/custom-model.yaml

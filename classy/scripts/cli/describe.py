@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from classy.data.data_drivers import SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION
+from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.utils.help_cli import HELP_TASKS
 
 
@@ -10,7 +10,11 @@ def populate_parser(parser: ArgumentParser):
         choices=[SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION],
         help=HELP_TASKS,
     )
-    parser.add_argument("--dataset", required=True, help="The dataset you want to describe (run statistics on).")
+    parser.add_argument(
+        "--dataset",
+        required=True,
+        help="The dataset you want to describe (run statistics on).",
+    )
     parser.add_argument(
         "--tokenize",
         default=None,
@@ -19,7 +23,11 @@ def populate_parser(parser: ArgumentParser):
         "the sacremoses tokenizer url: 'https://github.com/alvations/sacremoses'.",
     )
     parser.add_argument(
-        "-p", "--port", type=int, default=8000, help="The port where the streamlit demo will be exposed."
+        "-p",
+        "--port",
+        type=int,
+        default=8000,
+        help="The port where the streamlit demo will be exposed.",
     )
 
 
@@ -29,7 +37,9 @@ def get_parser(subparser=None) -> ArgumentParser:
         description="run several statistics on the input dataset and expose them on a streamlit page",
         help="Run several statistics on the input dataset and expose them on a streamlit page.",
     )
-    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
+        **parser_kwargs
+    )
 
     populate_parser(parser)
 
@@ -43,6 +53,7 @@ def parse_args():
 def main(args):
     # import here to avoid importing before needed
     import sys
+
     from streamlit.cli import main as st_main
 
     # script params

@@ -1,7 +1,7 @@
 import copy
 import sys
 from dataclasses import dataclass
-from typing import List, Any
+from typing import Any, List
 
 from hydra._internal.config_loader_impl import ConfigLoaderImpl
 from hydra._internal.config_repository import IConfigRepository
@@ -9,12 +9,14 @@ from hydra.core.default_element import ResultDefault
 from hydra.core.override_parser.types import Override
 from hydra.errors import ConfigCompositionException
 from hydra.plugins.config_source import ConfigResult
-from omegaconf import DictConfig, OmegaConf, flag_override, ValidationError, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf, ValidationError, flag_override
 
 
 class ConfigBlame:
     def __init__(self):
-        raise ValueError("Cannot instantiate this directly. Either call from_override or from_default_and_result!")
+        raise ValueError(
+            "Cannot instantiate this directly. Either call from_override or from_default_and_result!"
+        )
 
     @classmethod
     def from_default_and_result(cls, default: ResultDefault, result: ConfigResult):
@@ -45,7 +47,9 @@ class NormalConfigBlame(ConfigBlame):
         self.result.config = None
 
     def __str__(self):
-        provider = NormalConfigBlame._PROVIDER_SHORT.get(self.result.provider, self.result.provider)
+        provider = NormalConfigBlame._PROVIDER_SHORT.get(
+            self.result.provider, self.result.provider
+        )
         return f"[source: {provider}/{self.default.config_path}]"
 
     def __hash__(self):
@@ -82,7 +86,10 @@ def _compose_config_from_defaults_list_patch(
                 if loaded.provider == "hydra":
                     continue
 
-                cfg_blame = (flatten_keys(loaded.config), ConfigBlame.from_default_and_result(default, loaded))
+                cfg_blame = (
+                    flatten_keys(loaded.config),
+                    ConfigBlame.from_default_and_result(default, loaded),
+                )
 
                 blame.append(cfg_blame)
 
@@ -148,6 +155,10 @@ def flatten_keys(cfg: Any, resolve: bool = False) -> List[str]:
     return ret
 
 
-ConfigLoaderImpl._apply_overrides_to_config_orig = ConfigLoaderImpl._apply_overrides_to_config
+ConfigLoaderImpl._apply_overrides_to_config_orig = (
+    ConfigLoaderImpl._apply_overrides_to_config
+)
 ConfigLoaderImpl._apply_overrides_to_config = _apply_overrides_to_config
-ConfigLoaderImpl._compose_config_from_defaults_list = _compose_config_from_defaults_list_patch
+ConfigLoaderImpl._compose_config_from_defaults_list = (
+    _compose_config_from_defaults_list_patch
+)

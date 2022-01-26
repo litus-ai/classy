@@ -2,7 +2,10 @@ from argparse import ArgumentParser
 
 
 def populate_parser(parser: ArgumentParser):
-    parser.add_argument("model_name", help="The model you want to download (use user@model for a specific model)")
+    parser.add_argument(
+        "model_name",
+        help="The model you want to download (use user@model for a specific model)",
+    )
     parser.add_argument(
         "--force-download",
         action="store_true",
@@ -17,7 +20,9 @@ def get_parser(subparser=None) -> ArgumentParser:
         description="download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub",
         help="Download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub.",
     )
-    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
+        **parser_kwargs
+    )
 
     populate_parser(parser)
 

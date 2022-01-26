@@ -1,20 +1,20 @@
-from typing import Callable, List, Any, Dict, Union, Optional, Iterator, Generator
+from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
 import numpy as np
-
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
 from classy.data.data_drivers import (
+    ClassySample,
     DataDriver,
+    GenerationSample,
+    QASample,
     SentencePairSample,
     SequenceSample,
     TokensSample,
-    QASample,
-    GenerationSample,
 )
-from classy.utils.commons import chunks, flatten, add_noise_to_value
+from classy.utils.commons import add_noise_to_value, chunks, flatten
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
@@ -41,13 +41,13 @@ class BaseDataset(IterableDataset):
         return True
 
     @staticmethod
-    def fit_vocabulary(
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
-    ) -> Vocabulary:
+    def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         raise NotImplementedError
 
     @classmethod
-    def from_file(cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs) -> "BaseDataset":
+    def from_file(
+        cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs
+    ) -> "BaseDataset":
 
         if vocabulary is None and cls.requires_vocab():
             # vocabulary fitting here
@@ -55,18 +55,16 @@ class BaseDataset(IterableDataset):
             vocabulary = cls.fit_vocabulary(data_driver.read_from_path(path))
             logger.info("Vocabulary fitting completed")
 
-        return cls(samples_iterator=lambda: data_driver.read_from_path(path), vocabulary=vocabulary, **kwargs)
-
-    @classmethod
-    def from_lines(
-        cls, lines: Iterator[str], data_driver: DataDriver, vocabulary: Vocabulary, **kwargs
-    ) -> "BaseDataset":
-        return cls(samples_iterator=lambda: data_driver.read(lines), vocabulary=vocabulary, **kwargs)
+        return cls(
+            samples_iterator=lambda: data_driver.read_from_path(path),
+            vocabulary=vocabulary,
+            **kwargs,
+        )
 
     @classmethod
     def from_samples(
         cls,
-        samples: Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]],
+        samples: Iterator[ClassySample],
         vocabulary: Vocabulary,
         **kwargs,
     ):
@@ -74,9 +72,7 @@ class BaseDataset(IterableDataset):
 
     def __init__(
         self,
-        samples_iterator: Callable[
-            [], Iterator[Union[SentencePairSample, SequenceSample, TokensSample, QASample, GenerationSample]]
-        ],
+        samples_iterator: Callable[[], Iterator[ClassySample]],
         vocabulary: Vocabulary,
         fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         for_inference: bool,
@@ -115,7 +111,9 @@ class BaseDataset(IterableDataset):
 
         if self.batch_size is not None:
             if max_batch_size is not None:
-                logger.warning(f"max_batch_size has no meaning when not using token batching")
+                logger.warning(
+                    f"max_batch_size has no meaning when not using token batching"
+                )
         else:
             assert len(batching_fields) > 0, "At least 1 batching field is required"
             if self.tokens_per_batch < self.max_length:
@@ -134,7 +132,9 @@ class BaseDataset(IterableDataset):
 
     def prebatch_elements(self, dataset_elements: List):
         sorting_fn = (
-            lambda elem: add_noise_to_value(sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1)
+            lambda elem: add_noise_to_value(
+                sum(len(elem[k]) for k in self.batching_fields), noise_param=0.1
+            )
             if not self.for_inference
             else sum(len(elem[k]) for k in self.batching_fields)
         )
@@ -151,7 +151,9 @@ class BaseDataset(IterableDataset):
         self._dataset_store = list(self.dataset_iterator_func())
         logger.info("Materialization completed")
 
-    def materialize_batches(self, dataset_elements: List[Dict[str, Any]]) -> Generator[Dict[str, Any], None, None]:
+    def materialize_batches(
+        self, dataset_elements: List[Dict[str, Any]]
+    ) -> Generator[Dict[str, Any], None, None]:
 
         if self.prebatch:
             dataset_elements = self.prebatch_elements(dataset_elements)
@@ -163,16 +165,23 @@ class BaseDataset(IterableDataset):
 
             batch_dict = dict()
 
-            de_values_by_field = {fn: [de[fn] for de in current_batch if fn in de] for fn in self.fields_batcher}
+            de_values_by_field = {
+                fn: [de[fn] for de in current_batch if fn in de]
+                for fn in self.fields_batcher
+            }
 
             # in case you provide fields batchers but in the batch there are no elements for that field
-            de_values_by_field = {fn: fvs for fn, fvs in de_values_by_field.items() if len(fvs) > 0}
+            de_values_by_field = {
+                fn: fvs for fn, fvs in de_values_by_field.items() if len(fvs) > 0
+            }
 
             assert len(set([len(v) for v in de_values_by_field.values()]))
 
             # todo: maybe we should report the user about possible fields filtering due to "None" instances
             de_values_by_field = {
-                fn: fvs for fn, fvs in de_values_by_field.items() if all([fv is not None for fv in fvs])
+                fn: fvs
+                for fn, fvs in de_values_by_field.items()
+                if all([fv is not None for fv in fvs])
             }
 
             for field_name, field_values in de_values_by_field.items():
@@ -192,23 +201,33 @@ class BaseDataset(IterableDataset):
 
         for de in dataset_elements:
 
-            if (should_token_batch and self.max_batch_size != -1 and len(current_batch) == self.max_batch_size) or (
-                not should_token_batch and len(current_batch) == self.batch_size
-            ):
+            if (
+                should_token_batch
+                and self.max_batch_size != -1
+                and len(current_batch) == self.max_batch_size
+            ) or (not should_token_batch and len(current_batch) == self.batch_size):
                 yield output_batch()
                 current_batch = []
 
             # todo support max length (and min length) as dicts
 
             too_long_fields = [
-                k for k in de if self.max_length != -1 and torch.is_tensor(de[k]) and len(de[k]) > self.max_length
+                k
+                for k in de
+                if self.max_length != -1
+                and torch.is_tensor(de[k])
+                and len(de[k]) > self.max_length
             ]
             if len(too_long_fields) > 0:
                 max_len_discards += 1
                 continue
 
             too_short_fields = [
-                k for k in de if self.min_length != -1 and torch.is_tensor(de[k]) and len(de[k]) < self.min_length
+                k
+                for k in de
+                if self.min_length != -1
+                and torch.is_tensor(de[k])
+                and len(de[k]) < self.min_length
             ]
             if len(too_short_fields) > 0:
                 min_len_discards += 1
@@ -220,12 +239,21 @@ class BaseDataset(IterableDataset):
 
                 future_max_len = max(
                     de_len,
-                    max([sum(len(bde[k]) for k in self.batching_fields) for bde in current_batch], default=0),
+                    max(
+                        [
+                            sum(len(bde[k]) for k in self.batching_fields)
+                            for bde in current_batch
+                        ],
+                        default=0,
+                    ),
                 )
 
                 future_tokens_per_batch = future_max_len * (len(current_batch) + 1)
 
-                if len(current_batch) > 0 and future_tokens_per_batch >= self.tokens_per_batch:
+                if (
+                    len(current_batch) > 0
+                    and future_tokens_per_batch >= self.tokens_per_batch
+                ):
                     yield output_batch()
                     current_batch = []
 
@@ -264,14 +292,21 @@ class BaseDataset(IterableDataset):
 
     def __iter__(self):
 
-        dataset_iterator = self.dataset_iterator_func() if self._dataset_store is None else self._dataset_store
+        dataset_iterator = (
+            self.dataset_iterator_func()
+            if self._dataset_store is None
+            else self._dataset_store
+        )
 
         current_dataset_elements = []
 
         i = None
         for i, dataset_elem in enumerate(dataset_iterator, start=1):
 
-            if self.section_size is not None and len(current_dataset_elements) == self.section_size:
+            if (
+                self.section_size is not None
+                and len(current_dataset_elements) == self.section_size
+            ):
                 for batch in self.materialize_batches(current_dataset_elements):
                     yield batch
                 current_dataset_elements = []

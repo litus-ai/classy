@@ -1,5 +1,6 @@
-import transformers
 import os
+
+import transformers
 
 # setting the transformers logging level to error with their own function
 transformers.logging.set_verbosity_error()

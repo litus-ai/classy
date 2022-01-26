@@ -1,8 +1,10 @@
-# torch tested against torch=1.9.0
+torch==1.9.0  # todo change to >=
 pytorch-lightning==1.4.9
 torchmetrics==0.5.1
 transformers==4.11.3
 hydra-core==1.1.1
+# argcomplete
+argcomplete==1.12.3
 # datasets and metrics
 datasets==1.12.1
 seqeval==1.2.2
@@ -19,6 +21,3 @@ wandb==0.12.2  # required for logging
 nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==1.4.12  # required by sacrebleu callback
-# black
-black==21.8b0
-argcomplete==1.12.3

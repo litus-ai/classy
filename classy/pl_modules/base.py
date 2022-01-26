@@ -1,12 +1,9 @@
-import collections
-import torch
-
-from typing import Optional, NamedTuple, Any, Dict
+from typing import Dict, NamedTuple, Optional
 
 import hydra
 import omegaconf
 import pytorch_lightning as pl
-import torchmetrics
+import torch
 
 from classy.pl_modules.mixins.prediction import PredictionMixin
 from classy.pl_modules.mixins.saving import SavingMixin
@@ -21,7 +18,9 @@ class ClassificationOutput(NamedTuple):
 
 
 class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
-    def __init__(self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig):
+    def __init__(
+        self, vocabulary: Optional[Vocabulary], optim_conf: omegaconf.DictConfig
+    ):
         super().__init__()
         self.vocabulary: Vocabulary = vocabulary
         self._optim_conf = optim_conf
@@ -33,4 +32,5 @@ class ClassyPLModule(SavingMixin, PredictionMixin, pl.LightningModule):
         raise NotImplementedError
 
     def configure_optimizers(self):
+        """ """
         return hydra.utils.instantiate(self._optim_conf, _recursive_=False)(module=self)

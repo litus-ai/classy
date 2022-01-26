@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -74,7 +74,9 @@ def split_dataset(
     output_folder = Path(output_folder)
 
     if validation_split_size is not None:
-        n_validation_samples = min(int(len(samples) * validation_split_size), data_max_split or len(samples))
+        n_validation_samples = min(
+            int(len(samples) * validation_split_size), data_max_split or len(samples)
+        )
         validation_samples, training_samples = (
             training_samples[:n_validation_samples],
             training_samples[n_validation_samples:],
@@ -83,8 +85,13 @@ def split_dataset(
         data_driver.save(validation_samples, validation_path)
 
     if test_split_size is not None:
-        n_test_samples = min(int(len(samples) * test_split_size), data_max_split or len(samples))
-        test_samples, training_samples = training_samples[:n_test_samples], training_samples[n_test_samples:]
+        n_test_samples = min(
+            int(len(samples) * test_split_size), data_max_split or len(samples)
+        )
+        test_samples, training_samples = (
+            training_samples[:n_test_samples],
+            training_samples[n_test_samples:],
+        )
         test_path = str(output_folder.joinpath(f"test.{output_extension}"))
         data_driver.save(test_samples, test_path)
 

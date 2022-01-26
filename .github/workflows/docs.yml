@@ -1,16 +1,29 @@
 name: Build and Deploy Docs
 on:
-  push:
-    branches:
-      - master
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Docs
+      - name: Checkout
         uses: actions/checkout@v2.3.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Generate pdoc output
+        run: |
+          pip install -r requirements.txt
+          pip install pdoc3
+          pdoc -f --template-dir docs/pdoc-templates -o docs/docs classy
+          mv docs/docs/classy docs/docs/api
+          python docs/pdoc/pdoc_postprocess.py
 
       - name: Set up Node
         uses: actions/setup-node@v2

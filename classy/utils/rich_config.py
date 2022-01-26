@@ -10,16 +10,18 @@ except ImportError:
     print("classy train [...] --print requires `pip install rich`")
     exit()
 
-from typing import Union, Iterable, List, Tuple, Optional
+from typing import Iterable, List, Optional, Tuple, Union
 
-from omegaconf import OmegaConf, DictConfig, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from classy.utils.config import ExplainableConfig, NodeInfo
 from classy.utils.hydra_patch import ConfigBlame, NormalConfigBlame
 
 
 class RichNodeInfo:
-    _CLASSY_GITHUB_CONFIG_URL = "https://github.com/sunglasses-ai/classy/tree/main/configurations"
+    _CLASSY_GITHUB_CONFIG_URL = (
+        "https://github.com/sunglasses-ai/classy/tree/main/configurations"
+    )
 
     def __init__(self, info: NodeInfo):
         self.info = info
@@ -79,7 +81,9 @@ class RichNodeInfo:
                 elif OmegaConf.is_dict(value):
                     v = "{}"
                 else:
-                    raise ValueError(f"key {self.info.key} is neither a dict nor a list. {value}")
+                    raise ValueError(
+                        f"key {self.info.key} is neither a dict nor a list. {value}"
+                    )
 
                 parts.append(": ")
                 parts.append(Text(v, style=Style(bold=True, color="yellow3")))
@@ -93,16 +97,23 @@ class RichNodeInfo:
             if isinstance(blame, NormalConfigBlame):
                 # TODO: maybe we can improve this?
                 blame = str(blame)
-                assert blame.startswith("[source: ") and blame.endswith("]"), f"Unknown blame: {blame}"
+                assert blame.startswith("[source: ") and blame.endswith(
+                    "]"
+                ), f"Unknown blame: {blame}"
                 blame_val = blame[len("[source: ") : -1]
                 provider, config = blame_val.split("/", 1)
                 if provider == "classy":
                     # if rich.console
-                    config_url = f"{RichNodeInfo._CLASSY_GITHUB_CONFIG_URL}/{config}.yaml"
+                    config_url = (
+                        f"{RichNodeInfo._CLASSY_GITHUB_CONFIG_URL}/{config}.yaml"
+                    )
                     parts.append(
                         Text.assemble(
                             " [source: ",
-                            Text.from_markup(f"[link={config_url}][blue]classy/{config}[/blue][/link]", style="blue"),
+                            Text.from_markup(
+                                f"[link={config_url}][blue]classy/{config}[/blue][/link]",
+                                style="blue",
+                            ),
                             "]",
                             style="blue",
                         )
@@ -139,7 +150,9 @@ class ConfigPrinter:
         ordered_keys = list(self.fields_order)
 
         if not self.skip_remaining:
-            ordered_keys += sorted(set(self.expl.cfg.keys()).difference(self.fields_order))
+            ordered_keys += sorted(
+                set(self.expl.cfg.keys()).difference(self.fields_order)
+            )
 
         for key in ordered_keys:
             for branch in self.walk_config(key, sort=False):
@@ -179,11 +192,15 @@ class ConfigPrinter:
         return [t]
 
 
-def get_rich_tree_config(cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None):
+def get_rich_tree_config(
+    cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None
+):
     return ConfigPrinter(cfg, additional_blames=blames).get_rich_tree()
 
 
-def print_config(cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None):
+def print_config(
+    cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None
+):
     rich.print(get_rich_tree_config(cfg, blames))
 
 
@@ -197,7 +214,9 @@ RICH_ST_CODE_FORMAT = (
 
 def rich_to_html(renderable, print_to_console: bool = False, width: int = 230):
     with open(os.devnull, "w") as f:
-        console = Console(record=True, file=None if print_to_console else f, width=width)
+        console = Console(
+            record=True, file=None if print_to_console else f, width=width
+        )
         console.print(renderable)
         html = console.export_html(inline_styles=True, code_format=RICH_ST_CODE_FORMAT)
 
