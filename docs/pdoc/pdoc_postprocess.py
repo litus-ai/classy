@@ -95,8 +95,8 @@ def build_api_landing():
 ---
 pagination_next: null
 pagination_prev: null
+title: classy Reference API
 ---
-## classy Reference API
 
 Welcome to `classy`'s reference API!
 
