@@ -28,7 +28,10 @@ def build_mapping(main_module: pdoc.Module):
     for e in to_remove:
         del mapping[e]
 
-    with open("docs/generated/api-mapping.json", "w") as f:
+    tgt_file = Path("docs/generated/api-mapping.json")
+    tgt_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with tgt_file.open("w") as f:
         json.dump({name: packages[0] for name, packages in mapping.items()}, f, indent=2)
 
 
