@@ -91,8 +91,7 @@ def build_sidebar(module):
 
 
 def build_api_landing():
-    content = """
----
+    content = """---
 pagination_next: null
 pagination_prev: null
 title: classy Reference API
