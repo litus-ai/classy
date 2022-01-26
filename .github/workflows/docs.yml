@@ -22,16 +22,13 @@ jobs:
         with:
           node-version: "14"
 
-      - name: Generate pdoc output
+      - name: Generate pdoc output & Build Docusaurus website
         run: |
           pip install -r requirements.txt
           pip install pdoc3
           pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy
           mv docs/docs/classy docs/docs/api
           python docs/pdoc/pdoc_postprocess.py
-
-      - name: Build Docusaurus website
-        run: |
           cd docs
           yarn install
           # builds https://gitlab.grnet.gr/terminology/docusaurus-terminology
