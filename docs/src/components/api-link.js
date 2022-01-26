@@ -1,6 +1,6 @@
 import React from "react";
 
-const backmap = require('/docs/generated/api-mapping.json');
+const backmap = require('/generated/api-mapping.json');
 
 export default class ApiLink extends React.Component {
 
