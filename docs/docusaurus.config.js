@@ -48,7 +48,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
       {
         announcementBar: {
           id: 'announcementBar-2', // Increment on change
-          content: 'v0.1.0: Classy is still in its early stages, help us shape its future by <a href="https://github.com/sunglasses-ai/classy#contributions">contributing</a>!'
+          content: 'Classy is still in its early stages, help us shape its future by <a href="https://github.com/sunglasses-ai/classy#contributions">contributing</a>!'
         },
         navbar: {
           title: 'Classy',
