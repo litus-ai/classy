@@ -5,10 +5,10 @@ const backmap = require('/generated/api-mapping.json');
 export default class ApiLink extends React.Component {
 
     url() {
-        let identifier = this.props.name.replaceAll('.', '-')
+        let identifier = this.props.name.replace(/\./g, '-')
         let pkg = this.package()
             .replace('classy.', '')
-            .replaceAll('.', '/')
+            .replace(/\./g, '/')
 
         return `/docs/api/${pkg}/#${identifier}`
     }
