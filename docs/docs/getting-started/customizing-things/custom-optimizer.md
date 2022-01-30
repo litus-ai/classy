@@ -12,7 +12,7 @@ Classy comes with a set of well established predefined Optimizers that you can e
 ### Adam
 One of the most famous Optimizer for Natural Language Processing applications, __virtually ubiquitous__.
 
-- :hammer: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html)
+- :hammer: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html)
 - :page_facing_up: [Paper](https://arxiv.org/abs/1412.6980)
 
 To use it, put the following yaml lines in your own profile or config.
