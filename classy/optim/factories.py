@@ -5,7 +5,7 @@ import hydra
 import torch
 import transformers
 from omegaconf import DictConfig
-from torch.optim import Adam, Adagrad
+from torch.optim import Adagrad, Adam
 from transformers import AdamW
 
 from classy.optim.optimizers.radam import RAdam
