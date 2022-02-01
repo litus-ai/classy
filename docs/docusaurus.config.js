@@ -46,6 +46,18 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     (
       {
+        algolia: {
+          // The application ID provided by Algolia
+          appId: '02OUF7W4JD',
+    
+          // Public API key: it is safe to commit it
+          apiKey: '2e4d4570c14c4dfe5050a9b90d3cff22',
+    
+          indexName: 'sunglasses-ai-classy',
+    
+          // Optional: see doc section below
+          contextualSearch: true,
+        },
         announcementBar: {
           id: 'announcementBar-2', // Increment on change
           content: 'v0.1.0: Classy is still in its early stages, help us shape its future by <a href="https://github.com/sunglasses-ai/classy#contributions">contributing</a>!'
