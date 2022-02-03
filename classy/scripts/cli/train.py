@@ -182,7 +182,8 @@ def _main_mock(cfg, blames: Optional[List] = None):
     # import here to avoid importing torch before it's actually needed
     import hydra
 
-    from classy.scripts.model.train import fix_paths, train
+    from classy.scripts.model.train import train
+    from classy.utils.hydra import fix_paths
 
     if "supported_tasks" in cfg and cfg.task not in cfg.supported_tasks:
         logger.error(
@@ -587,20 +588,26 @@ def main(args):
             key = key.lstrip("+~")
             blames.append(([key], ClassyBlame(f"-c {override}")))
 
-        # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
-        # it was imported in task_ui.py and was double-logging stuff...
-        # this is the best workaround at this time, but we should investigate and / or (re-)open an issue
-        # https://github.com/streamlit/streamlit/issues/1248
-        import logging
+        try:
 
-        import streamlit
+            # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
+            # it was imported in task_ui.py and was double-logging stuff...
+            # this is the best workaround at this time, but we should investigate and / or (re-)open an issue
+            # https://github.com/streamlit/streamlit/issues/1248
+            import logging
 
-        with open("/dev/null", "w") as f:
-            # we do this here so that streamlit's import is not unused and is not removed by linters & co
-            print(streamlit.__version__, file=f)
+            import streamlit
 
-        # at this point, streamlit's is the only handler added, so we can safely reset the handlers
-        logging.getLogger().handlers = []
+            with open("/dev/null", "w") as f:
+                # we do this here so that streamlit's import is not unused and is not removed by linters & co
+                print(streamlit.__version__, file=f)
+
+            # at this point, streamlit's is the only handler added, so we can safely reset the handlers
+            logging.getLogger().handlers = []
+
+        except ImportError:
+            # nothing to do then
+            pass
 
         import sys
 

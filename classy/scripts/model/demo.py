@@ -4,7 +4,16 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
-import streamlit as st
+from classy.utils.optional_deps import get_optional_requirement
+
+try:
+    import streamlit as st
+except ImportError:
+    print(
+        f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
+    )
+    exit()
+
 import torch
 from omegaconf import OmegaConf
 

@@ -54,7 +54,13 @@ def main(args):
     # import here to avoid importing before needed
     import sys
 
-    from streamlit.cli import main as st_main
+    try:
+        from streamlit.cli import main as st_main
+    except ImportError:
+        print(
+            f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
+        )
+        exit()
 
     # script params
     script_params = [args.task, args.dataset]
