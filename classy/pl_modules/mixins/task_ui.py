@@ -19,7 +19,7 @@ from classy.data.data_drivers import (
     TokensSample,
     get_data_driver,
 )
-from classy.utils.optional_deps import get_optional_requirement
+from classy.optional_deps import get_optional_requirement
 from classy.utils.streamlit import get_md_200_random_color_generator
 
 

@@ -4,7 +4,7 @@ from typing import List, Optional
 import torch
 from omegaconf import OmegaConf
 
-from classy.utils.optional_deps import get_optional_requirement
+from classy.optional_deps import get_optional_requirement
 
 try:
     import uvicorn
