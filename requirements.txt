@@ -10,11 +10,6 @@ datasets==1.12.1
 seqeval==1.2.2
 scikit-learn==0.24.2
 matplotlib==3.4.3
-# web
-fastapi==0.68.1
-uvicorn[standard]==0.15.0
-streamlit==0.88.0
-st-annotated-text==2.0.0
 # optional(?)
 sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
 wandb==0.12.2  # required for logging

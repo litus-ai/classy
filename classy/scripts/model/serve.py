@@ -2,9 +2,18 @@ import argparse
 from typing import List, Optional
 
 import torch
-import uvicorn
-from fastapi import FastAPI
 from omegaconf import OmegaConf
+
+from classy.utils.optional_deps import get_optional_requirement
+
+try:
+    import uvicorn
+    from fastapi import FastAPI
+except ImportError:
+    print(
+        f"classy serve [...] requires `pip install {get_optional_requirement('fastapi')} {get_optional_requirement('uvicorn')}`"
+    )
+    exit()
 
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import (
@@ -62,6 +71,10 @@ def serve(
             output_samples.append(OutputSample.marshal(predicted_sample))
 
         return output_samples
+
+    @app.get("/healthz")
+    def healthz():
+        return "ok"
 
     local_ip_address = get_local_ip_address()
     print(f"Model exposed at http://{local_ip_address}:{port}")

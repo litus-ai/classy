@@ -1,0 +1,8 @@
+# classy demo
+streamlit==1.5.0
+st-annotated-text==2.0.0
+# classy serve
+fastapi==0.68.1
+uvicorn[standard]==0.15.0
+# classy train --print
+rich==11.1.0
