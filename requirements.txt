@@ -1,5 +1,5 @@
 torch==1.9.0  # todo change to >=
-pytorch-lightning==1.4.9
+pytorch-lightning==1.5.9
 torchmetrics==0.5.1
 transformers==4.11.3
 hydra-core==1.1.1

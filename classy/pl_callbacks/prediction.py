@@ -71,6 +71,30 @@ class FileDumperPredictionCallback(PredictionCallback):
                 f.write(sample.pretty_print() + "\n")
 
 
+class WANDBLoggerPredictionCallback(PredictionCallback):
+    def __call__(
+        self,
+        name: str,
+        path: str,
+        predicted_samples: List[ClassySample],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
+    ):
+        columns = ["input", "label", "prediction"]
+        data = []
+
+        for predicted_sample in predicted_samples:
+            data.append(
+                [
+                    str(predicted_sample.input),
+                    str(predicted_sample.predicted_annotation),
+                    str(predicted_sample.reference_annotation),
+                ]
+            )
+
+        trainer.logger.log_text(key=f"{name}-predictions", columns=columns, data=data)
+
+
 class PredictionPLCallback(pl.Callback):
     def __init__(
         self,
