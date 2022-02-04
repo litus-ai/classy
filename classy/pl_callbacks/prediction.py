@@ -1,3 +1,4 @@
+import glob
 import itertools
 import tempfile
 from pathlib import Path
@@ -152,11 +153,14 @@ class PredictionPLCallback(pl.Callback):
                     dict(OmegaConf.load(prediction_param_conf_path))
                 )
 
-            extension = path.split(".")[-1]
-            data_driver = get_data_driver(model.task, extension)
-
             # build samples iterator
-            samples_it = data_driver.read_from_path(path)
+            samples_it = iter([])
+            for _path in glob.iglob(path):
+                extension = _path.split(".")[-1]
+                data_driver = get_data_driver(model.task, extension)
+                samples_it = itertools.chain(
+                    samples_it, data_driver.read_from_path(_path)
+                )
 
             # apply limits (changing path as well)
             if trainer.global_step == 0:
