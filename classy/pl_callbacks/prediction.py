@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.loggers import WandbLogger as PLWandbLogger
 
 from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.evaluation.base import Evaluation
@@ -81,6 +82,18 @@ class WANDBLoggerPredictionCallback(PredictionCallback):
         model: ClassyPLModule,
         trainer: pl.Trainer,
     ):
+        if trainer.logger is None:
+            logger.warning(
+                "WANDBLoggerPredictionCallback has been included as a PredictionCallback, however it seems wandb is not being used (did you pass `--wandb [...]`?)"
+            )
+            return
+
+        if not isinstance(trainer.logger, PLWandbLogger):
+            logger.warning(
+                "WANDBLoggerPredictionCallback has been included as a PredictionCallback, however trainer.logger does not seem to be a WandbLogger"
+            )
+            return
+
         columns = ["input", "label", "prediction"]
         data = []
 
@@ -93,7 +106,12 @@ class WANDBLoggerPredictionCallback(PredictionCallback):
                 ]
             )
 
-        trainer.logger.log_text(key=f"{name}-predictions", columns=columns, data=data)
+        trainer.logger.log_text(
+            key=f"{name}-predictions",
+            columns=columns,
+            data=data,
+            step=trainer.global_step,
+        )
 
 
 class PredictionPLCallback(pl.Callback):
