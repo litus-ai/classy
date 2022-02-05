@@ -101,8 +101,8 @@ class WANDBLoggerPredictionCallback(PredictionCallback):
             data.append(
                 [
                     str(predicted_sample.input),
-                    str(predicted_sample.predicted_annotation),
                     str(predicted_sample.reference_annotation),
+                    str(predicted_sample.predicted_annotation),
                 ]
             )
 
