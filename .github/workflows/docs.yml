@@ -25,7 +25,7 @@ jobs:
       - name: Generate pdoc output & Build Docusaurus website
         run: |
           pip install -r requirements.txt
-          pip install pdoc3
+          pip install -r <(python classy/optional_deps.py)
           pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy
           mv docs/docs/classy docs/docs/api
           python docs/pdoc/pdoc_postprocess.py

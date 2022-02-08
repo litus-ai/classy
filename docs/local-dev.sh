@@ -7,7 +7,8 @@ read -rp "If a container was already created (and you wish to re-use it), enter 
 
 if [ -z "$container_id" ]; then
   echo "Starting docker"
-  container_id=$(docker run --name classy-docs-website -v $(pwd):/docs -p 30000:30000 -itd node:16-bullseye bash)
+  container_id=$(docker run --name classy-docs-website -v $(pwd):/classy -p 30000:30000 -itd node:16-bullseye bash)
+  docker exec $container_id bash -c "apt-get update && apt-get install -y python3-pip"
   echo "Started container with id $container_id"
 fi
 
@@ -22,8 +23,18 @@ function ctrl_c() {
   echo "Stopping container with id $container_id"
   docker stop $container_id
   echo "Resetting file permissions"
-  sudo chown -R $USER:$USER ../docs
+  sudo chown -R $USER:$USER docs
 }
 
-#docker exec $container_id bash -c "cd /docs && yarn install && yarn docusaurus parse && yarn docusaurus glossary && yarn run start -p 30000 -h 0.0.0.0"
-docker exec $container_id bash -c "cd /docs && yarn install && yarn docusaurus clear && yarn run start -p 30000 -h 0.0.0.0"
+docker exec $container_id bash -c "
+  cd /classy && \
+  pip install -r requirements.txt && \
+  pip install -r <(python3 classy/optional_deps.py) && \
+  pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy && \
+  rm -rf docs/docs/api && \
+  mv docs/docs/classy docs/docs/api && \
+  python3 docs/pdoc/pdoc_postprocess.py && \
+  cd docs && \
+  yarn install && \
+  yarn docusaurus clear && \
+  yarn run start -p 30000 -h 0.0.0.0"

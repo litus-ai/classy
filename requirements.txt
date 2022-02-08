@@ -11,10 +11,9 @@ seqeval==1.2.2
 scikit-learn==0.24.2
 matplotlib==3.4.3
 # optional(?)
+rich==11.0.0
 sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
 wandb==0.12.2  # required for logging
 nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
-sacrebleu==1.4.12  # required by sacrebleu callback
-rich==11.0.0
-plotly==5.5.0
+sacrebleu==2.0.0  # required by sacrebleu callback
