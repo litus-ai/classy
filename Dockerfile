@@ -22,7 +22,7 @@ RUN conda update -y conda && conda init
 WORKDIR /classy
 COPY . .
 RUN \
-    bash -c "source ~/miniconda3/etc/profile.d/conda.sh && printf 'classy\n3.8\n1.9.0\n11.3\n' | bash setup.sh"
+    bash -c "source ~/miniconda3/etc/profile.d/conda.sh && printf 'classy\n3.8\n1.9.0\n11.3\nN\n' | bash setup.sh"
 
 # standard cmd
 CMD [ "/bin/bash" ]
