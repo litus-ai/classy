@@ -5,7 +5,7 @@ import hydra
 import torch
 import transformers
 from omegaconf import DictConfig
-from torch.optim import Adagrad
+from torch.optim import Adagrad, Adam
 from transformers import AdamW
 
 from classy.optim.optimizers.radam import RAdam
@@ -145,6 +145,43 @@ class AdafactorWithWarmupFactory(WeightDecayOptimizer):
             warmup_init=False,
             relative_step=False,
             scale_parameter=False,
+        )
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, self.warmup_steps, self.total_steps
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
+
+
+class AdamWithWarmupFactory(WeightDecayOptimizer):
+    """
+    Factory for Adam optimizer with warmup learning rate scheduler
+    reference paper for Adam: https://arxiv.org/abs/1412.6980
+    """
+
+    def __init__(
+        self,
+        lr: float,
+        warmup_steps: int,
+        total_steps: int,
+        weight_decay: float,
+        no_decay_params: Optional[List[str]],
+    ):
+        super().__init__(weight_decay, no_decay_params)
+        self.lr = lr
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+
+    def __call__(self, module: torch.nn.Module):
+        optimizer_grouped_parameters = self.group_params(module)
+        optimizer = Adam(
+            optimizer_grouped_parameters, lr=self.lr, weight_decay=self.weight_decay
         )
         scheduler = transformers.get_linear_schedule_with_warmup(
             optimizer, self.warmup_steps, self.total_steps
