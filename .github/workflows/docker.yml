@@ -1,9 +1,6 @@
 name: Publish Docker image
 on:
   push:
-    branches:
-      - 'master'
-      - 'misc/v0.2.1'
     tags:
       - 'v*'
 
