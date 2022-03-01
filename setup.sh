@@ -18,7 +18,7 @@ read -rp "Enter cuda version (e.g. 11.1 or none to avoid installing cuda support
 if [ "$cuda_version" == "none" ]; then
     conda install -y pytorch=$torch_version torchvision cpuonly -c pytorch
 else
-    conda install -y pytorch=$torch_version torchvision cudatoolkit=$cuda_version -c pytorch -c conda-forge
+    conda install -y pytorch=$torch_version torchvision cudatoolkit=$cuda_version -c pytorch
 fi
 
 # install python requirements
