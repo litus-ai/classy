@@ -13,7 +13,7 @@ except ImportError:
     print(
         f"classy serve [...] requires `pip install {get_optional_requirement('fastapi')} {get_optional_requirement('uvicorn')}`"
     )
-    exit()
+    exit(1)
 
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import (

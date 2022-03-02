@@ -12,7 +12,7 @@ except ImportError:
     print(
         f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
     )
-    exit()
+    exit(1)
 
 import torch
 from omegaconf import OmegaConf

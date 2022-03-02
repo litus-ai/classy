@@ -64,7 +64,7 @@ def main(args):
         print(
             f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
         )
-        exit()
+        exit(1)
 
     device = get_device(args.device)
 

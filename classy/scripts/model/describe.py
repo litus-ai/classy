@@ -12,7 +12,7 @@ except ImportError:
     print(
         f"classy describe [...] requires `pip install {get_optional_requirement('plotly')}`"
     )
-    exit()
+    exit(1)
 
 try:
     import streamlit as st
@@ -20,7 +20,7 @@ except ImportError:
     print(
         f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
     )
-    exit()
+    exit(1)
 
 from sacremoses import MosesTokenizer
 
