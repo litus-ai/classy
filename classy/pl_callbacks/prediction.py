@@ -1,3 +1,4 @@
+import glob
 import itertools
 import tempfile
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import Any, Dict, List
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.loggers import WandbLogger as PLWandbLogger
 
 from classy.data.data_drivers import ClassySample, get_data_driver
 from classy.evaluation.base import Evaluation
@@ -71,6 +73,47 @@ class FileDumperPredictionCallback(PredictionCallback):
                 f.write(sample.pretty_print() + "\n")
 
 
+class WANDBLoggerPredictionCallback(PredictionCallback):
+    def __call__(
+        self,
+        name: str,
+        path: str,
+        predicted_samples: List[ClassySample],
+        model: ClassyPLModule,
+        trainer: pl.Trainer,
+    ):
+        if trainer.logger is None:
+            logger.warning(
+                "WANDBLoggerPredictionCallback has been included as a PredictionCallback, however it seems wandb is not being used (did you pass `--wandb [...]`?)"
+            )
+            return
+
+        if not isinstance(trainer.logger, PLWandbLogger):
+            logger.warning(
+                "WANDBLoggerPredictionCallback has been included as a PredictionCallback, however trainer.logger does not seem to be a WandbLogger"
+            )
+            return
+
+        columns = ["input", "label", "prediction"]
+        data = []
+
+        for predicted_sample in predicted_samples:
+            data.append(
+                [
+                    str(predicted_sample.input),
+                    str(predicted_sample.reference_annotation),
+                    str(predicted_sample.predicted_annotation),
+                ]
+            )
+
+        trainer.logger.log_text(
+            key=f"{name}-predictions",
+            columns=columns,
+            data=data,
+            step=trainer.global_step,
+        )
+
+
 class PredictionPLCallback(pl.Callback):
     def __init__(
         self,
@@ -128,11 +171,14 @@ class PredictionPLCallback(pl.Callback):
                     dict(OmegaConf.load(prediction_param_conf_path))
                 )
 
-            extension = path.split(".")[-1]
-            data_driver = get_data_driver(model.task, extension)
-
             # build samples iterator
-            samples_it = data_driver.read_from_path(path)
+            samples_it = iter([])
+            for _path in glob.iglob(path):
+                extension = _path.split(".")[-1]
+                data_driver = get_data_driver(model.task, extension)
+                samples_it = itertools.chain(
+                    samples_it, data_driver.read_from_path(_path)
+                )
 
             # apply limits (changing path as well)
             if trainer.global_step == 0:

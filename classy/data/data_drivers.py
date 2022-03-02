@@ -70,6 +70,10 @@ class ClassySample:
     def pretty_print(self) -> str:
         raise NotImplementedError
 
+    @property
+    def input(self) -> str:
+        raise NotImplementedError
+
 
 class SentencePairSample(ClassySample):
     def __init__(
@@ -101,6 +105,10 @@ class SentencePairSample(ClassySample):
             parts.append(f"\t# classification_result: {self.predicted_annotation}")
         return "\n".join(parts)
 
+    @property
+    def input(self) -> str:
+        return f"{self.sentence1} ==> {self.sentence2}"
+
 
 class SequenceSample(ClassySample):
     def __init__(self, sequence: str, label: Optional[str] = None, **kwargs):
@@ -128,6 +136,10 @@ class SequenceSample(ClassySample):
         if self.predicted_annotation is not None:
             parts.append(f"\t# classification_result: {self.predicted_annotation}")
         return "\n".join(parts)
+
+    @property
+    def input(self) -> str:
+        return self.sequence
 
 
 class TokensSample(ClassySample):
@@ -166,6 +178,10 @@ class TokensSample(ClassySample):
                 f'\t# classification_result: {" ".join(self.predicted_annotation)}'
             )
         return "\n".join(parts)
+
+    @property
+    def input(self) -> str:
+        return " ".join(self.tokens)
 
 
 class QASample(ClassySample):
@@ -222,6 +238,10 @@ class QASample(ClassySample):
 
         return "\n".join(parts)
 
+    @property
+    def input(self) -> str:
+        return f"[Q] {self.question} [C] {self.context}"
+
 
 class GenerationSample(ClassySample):
     def __init__(
@@ -270,6 +290,13 @@ class GenerationSample(ClassySample):
             )
 
         return "\n".join(parts)
+
+    @property
+    def input(self) -> str:
+        if self.source_language is None:
+            return self.source_sequence
+        else:
+            return f"[{self.source_language} => {self.target_language}] {self.source_sequence}"
 
 
 class DataDriver:

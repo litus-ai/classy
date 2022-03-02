@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+from classy.optional_deps import get_optional_requirement
 from classy.scripts.cli.utils import (
     autocomplete_model_path,
     checkpoint_path_from_user_input,
@@ -57,7 +58,13 @@ def main(args):
     # import here to avoid importing before needed
     import sys
 
-    from streamlit.cli import main as st_main
+    try:
+        from streamlit.cli import main as st_main
+    except ImportError:
+        print(
+            f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
+        )
+        exit(1)
 
     device = get_device(args.device)
 

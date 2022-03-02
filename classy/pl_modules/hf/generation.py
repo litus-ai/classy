@@ -167,7 +167,7 @@ class BartGenerativeModule(HFGenerativeModel):
         bart_out = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            decoder_start=decoder_start[0][0],
+            decoder_start_token_id=decoder_start[0][0],
             num_return_sequences=num_return_sequences,
             forced_bos_token_id=self.forced_bos_token_id,
             **self.generation_params,

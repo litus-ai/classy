@@ -28,7 +28,10 @@ def build_mapping(main_module: pdoc.Module):
     for e in to_remove:
         del mapping[e]
 
-    with open("docs/generated/api-mapping.json", "w") as f:
+    tgt_file = Path("docs/generated/api-mapping.json")
+    tgt_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with tgt_file.open("w") as f:
         json.dump({name: packages[0] for name, packages in mapping.items()}, f, indent=2)
 
 
@@ -88,12 +91,11 @@ def build_sidebar(module):
 
 
 def build_api_landing():
-    content = """
----
+    content = """---
 pagination_next: null
 pagination_prev: null
+title: classy Reference API
 ---
-## classy Reference API
 
 Welcome to `classy`'s reference API!
 

@@ -82,8 +82,9 @@ you need to install:
 * [docker](https://docs.docker.com/get-docker/)
 * [nvidia container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 
-Once set up, you can just run `docker run --gpus all -it poccio/classy:0.1.0-cuda11.1 bash` and you'll get a shell on a fully-setup container, with a *classy* conda environment
-already created.
+Once set up, you can just run `docker run --gpus all -it poccio/classy bash` (or checkout [poccio/classy](https://hub.docker.com/repository/docker/poccio/classy)
+for specific version tags) and you'll get a shell on a fully-setup container, with a *classy* conda environment already
+created.
 
 Alternatively, if you use external cloud computing platforms that support docker images (e.g. [vast.ai](https://vast.ai/)),
-just providing the image name (`poccio/classy:0.1.0-cuda11.1`) should suffice (it's hosted on Dockerhub).
+just providing the image name (`poccio/classy`) should suffice (it's hosted on Dockerhub).

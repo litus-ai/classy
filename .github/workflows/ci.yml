@@ -4,7 +4,7 @@ on:
   release:
     types: [published]
   schedule:
-    - cron: '00 04 * * *'  # early morning (04:00 UTC) every day
+    - cron: '00 08 * * *'  # early morning (04:00 UTC) every day
 
 jobs:
   check_date:
@@ -14,11 +14,13 @@ jobs:
       WAS_EDITED: ${{ steps.check_date.outputs.WAS_EDITED }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: develop
 
       - id: check_date
         name: Check if there were commits in the last day
         if: ${{ github.event_name == 'schedule' }}
-        run: echo '::set-output name=WAS_EDITED::'$(test -n "$(git log --format=%H --since='24 hours ago')" && echo 'true' || echo 'false')
+        run: echo '::set-output name=WAS_EDITED::'$(test -n "$(git log --format=%H --since='72 hours ago')" && echo 'true' || echo 'false')
 
   build:
     needs: [check_date]
@@ -29,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: develop
 
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -75,6 +79,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: develop
 
     - name: Setup Python
       uses: actions/setup-python@v2

@@ -17,21 +17,18 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Generate pdoc output
-        run: |
-          pip install -r requirements.txt
-          pip install pdoc3
-          pdoc -f --template-dir docs/pdoc-templates -o docs/docs classy
-          mv docs/docs/classy docs/docs/api
-          python docs/pdoc/pdoc_postprocess.py
-
       - name: Set up Node
         uses: actions/setup-node@v2
         with:
-          node-version: "12"
+          node-version: "14"
 
-      - name: Build Docusaurus website
+      - name: Generate pdoc output & Build Docusaurus website
         run: |
+          pip install -r requirements.txt
+          pip install -r <(python classy/optional_deps.py)
+          pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy
+          mv docs/docs/classy docs/docs/api
+          python docs/pdoc/pdoc_postprocess.py
           cd docs
           yarn install
           # builds https://gitlab.grnet.gr/terminology/docusaurus-terminology

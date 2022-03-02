@@ -6,7 +6,6 @@ import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 
 from classy.data.data_modules import ClassyDataModule
-from classy.utils.hydra import fix_paths
 
 
 def train(conf: DictConfig) -> None:
