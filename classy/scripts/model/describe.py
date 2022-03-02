@@ -3,8 +3,25 @@ import collections
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
-import plotly.express as px
-import streamlit as st
+
+from classy.optional_deps import get_optional_requirement
+
+try:
+    import plotly.express as px
+except ImportError:
+    print(
+        f"classy describe [...] requires `pip install {get_optional_requirement('plotly')}`"
+    )
+    exit(1)
+
+try:
+    import streamlit as st
+except ImportError:
+    print(
+        f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
+    )
+    exit(1)
+
 from sacremoses import MosesTokenizer
 
 from classy.data.data_drivers import (

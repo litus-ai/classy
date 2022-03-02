@@ -1,5 +1,5 @@
 torch==1.9.0  # todo change to >=
-pytorch-lightning==1.4.9
+pytorch-lightning==1.5.9
 torchmetrics==0.5.1
 transformers==4.11.3
 hydra-core==1.1.1
@@ -10,16 +10,10 @@ datasets==1.12.1
 seqeval==1.2.2
 scikit-learn==0.24.2
 matplotlib==3.4.3
-# web
-fastapi==0.68.1
-uvicorn[standard]==0.15.0
-streamlit==0.88.0
-st-annotated-text==2.0.0
 # optional(?)
+rich==11.0.0
 sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
 wandb==0.12.2  # required for logging
 nltk==3.6.5
 rouge-score==0.0.4  # required by rouge callback
-sacrebleu==1.4.12  # required by sacrebleu callback
-rich==11.0.0
-plotly==5.5.0
+sacrebleu==2.0.0  # required by sacrebleu callback

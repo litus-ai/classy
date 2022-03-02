@@ -8,10 +8,33 @@ title: Custom Optimizer
 
 Classy comes with a set of well established predefined Optimizers that you can easily plug in your experiments. At the moment we support:
 
-### AdamW
-The most famous Optimizer in Natural Language Processing applications, __virtually ubiquitous__.
 
-- :hammer: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html)
+### Adam
+One of the most famous Optimizer for Natural Language Processing applications, __virtually ubiquitous__.
+
+- :hammer: [Implementation](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html)
+- :page_facing_up: [Paper](https://arxiv.org/abs/1412.6980)
+
+To use it, put the following yaml lines in your own profile or config.
+
+```yaml
+model:
+  optim_conf:
+    _target_: classy.optim.factories.AdamWithWarmupFactory
+    lr: 3e-5
+    warmup_steps: 5000
+    total_steps: ${training.pl_trainer.max_steps}
+    weight_decay: 0.01
+    no_decay_params:
+      - bias
+      - LayerNorm.weight
+```
+
+
+### AdamW
+Adam implementation with weight decay fix as stated in the original paper.
+
+- :hammer: [Implementation](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.AdamW)
 - :page_facing_up: [Paper](https://arxiv.org/abs/1711.05101)
 
 To use it, put the following yaml lines in your own profile or config.
