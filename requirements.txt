@@ -1,12 +1,12 @@
-torch==1.9.0  # todo change to >=
+torch>=1.9,<1.11
 pytorch-lightning==1.5.9
 torchmetrics==0.5.1
-transformers==4.11.3
+transformers>=4.1,<4.18
 hydra-core==1.1.1
 # argcomplete
 argcomplete==1.12.3
 # datasets and metrics
-datasets==1.12.1
+datasets>=1.12,<1.19
 seqeval==1.2.2
 scikit-learn==0.24.2
 matplotlib==3.4.3
