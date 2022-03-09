@@ -32,6 +32,10 @@ class SavingMixin:
         # move every paths into "./resources/" and overwrite the config
         Path(experiment_folder / "resources").mkdir()
 
+        # a same resource might be used by multiple components at the same time
+        # avoid copying them multiple times
+        colored_paths = set()
+
         def fix_with_copy_side_effect(path):
             input_path = Path(path)
             assert input_path.exists()
@@ -39,10 +43,12 @@ class SavingMixin:
                 experiment_folder / "resources" / input_path.relative_to(working_folder)
             )
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            if os.path.isdir(input_path):
-                shutil.copytree(input_path, output_path)
-            else:
-                shutil.copy(input_path, output_path)
+            if input_path not in colored_paths:
+                if Path(input_path).is_dir():
+                    shutil.copytree(input_path, output_path)
+                else:
+                    shutil.copy(input_path, output_path)
+            colored_paths.add(input_path)
             return str(output_path.relative_to(experiment_folder))
 
         fix_paths(
