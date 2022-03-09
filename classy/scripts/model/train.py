@@ -4,6 +4,7 @@ from pathlib import Path
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.callbacks import RichProgressBar
 
 from classy.data.data_modules import ClassyDataModule
 
@@ -28,7 +29,7 @@ def train(conf: DictConfig) -> None:
     pl_module = hydra.utils.instantiate(conf.model, **pl_module_init)
 
     # callbacks declaration
-    callbacks_store = []
+    callbacks_store = [RichProgressBar()]
 
     # lightning callbacks
     if conf.training.early_stopping_callback is not None:
