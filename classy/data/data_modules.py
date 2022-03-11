@@ -253,29 +253,6 @@ class ClassyDataModule(pl.LightningDataModule):
         self.external_vocabulary_path = external_vocabulary_path
         self.vocabulary = None
 
-        # If the data directory exists this run is being resumed from a previous one.
-        # If the previous run stored some data we have to load them instead of recomputing
-        # the splits or the shuffling.
-        if Path("data/").exists():
-            files_in_dir = os.listdir("data/")
-
-            # check if the previous run stored a train file
-            possible_train_paths = [fp for fp in files_in_dir if "train" in fp]
-            if len(possible_train_paths) == 1:
-                self.train_path = possible_train_paths[0]
-
-            # check if the previous run stored a validation file
-            possible_validation_paths = [
-                fp for fp in files_in_dir if "validation" in fp
-            ]
-            if len(possible_validation_paths) == 1:
-                self.validation_path = possible_validation_paths[0]
-
-            # check if the previous run stored a test file
-            possible_test_paths = [fp for fp in files_in_dir if "test" in fp]
-            if len(possible_test_paths) == 1:
-                self.test_path = possible_test_paths[0]
-
     def get_examples(self, n: int) -> Tuple[str, List]:
         source = (
             self.train_coordinates.test_bundle
@@ -308,45 +285,28 @@ class ClassyDataModule(pl.LightningDataModule):
     def prepare_data(self) -> None:
         train_coordinates = load_coordinates(self.dataset_path, self.task)
 
-        # Check it the training dataset has been split or not
-        # If so check that it is the only dataset in the train_bundle
-        if train_coordinates.main_data_driver.dataset_exists_at_path(
-            f"data/train.shuffled.{train_coordinates.main_file_extension}"
-        ):
-            assert (
-                len(train_coordinates.train_bundle) == 1
-                and list(train_coordinates.train_bundle.keys())[0]
-                == f"data/train.shuffled.{train_coordinates.main_file_extension}"
-            ), (
-                f"If the train.shuffled.{train_coordinates.main_file_extension} "
-                f"already exists it must be the only training dataset at this point."
-            )
-
+        shuffled_train_dataset_path = f"data/train.shuffled.{train_coordinates.main_file_extension}"
         must_shuffle_dataset = (
             self.shuffle_dataset
             and not train_coordinates.main_data_driver.dataset_exists_at_path(
-                f"data/train.shuffled.{train_coordinates.main_file_extension}"
+                shuffled_train_dataset_path
             )
         )
 
         if must_shuffle_dataset:
             # create data folder
             create_data_dir()
-            # shuffle input dataset
-            shuffled_dataset_path = (
-                f"data/train.shuffled.{train_coordinates.main_file_extension}"
-            )
             logger.info(
                 f"Shuffling training dataset. The shuffled dataset "
-                f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
+                f"will be stored at: {os.getcwd()}/{shuffled_train_dataset_path}"
             )
             shuffle_and_store_dataset(
                 train_coordinates.train_bundle,
                 train_coordinates.main_data_driver,
-                output_path=shuffled_dataset_path,
+                output_path=shuffled_train_dataset_path,
             )
             train_coordinates.train_bundle = {
-                shuffled_dataset_path: train_coordinates.main_data_driver
+                shuffled_train_dataset_path: train_coordinates.main_data_driver
             }
 
         if train_coordinates.validation_bundle is None:
@@ -359,7 +319,7 @@ class ClassyDataModule(pl.LightningDataModule):
             # if we must split the shuffled train dataset in two, then we must change its name
             if must_shuffle_dataset:
                 shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
-                os.rename(self.train_path, shuffled_dataset_path)
+                os.rename(shuffled_train_dataset_path, shuffled_dataset_path)
                 train_coordinates.train_bundle = {
                     shuffled_dataset_path: train_coordinates.main_data_driver
                 }
@@ -379,7 +339,9 @@ class ClassyDataModule(pl.LightningDataModule):
                 shuffle=False,
             )
             logger.info(
-                f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'"
+                f"Storing the newly created datasets at"
+                f" '{list(train_coordinates.train_bundle.keys())[0]}'"
+                f" and '{list(train_coordinates.validation_bundle.keys())[0]}'"
             )
 
         self.train_coordinates = train_coordinates
