@@ -108,7 +108,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
     # If the coordinates_path points to a file, it is either a yaml
     # file containing the paths the datasets or a single file that
     # we have to split in train and dev.
-    elif Path(coordinates_path).is_file():
+    if Path(coordinates_path).is_file():
 
         if coordinates_path.split(".")[-1] == "yaml":
 
@@ -165,50 +165,56 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
 
             coordinates_dict = OmegaConf.load(coordinates_path)
 
-            assert (
-                "train_dataset" in coordinates_dict
-            ), "The coordinates file must specify the 'train_dataset' field"
+            # this is not a resume from a previous run
+            if train_coordinates.train_bundle is None:
 
-            # assign the main file extension if specified in the config
-            train_coordinates.main_file_extension = coordinates_dict.get(
-                "main_file_extension", None
-            )
+                assert (
+                        "train_dataset" in coordinates_dict
+                ), "The coordinates file must specify the 'train_dataset' field"
 
-            # train_bundle
-            if train_coordinates.main_file_extension is None:
-                (
-                    train_coordinates.train_bundle,
-                    train_coordinates.main_file_extension,
-                ) = load_bundle(
-                    coordinates_dict.get("train_dataset"), compute_main_extension=True
+                # assign the main file extension if specified in the config
+                train_coordinates.main_file_extension = coordinates_dict.get(
+                    "main_file_extension", None
                 )
-            else:
-                train_coordinates.train_bundle = load_bundle(
-                    coordinates_dict.get("train_dataset")
+
+                # train_bundle
+                if train_coordinates.main_file_extension is None:
+                    (
+                        train_coordinates.train_bundle,
+                        train_coordinates.main_file_extension,
+                    ) = load_bundle(
+                        coordinates_dict.get("train_dataset"), compute_main_extension=True
+                    )
+                else:
+                    train_coordinates.train_bundle = load_bundle(
+                        coordinates_dict.get("train_dataset")
+                    )
+                train_coordinates.main_data_driver = get_data_driver(
+                    task, train_coordinates.main_file_extension
                 )
-            train_coordinates.main_data_driver = get_data_driver(
-                task, train_coordinates.main_file_extension
-            )
 
-            # validation_bundle
-            train_coordinates.validation_bundle = load_bundle(
-                coordinates_dict.get("validation_dataset")
-            )
+            if train_coordinates.validation_bundle is None:
+                # validation_bundle
+                train_coordinates.validation_bundle = load_bundle(
+                    coordinates_dict.get("validation_dataset")
+                )
 
-            # test_bundle
-            train_coordinates.test_bundle = load_bundle(
-                coordinates_dict.get("test_dataset")
-            )
+            if train_coordinates.test_bundle is None:
+                # test_bundle
+                train_coordinates.test_bundle = load_bundle(
+                    coordinates_dict.get("test_dataset")
+                )
 
         else:
             # just one file that will later be split in train and dev
-            train_coordinates.main_file_extension = coordinates_path.split(".")[-1]
-            train_coordinates.main_data_driver = get_data_driver(
-                task, train_coordinates.main_file_extension
-            )
-            train_coordinates.train_bundle = {
-                coordinates_path: train_coordinates.main_data_driver
-            }
+            if train_coordinates.train_bundle is None:
+                train_coordinates.main_file_extension = coordinates_path.split(".")[-1]
+                train_coordinates.main_data_driver = get_data_driver(
+                    task, train_coordinates.main_file_extension
+                )
+                train_coordinates.train_bundle = {
+                    coordinates_path: train_coordinates.main_data_driver
+                }
     else:
         raise NotImplementedError
 
@@ -232,18 +238,16 @@ class ClassyDataModule(pl.LightningDataModule):
         super().__init__()
         self.task = task
         self.dataset_path = dataset_path
-        self.file_extension = None
-        self.data_driver = None
 
-        self.train_coordinates: TrainCoordinates = None
-        self.train_dataset, self.validation_dataset, self.test_dataset = (
-            None,
-            None,
-            None,
-        )
         self.train_dataset_conf = train_dataset
         self.validation_dataset_conf = validation_dataset or train_dataset
         self.test_dataset_conf = test_dataset or validation_dataset or train_dataset
+
+        self.train_coordinates: TrainCoordinates = None
+
+        self.train_dataset = None
+        self.validation_dataset = None
+        self.test_dataset = None
 
         self.validation_split_size = validation_split_size
         self.test_split_size = test_split_size
@@ -318,7 +322,7 @@ class ClassyDataModule(pl.LightningDataModule):
 
             # if we must split the shuffled train dataset in two, then we must change its name
             if must_shuffle_dataset:
-                shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
+                shuffled_dataset_path = f"data/dataset.shuffled.{train_coordinates.main_file_extension}"
                 os.rename(shuffled_train_dataset_path, shuffled_dataset_path)
                 train_coordinates.train_bundle = {
                     shuffled_dataset_path: train_coordinates.main_data_driver
