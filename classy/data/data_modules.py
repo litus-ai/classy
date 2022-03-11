@@ -39,8 +39,8 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
         coordinates_path:
             a path to
                 - a file containing the training coordinates (check the documentation for more info)
-                - a single file
-                - directory containing three files for train validation and test
+                - a single file containing the whole dataset to be split in train / dev
+                - directory containing two (three) files for train, validation (and test)
         task:
             one of the supported tasks in classy (e.g. sentence-pair)
     Returns:
@@ -48,105 +48,121 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
          all the info on the datasets involved in the training.
     """
 
-    def scan_dir_for_file(
-        dir_path: str, file_name: str
-    ) -> Optional[Tuple[str, str, DataDriver]]:
-        files_in_dir = os.listdir(dir_path)
-        matching_files = [fp for fp in files_in_dir if file_name in fp]
-
-        if len(matching_files) == 1:
-            matching_file = matching_files[0]
-            file_extension = matching_file.split(".")[-1]
-            data_driver = get_data_driver(task, file_extension)
-            return f"{dir_path}/{matching_file}", file_extension, data_driver
-
-        return None
-
     train_coordinates = TrainCoordinates(None, None, None, None, None)
 
-    # If the data directory exists this run is being resumed from a previous one.
-    # If the previous run stored some data we have to load them instead of recomputing
-    # the splits or the shuffling. If instead the provided data is in a directory we
-    # have to load them following the same behavior.
+    # If the "data" directory exists (and so this a resume from a previous run)
+    # or the "coordinates_path" point to a directory we have to retrieve the data
+    # from there.
     if Path("data/").exists() or Path(coordinates_path).is_dir():
-        curr_directory = "data/" if Path("data/").exists() else coordinates_path
 
-        # check if the previous run stored a train file if so create the train bundle
-        train_scan_output = scan_dir_for_file(curr_directory, "train")
-        if train_scan_output is not None:
-            train_file, train_file_extension, train_data_driver = train_scan_output
-            train_coordinates.main_file_extension = train_file_extension
-            train_coordinates.main_data_driver = train_data_driver
-            train_coordinates.train_bundle = {train_file: train_data_driver}
+        def scan_dir_for_file(
+                dir_path: str, file_name: str
+        ) -> Optional[Tuple[str, str, DataDriver]]:
+            files_in_dir = os.listdir(dir_path)
+            matching_files = [fp for fp in files_in_dir if file_name in fp]
 
-        # check if the previous run stored a validation file if so create the validation bundle
-        validation_scan_output = scan_dir_for_file(curr_directory, "validation")
+            if len(matching_files) == 1:
+                matching_file = matching_files[0]
+                file_extension = matching_file.split(".")[-1]
+                data_driver = get_data_driver(task, file_extension)
+                return f"{dir_path}/{matching_file}", file_extension, data_driver
+
+            return None
+
+        previous_run_dir = "data/"
+
+        # check if a previous run stored a train file
+        train_scan_output = scan_dir_for_file(previous_run_dir, "train")
+        # if not retrieve it from the directory at the coordinates path
+        if train_scan_output is None:
+            train_scan_output = scan_dir_for_file(coordinates_path, "train")
+
+        assert train_scan_output is not None, "The training file could not be found."
+
+        # Load training data
+        train_file, train_file_extension, train_data_driver = train_scan_output
+        train_coordinates.main_file_extension = train_file_extension
+        train_coordinates.main_data_driver = train_data_driver
+        train_coordinates.train_bundle = {train_file: train_data_driver}
+
+        # check if the previous run stored a validation file
+        validation_scan_output = scan_dir_for_file(previous_run_dir, "validation")
+        # if not retrieve it from the directory at the coordinates path
+        if validation_scan_output is None:
+            validation_scan_output = scan_dir_for_file(coordinates_path, "validation")
         if validation_scan_output is not None:
             validation_file, _, validation_data_driver = validation_scan_output
             train_coordinates.validation_bundle = {
                 validation_file: validation_data_driver
             }
 
-        # check if the previous run stored a test file if so create the test bundle
-        test_scan_output = scan_dir_for_file(curr_directory, "test")
+        # check if the previous run stored a test file
+        test_scan_output = scan_dir_for_file(previous_run_dir, "test")
+        # if not retrieve it from the directory at the coordinates path
+        if test_scan_output is None:
+            test_scan_output = scan_dir_for_file(coordinates_path, "test")
         if test_scan_output is not None:
             test_file, _, test_data_driver = test_scan_output
             train_coordinates.test_bundle = {test_file: test_data_driver}
 
+    # If the coordinates_path points to a file, it is either a yaml
+    # file containing the paths the datasets or a single file that
+    # we have to split in train and dev.
     elif Path(coordinates_path).is_file():
 
-        def load_bundle(
-            bundle_conf: Optional[Union[str, Dict[str, str]]],
-            compute_main_extension: bool = False,
-        ) -> Optional[Union[Dict[str, DataDriver], Tuple[Dict[str, DataDriver], str]]]:
-            if bundle_conf is None:
-                return None
-
-            main_extension = None
-            if type(bundle_conf) == str:
-                file_extension = bundle_conf.split(".")[-1]
-                bundle_store = {
-                    hydra.utils.to_absolute_path(bundle_conf): get_data_driver(
-                        task, file_extension
-                    )
-                }
-                if compute_main_extension:
-                    main_extension = file_extension
-            elif type(bundle_conf) == list:
-                file_extensions = [path.split(".")[-1] for path in bundle_conf]
-                bundle_store = {
-                    hydra.utils.to_absolute_path(path): file_extension
-                    for path, file_extension in zip(bundle_conf, file_extensions)
-                }
-                if compute_main_extension:
-                    main_extension = collections.Counter(file_extensions).most_common(
-                        1
-                    )[0][0]
-            elif type(bundle_conf) == dict:
-                bundle_store = {
-                    hydra.utils.to_absolute_path(path): get_data_driver(
-                        task, file_extension
-                    )
-                    for path, file_extension in bundle_conf
-                }
-                if compute_main_extension:
-                    main_extension = collections.Counter(
-                        bundle_store.values()
-                    ).most_common(1)[0][0]
-            else:
-                logger.error(
-                    "The value of the dataset in the coordinates file "
-                    "must be either a string indicating the dataset, a "
-                    "list of string or  a dict path -> file_extension"
-                )
-                raise NotImplementedError
-
-            if main_extension is not None:
-                return bundle_store, main_extension
-            else:
-                return bundle_store
-
         if coordinates_path.split(".")[-1] == "yaml":
+
+            def load_bundle(
+                    bundle_conf: Optional[Union[str, Dict[str, str]]],
+                    compute_main_extension: bool = False,
+            ) -> Optional[Union[Dict[str, DataDriver], Tuple[Dict[str, DataDriver], str]]]:
+                if bundle_conf is None:
+                    return None
+
+                main_extension = None
+                if type(bundle_conf) == str:
+                    file_extension = bundle_conf.split(".")[-1]
+                    bundle_store = {
+                        hydra.utils.to_absolute_path(bundle_conf): get_data_driver(
+                            task, file_extension
+                        )
+                    }
+                    if compute_main_extension:
+                        main_extension = file_extension
+                elif type(bundle_conf) == list:
+                    file_extensions = [path.split(".")[-1] for path in bundle_conf]
+                    bundle_store = {
+                        hydra.utils.to_absolute_path(path): file_extension
+                        for path, file_extension in zip(bundle_conf, file_extensions)
+                    }
+                    if compute_main_extension:
+                        main_extension = collections.Counter(file_extensions).most_common(
+                            1
+                        )[0][0]
+                elif type(bundle_conf) == dict:
+                    bundle_store = {
+                        hydra.utils.to_absolute_path(path): get_data_driver(
+                            task, file_extension
+                        )
+                        for path, file_extension in bundle_conf
+                    }
+                    if compute_main_extension:
+                        main_extension = collections.Counter(
+                            bundle_store.values()
+                        ).most_common(1)[0][0]
+                else:
+                    logger.error(
+                        "The value of the dataset in the coordinates file "
+                        "must be either a string indicating the dataset, a "
+                        "list of string or  a dict path -> file_extension"
+                    )
+                    raise NotImplementedError
+
+                if main_extension is not None:
+                    return bundle_store, main_extension
+                else:
+                    return bundle_store
+
             coordinates_dict = OmegaConf.load(coordinates_path)
 
             assert (
