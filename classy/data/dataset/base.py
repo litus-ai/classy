@@ -6,10 +6,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
-from classy.data.data_drivers import (
-    ClassySample,
-    DataDriver,
-)
+from classy.data.data_drivers import ClassySample, DataDriver
 from classy.utils.commons import add_noise_to_value, chunks, flatten
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary

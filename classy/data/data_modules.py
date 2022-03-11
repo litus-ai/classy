@@ -56,7 +56,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
     if Path("data/").exists() or Path(coordinates_path).is_dir():
 
         def scan_dir_for_file(
-                dir_path: str, file_name: str
+            dir_path: str, file_name: str
         ) -> Optional[Tuple[str, str, DataDriver]]:
             files_in_dir = os.listdir(dir_path)
             matching_files = [fp for fp in files_in_dir if file_name in fp]
@@ -113,9 +113,11 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
         if coordinates_path.split(".")[-1] == "yaml":
 
             def load_bundle(
-                    bundle_conf: Optional[Union[str, Dict[str, str]]],
-                    compute_main_extension: bool = False,
-            ) -> Optional[Union[Dict[str, DataDriver], Tuple[Dict[str, DataDriver], str]]]:
+                bundle_conf: Optional[Union[str, Dict[str, str]]],
+                compute_main_extension: bool = False,
+            ) -> Optional[
+                Union[Dict[str, DataDriver], Tuple[Dict[str, DataDriver], str]]
+            ]:
                 if bundle_conf is None:
                     return None
 
@@ -136,9 +138,9 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                         for path, file_extension in zip(bundle_conf, file_extensions)
                     }
                     if compute_main_extension:
-                        main_extension = collections.Counter(file_extensions).most_common(
-                            1
-                        )[0][0]
+                        main_extension = collections.Counter(
+                            file_extensions
+                        ).most_common(1)[0][0]
                 elif type(bundle_conf) == dict:
                     bundle_store = {
                         hydra.utils.to_absolute_path(path): get_data_driver(
@@ -169,7 +171,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
             if train_coordinates.train_bundle is None:
 
                 assert (
-                        "train_dataset" in coordinates_dict
+                    "train_dataset" in coordinates_dict
                 ), "The coordinates file must specify the 'train_dataset' field"
 
                 # assign the main file extension if specified in the config
@@ -183,7 +185,8 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                         train_coordinates.train_bundle,
                         train_coordinates.main_file_extension,
                     ) = load_bundle(
-                        coordinates_dict.get("train_dataset"), compute_main_extension=True
+                        coordinates_dict.get("train_dataset"),
+                        compute_main_extension=True,
                     )
                 else:
                     train_coordinates.train_bundle = load_bundle(
@@ -289,7 +292,9 @@ class ClassyDataModule(pl.LightningDataModule):
     def prepare_data(self) -> None:
         train_coordinates = load_coordinates(self.dataset_path, self.task)
 
-        shuffled_train_dataset_path = f"data/train.shuffled.{train_coordinates.main_file_extension}"
+        shuffled_train_dataset_path = (
+            f"data/train.shuffled.{train_coordinates.main_file_extension}"
+        )
         must_shuffle_dataset = (
             self.shuffle_dataset
             and not train_coordinates.main_data_driver.dataset_exists_at_path(
@@ -322,7 +327,9 @@ class ClassyDataModule(pl.LightningDataModule):
 
             # if we must split the shuffled train dataset in two, then we must change its name
             if must_shuffle_dataset:
-                shuffled_dataset_path = f"data/dataset.shuffled.{train_coordinates.main_file_extension}"
+                shuffled_dataset_path = (
+                    f"data/dataset.shuffled.{train_coordinates.main_file_extension}"
+                )
                 os.rename(shuffled_train_dataset_path, shuffled_dataset_path)
                 train_coordinates.train_bundle = {
                     shuffled_dataset_path: train_coordinates.main_data_driver
