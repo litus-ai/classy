@@ -47,7 +47,7 @@ class BaseDataset(IterableDataset):
     ) -> "BaseDataset":
 
         dataset_bundle: Dict[str, Any] = (
-            {path: data_driver} if type(path) == "str" else path
+            {path: data_driver} if type(path) == str else path
         )
 
         if vocabulary is None and cls.requires_vocab():

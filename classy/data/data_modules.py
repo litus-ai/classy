@@ -134,7 +134,9 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                 elif type(bundle_conf) == list:
                     file_extensions = [path.split(".")[-1] for path in bundle_conf]
                     bundle_store = {
-                        hydra.utils.to_absolute_path(path): file_extension
+                        hydra.utils.to_absolute_path(path): get_data_driver(
+                            task, file_extension
+                        )
                         for path, file_extension in zip(bundle_conf, file_extensions)
                     }
                     if compute_main_extension:
