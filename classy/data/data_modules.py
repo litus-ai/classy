@@ -58,6 +58,10 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
         def scan_dir_for_file(
             dir_path: str, file_name: str
         ) -> Optional[Tuple[str, str, DataDriver]]:
+
+            if not Path(dir_path).is_dir():
+                return None
+
             files_in_dir = os.listdir(dir_path)
             matching_files = [fp for fp in files_in_dir if file_name in fp]
 
@@ -220,8 +224,6 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                 train_coordinates.train_bundle = {
                     coordinates_path: train_coordinates.main_data_driver
                 }
-    else:
-        raise NotImplementedError
 
     return train_coordinates
 
