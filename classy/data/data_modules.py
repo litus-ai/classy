@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import hydra.utils
 import omegaconf
 import pytorch_lightning as pl
-from omegaconf import OmegaConf, ListConfig, DictConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from torch.utils.data import DataLoader
 
 from classy.data.data_drivers import DataDriver, get_data_driver

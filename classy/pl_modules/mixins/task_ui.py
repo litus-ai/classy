@@ -350,7 +350,6 @@ try:
                 unsafe_allow_html=True,
             )
 
-
 except ImportError:
 
     class MockTaskServeMixin(TaskUIMixin):
