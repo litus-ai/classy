@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import hydra.utils
 import omegaconf
 import pytorch_lightning as pl
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, ListConfig, DictConfig
 from torch.utils.data import DataLoader
 
 from classy.data.data_drivers import DataDriver, get_data_driver
@@ -135,7 +135,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                     }
                     if compute_main_extension:
                         main_extension = file_extension
-                elif type(bundle_conf) == list:
+                elif type(bundle_conf) == ListConfig:
                     file_extensions = [path.split(".")[-1] for path in bundle_conf]
                     bundle_store = {
                         hydra.utils.to_absolute_path(path): get_data_driver(
@@ -147,7 +147,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                         main_extension = collections.Counter(
                             file_extensions
                         ).most_common(1)[0][0]
-                elif type(bundle_conf) == dict:
+                elif type(bundle_conf) == DictConfig:
                     bundle_store = {
                         hydra.utils.to_absolute_path(path): get_data_driver(
                             task, file_extension
@@ -187,12 +187,19 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
 
                 # train_bundle
                 if train_coordinates.main_file_extension is None:
+                    logger.info(
+                        "No main extension declared in coordinates file,"
+                        " inferring it from training datasets"
+                    )
                     (
                         train_coordinates.train_bundle,
                         train_coordinates.main_file_extension,
                     ) = load_bundle(
                         coordinates_dict.get("train_dataset"),
                         compute_main_extension=True,
+                    )
+                    logger.info(
+                        f"Main extension found: {train_coordinates.main_file_extension}"
                     )
                 else:
                     train_coordinates.train_bundle = load_bundle(

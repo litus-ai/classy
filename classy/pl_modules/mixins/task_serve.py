@@ -193,6 +193,7 @@ try:
         def serve_output_class(self):
             return MarshalOutputGenerationSample
 
+
 except ImportError:
 
     class MockTaskServeMixin(TaskServeMixin):
