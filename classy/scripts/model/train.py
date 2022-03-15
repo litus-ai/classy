@@ -58,7 +58,7 @@ def train(conf: DictConfig) -> None:
             )[0][0]
 
             python_logger.info(
-                "Callback dataset path automatically set to: ", callback_path
+                f"Callback dataset path automatically set to:  {callback_path}"
             )
 
             callback["path"] = callback_path
