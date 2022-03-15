@@ -7,6 +7,9 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.callbacks import RichProgressBar
 
 from classy.data.data_modules import ClassyDataModule
+from classy.utils.log import get_project_logger
+
+python_logger = get_project_logger(__name__)
 
 
 def train(conf: DictConfig) -> None:
@@ -50,7 +53,16 @@ def train(conf: DictConfig) -> None:
             == "classy.pl_callbacks.prediction.PredictionPLCallback"
             and callback.get("path", None) is None
         ):
-            callback["path"] = pl_data_module.validation_path
+            callback_path = list(
+                pl_data_module.train_coordinates.validation_bundle.items()
+            )[0][0]
+
+            python_logger.info(
+                f"Callback dataset path automatically set to:  {callback_path}"
+            )
+
+            callback["path"] = callback_path
+
         callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
     # logging

@@ -87,14 +87,15 @@ class HFTokenDataset(HFBaseDataset):
                 "token_offsets": token_offsets,
             }
             if token_sample.reference_annotation is not None:
-                elem_dict["labels"] = torch.tensor(
-                    [
-                        self.vocabulary.get_idx(
-                            k="labels", elem=token_sample.reference_annotation[idx]
-                        )
-                        for idx in token_sample.target
-                    ]
-                )
+                # -100 == cross entropy ignore index
+                labels = [-100] * len(token_sample.reference_annotation)
+
+                for target_idx in token_sample.target:
+                    labels[target_idx] = self.vocabulary.get_idx(
+                        k="labels", elem=token_sample.reference_annotation[target_idx]
+                    )
+
+                elem_dict["labels"] = torch.tensor(labels, dtype=input_ids.dtype)
 
             elem_dict["samples"] = token_sample
             yield elem_dict
