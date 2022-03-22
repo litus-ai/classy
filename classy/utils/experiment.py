@@ -23,6 +23,10 @@ class Experiment:
         return max(self.iter_runs(), key=lambda r: r.date, default=None)
 
     @property
+    def last_valid_run(self) -> Optional["Run"]:
+        return max(self.iter_candidate_runs(), key=lambda r: r.date, default=None)
+
+    @property
     def has_checkpoint(self):
         return any(run.has_checkpoints for run in self.iter_runs())
 
@@ -32,12 +36,8 @@ class Experiment:
     @property
     def default_checkpoint(self):
         return (
-            self.last_run_by(
-                lambda r: r.best_checkpoint is not None
-            )  # first look for a run that has a best.ckpt
-            or self.last_run_by(
-                lambda r: r.last_checkpoint is not None
-            )  # if it fails, find last available checkpoint
+            self.last_run_by(lambda r: r.best_checkpoint is not None)  # first look for a run that has a best.ckpt
+            or self.last_run_by(lambda r: r.last_checkpoint is not None)  # if it fails, find last available checkpoint
         ).default_checkpoint  # this gives precedence to best, then sorts by last available
 
     def __str__(self):
@@ -47,9 +47,7 @@ class Experiment:
         return str(self)
 
     @classmethod
-    def from_name(
-        cls, exp_name: str, exp_dir: Optional[Union[str, Path]] = None
-    ) -> Optional["Experiment"]:
+    def from_name(cls, exp_name: str, exp_dir: Optional[Union[str, Path]] = None) -> Optional["Experiment"]:
         exp_dir = cls.get_exp_dir(exp_dir)
         directory = exp_dir / exp_name
 
@@ -59,9 +57,7 @@ class Experiment:
         return Experiment(directory)
 
     @classmethod
-    def iter_experiments(
-        cls, exps_dir: Optional[Union[str, Path]] = None
-    ) -> Iterator["Experiment"]:
+    def iter_experiments(cls, exps_dir: Optional[Union[str, Path]] = None) -> Iterator["Experiment"]:
         exps_dir = cls.get_exp_dir(exps_dir)
 
         if not exps_dir.exists():
@@ -72,16 +68,25 @@ class Experiment:
                 yield Experiment(exp_dir)
 
     @classmethod
-    def list_available_experiments(
-        cls, exps_dir: Optional[Union[str, Path]] = None
-    ) -> List[str]:
-        return list(
-            ex.name for ex in cls.iter_experiments(exps_dir) if ex.has_checkpoint
-        )
+    def list_available_experiments(cls, exps_dir: Optional[Union[str, Path]] = None) -> List[str]:
+        return list(ex.name for ex in cls.iter_experiments(exps_dir) if ex.has_checkpoint)
 
     @classmethod
     def list_downloaded_experiments(cls) -> List[str]:
         return cls.list_available_experiments(CLASSY_MODELS_CACHE_PATH)
+
+    @classmethod
+    def try_get_experiment_dir(cls) -> Optional[Path]:
+        cwd = Path.cwd()
+
+        if cwd.name == "experiments":
+            return cwd
+
+        exp_tentative = cwd / "experiments"
+        if exp_tentative.exists() and exp_tentative.is_dir():
+            return exp_tentative
+
+        return None
 
     def iter_runs(self) -> Iterator["Run"]:
         for config_file in self.directory.rglob(".hydra/config.yaml"):
@@ -90,9 +95,7 @@ class Experiment:
     def iter_candidate_runs(self, prefix: Optional[str] = None) -> Iterator["Run"]:
         valid_runs = filter(lambda r: r.has_checkpoints, self.iter_runs())
         if prefix is not None:
-            valid_runs = filter(
-                lambda r: prefix in str(r.relative_directory), valid_runs
-            )
+            valid_runs = filter(lambda r: prefix in str(r.relative_directory), valid_runs)
 
         yield from valid_runs
 
@@ -188,14 +191,10 @@ class Run:
         return str(self)
 
     @classmethod
-    def from_hydra_config(
-        cls, hydra_config_path: Path, experiment: Optional[Experiment] = None
-    ):
+    def from_hydra_config(cls, hydra_config_path: Path, experiment: Optional[Experiment] = None):
         # path structure is experiments/experiment-name/YYYY-MM-DD/HH-mm-ss/.hydra/config.yaml
         #          which is experiments/  parents[3]   /parents[2]/parents[1]/parents[0] when using Path.parents
         parents = hydra_config_path.parents
-        date = datetime.strptime(
-            f"{parents[2].name} {parents[1].name}", "%Y-%m-%d %H-%M-%S"
-        )
+        date = datetime.strptime(f"{parents[2].name} {parents[1].name}", "%Y-%m-%d %H-%M-%S")
         experiment = experiment or Experiment(parents[3])
         return cls(experiment, date, parents[1])
