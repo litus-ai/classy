@@ -202,7 +202,9 @@ def get_rich_tree_config(
     blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None,
     tree_label: str = "<root>",
 ):
-    return ConfigPrinter(cfg, additional_blames=blames, label=tree_label).get_rich_tree()
+    return ConfigPrinter(
+        cfg, additional_blames=blames, label=tree_label
+    ).get_rich_tree()
 
 
 def print_config(
