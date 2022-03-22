@@ -45,15 +45,10 @@ def populate_parser(parser: ArgumentParser):
         original sample.
         """,
     ).completer = FilesCompleter()
-    parser.add_argument(
-        "--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE
-    )
-    parser.add_argument(
-        "--evaluation-config", type=str, default=None, help=HELP_EVALUATE
-    )
-    parser.add_argument(
-        "--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS
-    )
+    parser.add_argument("--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE)
+    parser.add_argument("--evaluation-config", type=str, default=None, help=HELP_EVALUATE)
+    parser.add_argument("--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS)
+    parser.add_argument("-t", "--output-type", type=str, default="tree", choices=("tree", "json", "list"))
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -64,9 +59,7 @@ def get_parser(subparser=None) -> ArgumentParser:
         description="evaluate a model trained using classy",
         help="Evaluate a model trained using classy.",
     )
-    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
-        **parser_kwargs
-    )
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(**parser_kwargs)
 
     populate_parser(parser)
 
@@ -85,9 +78,7 @@ def automatically_infer_test_path(model_path: str) -> str:
 
     # search if it was created via split at training time
     if exp_split_data_folder.exists():
-        possible_test_files = [
-            fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"
-        ]
+        possible_test_files = [fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"]
         if len(possible_test_files) == 1:
             return str(possible_test_files[0])
 
@@ -125,7 +116,8 @@ def main(args):
         device,
         args.token_batch_size,
         input_path,
-        args.output_path,
+        output_type=args.output_type,
+        output_path=args.output_path,
         evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
         metrics_fn=None,
