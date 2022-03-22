@@ -33,7 +33,9 @@ def upload(
 ):
     token = huggingface_hub.HfFolder.get_token()
     if token is None:
-        print("No HuggingFace token found. You need to execute `huggingface-cli login` first!")
+        print(
+            "No HuggingFace token found. You need to execute `huggingface-cli login` first!"
+        )
         return
 
     exp = Experiment.from_name(model_name)
@@ -54,7 +56,9 @@ def upload(
             organization=organization,
             exist_ok=True,
         )
-        repo = huggingface_hub.Repository(str(tmpdir), clone_from=repo_url, use_auth_token=token)
+        repo = huggingface_hub.Repository(
+            str(tmpdir), clone_from=repo_url, use_auth_token=token
+        )
 
         tmp_path = Path(tmpdir)
         zip_run(run, tmp_path)
@@ -75,7 +79,9 @@ def parse_args() -> argparse.Namespace:
         "--name",
         help="Optional name to use when uploading to the HuggingFace repository",
     )
-    parser.add_argument("--commit", help="Commit message to use when pushing to the HuggingFace Hub")
+    parser.add_argument(
+        "--commit", help="Commit message to use when pushing to the HuggingFace Hub"
+    )
     return parser.parse_args()
 
 

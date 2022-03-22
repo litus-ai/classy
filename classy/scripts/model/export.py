@@ -4,7 +4,7 @@ import zipfile
 from pathlib import Path
 from typing import Optional
 
-from classy.utils.experiment import Run, Experiment
+from classy.utils.experiment import Experiment, Run
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,17 @@ def zip_run(
 
                 if strip_ckpt:
                     strip_checkpoint(file, ckpt_path)
-                    zip_file.write(ckpt_path, arcname=file.relative_to(relative_directory))
+                    zip_file.write(
+                        ckpt_path, arcname=file.relative_to(relative_directory)
+                    )
                     continue
 
             zip_file.write(file, arcname=file.relative_to(relative_directory))
 
         if best_only:
-            ckpt_name = run_dir.relative_to(relative_directory) / "checkpoints/best.ckpt"
+            ckpt_name = (
+                run_dir.relative_to(relative_directory) / "checkpoints/best.ckpt"
+            )
 
             if strip_ckpt:
                 logger.debug("Stripping checkpoint before writing to zip file")
@@ -100,13 +104,25 @@ def export(
 
     zip_name = zip_name or f"classy-export-{model_name}.zip"
 
-    print(zip_run(run, Path.cwd(), zip_name=zip_name, strip_ckpt=not no_strip, is_export=True, best_only=not all_ckpts))
+    print(
+        zip_run(
+            run,
+            Path.cwd(),
+            zip_name=zip_name,
+            strip_ckpt=not no_strip,
+            is_export=True,
+            best_only=not all_ckpts,
+        )
+    )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_name", help="The model you want to upload")
-    parser.add_argument("--zip-name", help="Name of the output file. Defaults to classy-export-{model_name}.zip")
+    parser.add_argument(
+        "--zip-name",
+        help="Name of the output file. Defaults to classy-export-{model_name}.zip",
+    )
     parser.add_argument(
         "-ns",
         "--no-strip",

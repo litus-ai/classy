@@ -29,7 +29,9 @@ def import_zip(zip_path: str, target_path: Optional[str] = None):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", help="Path to the zip file with the model run you want to import")
+    parser.add_argument(
+        "path", help="Path to the zip file with the model run you want to import"
+    )
     parser.add_argument(
         "--exp-dir",
         help="Path to the experiments folder where the exported model should be added. "

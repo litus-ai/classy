@@ -19,7 +19,7 @@ You can use `classy export` to save a zip file of a trained model to be shared w
 
 ### Import
 
-You can use `classy import` to import a model previously exported by someone else with `classy export`. By default, 
+You can use `classy import` to import a model previously exported by someone else with `classy export`. By default,
 everything will be imported under your `experiments/` folder (if you run from a classy project),
 but you can specify a target path via the `--exp-dir` argument.
 
