@@ -1,4 +1,3 @@
-import argparse
 import logging
 import zipfile
 from pathlib import Path
@@ -104,47 +103,12 @@ def export(
 
     zip_name = zip_name or f"classy-export-{model_name}.zip"
 
-    print(
-        zip_run(
-            run,
-            Path.cwd(),
-            zip_name=zip_name,
-            strip_ckpt=not no_strip,
-            is_export=True,
-            best_only=not all_ckpts,
-        )
+    zip_file = zip_run(
+        run,
+        Path.cwd(),
+        zip_name=zip_name,
+        strip_ckpt=not no_strip,
+        is_export=True,
+        best_only=not all_ckpts,
     )
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("model_name", help="The model you want to upload")
-    parser.add_argument(
-        "--zip-name",
-        help="Name of the output file. Defaults to classy-export-{model_name}.zip",
-    )
-    parser.add_argument(
-        "-ns",
-        "--no-strip",
-        action="store_true",
-        default=False,
-        help="Whether to strip the checkpoint of optimizer states, schedulers and callbacks. "
-        "Should only do this if you're not planning on resuming training (i.e., for inference).",
-    )
-    parser.add_argument(
-        "-a",
-        "--all-ckpts",
-        action="store_true",
-        default=False,
-        help="Whether to include every checkpoint under the <RUN>/checkpoints/ folder or just the `best.ckpt`.",
-    )
-    return parser.parse_args()
-
-
-def main():
-    args = parse_args()
-    export(args.model_name, args.no_strip, args.all_ckpts, zip_name=args.zip_name)
-
-
-if __name__ == "__main__":
-    main()
+    print(f"Model exported at {zip_file}")
