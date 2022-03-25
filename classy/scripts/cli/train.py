@@ -588,6 +588,7 @@ def main(args):
             key = key.lstrip("+~")
             blames.append(([key], ClassyBlame(f"-c {override}")))
 
+        # we wrap this under a try-catch block because streamlit is an optional dependency
         try:
 
             # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
