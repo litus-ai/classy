@@ -67,9 +67,10 @@ def evaluate(
 
     # dump predictions if requested
     if output_path is not None:
-        with open(output_path, "w") as f:
-            for sample in predicted_samples:
-                f.write(sample.pretty_print() + "\n")
+        output_data_driver = get_data_driver(model.task, output_path.split(".")[-1])
+        output_data_driver.save(
+            predicted_samples, output_path, use_predicted_annotation=True
+        )
 
     # run evaluation and print metrics
     result = metrics_fn(input_path, predicted_samples)
