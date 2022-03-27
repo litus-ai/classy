@@ -1,19 +1,19 @@
 torch>=1.9,<1.11
-pytorch-lightning==1.5.9
-torchmetrics==0.5.1
+pytorch-lightning>=1.5.0,<1.6.0
+torchmetrics>=0.5.0,<0.8.0
 transformers>=4.1,<4.18
 hydra-core==1.1.1
 # argcomplete
 argcomplete==1.12.3
-# datasets and metrics
+# logging
+wandb>=0.12.0
+# data and metrics
 datasets>=1.12,<1.19
-seqeval==1.2.2
-scikit-learn==0.24.2
-matplotlib==3.4.3
-# optional(?)
-rich==11.0.0
-sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
-wandb==0.12.2  # required for logging
-nltk==3.6.5
+scikit-learn>1.0.0,<2.0.0
+nltk>=3.4.5,<4.0.0
+seqeval==1.2.*  # required by span callback
 rouge-score==0.0.4  # required by rouge callback
 sacrebleu==2.0.0  # required by sacrebleu callback
+# extra
+rich>=11.0.0
+sentencepiece==0.1.96  # required by unigram tokenizers (mbart)
