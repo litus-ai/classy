@@ -1,9 +1,7 @@
-import re
 from typing import Dict, Iterator, List, Optional, Tuple
 
 import omegaconf
 import torch
-from torch import nn
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 
 from classy.data.data_drivers import GenerationSample
@@ -12,29 +10,6 @@ from classy.pl_modules.mixins.task import GenerationTask
 
 
 class HFGenerationPLModule(GenerationTask, ClassyPLModule):
-    def __init__(
-        self,
-        transformer_model: str,
-        decoding_skip_special_tokens: bool,
-        decoding_clean_up_tokenization_spaces: bool,
-        optim_conf: omegaconf.DictConfig,
-        additional_special_tokens: Optional[List[str]] = None,
-    ):
-        super().__init__(vocabulary=None, optim_conf=optim_conf)
-        self.save_hyperparameters()
-        self.generative_model = HFGenerativeModel.from_transformer_model(
-            transformer_model,
-            decoding_skip_special_tokens=decoding_skip_special_tokens,
-            decoding_clean_up_tokenization_spaces=decoding_clean_up_tokenization_spaces,
-            additional_special_tokens=additional_special_tokens,
-        )
-
-    def load_prediction_params(self, prediction_params: Dict):
-        self.generative_model.load_generation_params(prediction_params)
-
-    def forward(self, *args, **kwargs) -> ClassificationOutput:
-        return self.generative_model.forward(*args, **kwargs)
-
     def training_step(self, batch: dict, batch_idx: int) -> torch.Tensor:
         """ """
         forward_output = self.forward(**batch)
@@ -68,54 +43,17 @@ class HFGenerationPLModule(GenerationTask, ClassyPLModule):
         )
         return forward_output.loss
 
-    def batch_predict(self, *args, **kwargs) -> Iterator[GenerationSample]:
-        return self.generative_model.batch_predict(*args, **kwargs)
 
-
-class HFGenerativeModel(nn.Module):
-    @classmethod
-    def from_transformer_model(cls, transformer_model: str, **kwargs):
-        if re.fullmatch("facebook/bart-(base|large)", transformer_model):
-            return BartGenerativeModule(transformer_model, **kwargs)
-        elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
-            return MBartGenerativeModule(transformer_model, **kwargs)
-        elif transformer_model.startswith("gpt2"):
-            return GPT2GenerativeModule(transformer_model, **kwargs)
-        else:
-            raise ValueError
-
+class BartGenerativeModule(HFGenerationPLModule):
     def __init__(
         self,
         transformer_model: str,
         decoding_skip_special_tokens: bool,
         decoding_clean_up_tokenization_spaces: bool,
-    ):
-        super().__init__()
-        self.generation_params = {}
-
-    def load_generation_params(self, generation_params: Dict):
-        self.generation_params = generation_params
-
-    def forward(self, *args, **kwargs) -> ClassificationOutput:
-        raise NotImplementedError
-
-    def batch_predict(self, *args, **kwargs) -> Iterator[Tuple[GenerationSample, str]]:
-        raise NotImplementedError
-
-
-class BartGenerativeModule(HFGenerativeModel):
-    def __init__(
-        self,
-        transformer_model: str,
-        decoding_skip_special_tokens: bool,
-        decoding_clean_up_tokenization_spaces: bool,
+        optim_conf: omegaconf.DictConfig,
         additional_special_tokens: Optional[List[str]] = None,
     ):
-        super().__init__(
-            transformer_model,
-            decoding_skip_special_tokens,
-            decoding_clean_up_tokenization_spaces,
-        )
+        super().__init__(vocabulary=None, optim_conf=optim_conf)
         self.tokenizer = AutoTokenizer.from_pretrained(
             transformer_model,
             additional_special_tokens=list(additional_special_tokens)
@@ -132,6 +70,10 @@ class BartGenerativeModule(HFGenerativeModel):
             decoding_clean_up_tokenization_spaces
         )
         self.forced_bos_token_id = self.tokenizer.bos_token_id
+        self.generation_params = {}
+
+    def load_prediction_params(self, prediction_params: Dict):
+        self.generation_params = prediction_params
 
     def forward(
         self,
@@ -158,17 +100,15 @@ class BartGenerativeModule(HFGenerativeModel):
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
-        decoder_start: torch.Tensor,
-        num_return_sequences: int = 1,  # todo implement
+        decoder_start_token_id: torch.Tensor,
         **kwargs,
     ) -> Iterator[GenerationSample]:
-        assert len(set(decoder_start.squeeze(-1).tolist())) == 1
+        assert len(set(decoder_start_token_id.squeeze(-1).tolist())) == 1
         # generate
         bart_out = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            decoder_start_token_id=decoder_start[0][0],
-            num_return_sequences=num_return_sequences,
+            decoder_start_token_id=decoder_start_token_id[0][0],
             forced_bos_token_id=self.forced_bos_token_id,
             **self.generation_params,
         )
@@ -178,10 +118,17 @@ class BartGenerativeModule(HFGenerativeModel):
             skip_special_tokens=self.decoding_skip_special_tokens,
             clean_up_tokenization_spaces=self.decoding_clean_up_tokenization_spaces,
         )
+        # handle num sequences
+        num_sequences = int(len(decoded_bart_out) / input_ids.shape[0])
+        grouped_decoded_bart_out = []
+        for i in range(0, len(decoded_bart_out), num_sequences):
+            grouped_decoded_bart_out.append(decoded_bart_out[i : i + num_sequences])
         # postprocess
         samples = kwargs.get("samples")
-        for sample, prediction in zip(samples, decoded_bart_out):
-            sample.predicted_annotation = prediction
+        for sample, prediction in zip(samples, grouped_decoded_bart_out):
+            sample.predicted_annotation = prediction[0]
+            if num_sequences > 1:
+                sample.predicted_annotation_group = prediction
             yield sample
 
 
@@ -191,19 +138,16 @@ class MBartGenerativeModule(BartGenerativeModule):
         self.forced_bos_token_id = None
 
 
-class GPT2GenerativeModule(HFGenerativeModel):
+class GPT2GenerativeModule(HFGenerationPLModule):
     def __init__(
         self,
         transformer_model: str,
         decoding_skip_special_tokens: bool,
         decoding_clean_up_tokenization_spaces: bool,
+        optim_conf: omegaconf.DictConfig,
         additional_special_tokens: Optional[List[str]] = None,
     ):
-        super().__init__(
-            transformer_model,
-            decoding_skip_special_tokens,
-            decoding_clean_up_tokenization_spaces,
-        )
+        super().__init__(vocabulary=None, optim_conf=optim_conf)
         self.tokenizer = AutoTokenizer.from_pretrained(
             transformer_model,
             additional_special_tokens=list(additional_special_tokens)
@@ -221,6 +165,10 @@ class GPT2GenerativeModule(HFGenerativeModel):
         self.decoding_clean_up_tokenization_spaces = (
             decoding_clean_up_tokenization_spaces
         )
+        self.generation_params = {}
+
+    def load_prediction_params(self, prediction_params: Dict):
+        self.generation_params = prediction_params
 
     def forward(
         self,
@@ -245,14 +193,12 @@ class GPT2GenerativeModule(HFGenerativeModel):
         self,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
-        num_return_sequences: int = 1,  # todo implement
         **kwargs,
     ) -> Iterator[Tuple[GenerationSample, str]]:
         # generate
         gpt_out = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            num_return_sequences=num_return_sequences,
             **self.generation_params,
         )
         # decode
@@ -261,7 +207,15 @@ class GPT2GenerativeModule(HFGenerativeModel):
             skip_special_tokens=self.decoding_skip_special_tokens,
             clean_up_tokenization_spaces=self.decoding_clean_up_tokenization_spaces,
         )
+        # handle num sequences
+        num_sequences = int(len(decoded_gpt_out) / input_ids.shape[0])
+        grouped_decoded_gpt_out = []
+        for i in range(0, len(decoded_gpt_out), num_sequences):
+            grouped_decoded_gpt_out.append(decoded_gpt_out[i : i + num_sequences])
         # postprocess
         samples = kwargs.get("samples")
         for sample, prediction in zip(samples, decoded_gpt_out):
-            yield sample, prediction
+            sample.predicted_annotation = prediction[0]
+            if num_sequences > 1:
+                sample.predicted_annotation_group = prediction
+            yield sample

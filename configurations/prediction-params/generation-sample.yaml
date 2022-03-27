@@ -1,3 +1,4 @@
+num_return_sequences: 1
 num_beams: 1
 do_sample: True
 top_p: 0.8
