@@ -328,7 +328,7 @@ def apply_profile_on_dir(
                                 k,
                                 v,
                                 target_node,
-                                (blame_prefix + "." + prefix).lstrip("."),
+                                (blame_prefix + "." + prefix).strip("."),
                                 path_to_target_config=None,
                                 defaults=None,
                                 potential_defaults=None,
