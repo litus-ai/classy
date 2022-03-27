@@ -16,6 +16,7 @@ class CustomDataDriver(DataDriver):
         self,
         samples: Iterator[ClassySample],
         path: str,
+        use_predicted_annotation: bool = False,
     ):
         raise NotImplementedError
 
