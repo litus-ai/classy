@@ -156,7 +156,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                     }
                     if compute_main_extension:
                         main_extension = collections.Counter(
-                            bundle_store.values()
+                            bundle_conf.values()
                         ).most_common(1)[0][0]
                 else:
                     logger.error(
