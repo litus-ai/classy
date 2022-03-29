@@ -1,8 +1,8 @@
 import collections
-from typing import Optional, Union, Dict, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 import hydra
-from omegaconf import ListConfig, DictConfig
+from omegaconf import DictConfig, ListConfig
 
 from classy.data.data_drivers import DataDriver, get_data_driver
 from classy.utils.log import get_project_logger

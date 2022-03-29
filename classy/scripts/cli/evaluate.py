@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Union, Dict
+from typing import Dict, Union
 
 from argcomplete import FilesCompleter
 from omegaconf import OmegaConf
@@ -102,16 +102,21 @@ def automatically_infer_test_path(model_path: str) -> Union[str, Dict[str, DataD
         if dataset_path.is_file():
             coordinates_dict = OmegaConf.load(dataset_path)
             if "test_dataset" in coordinates_dict:
-                test_bundle = load_bundle(coordinates_dict["test_dataset"], training_conf.data.datamodule.task)
+                test_bundle = load_bundle(
+                    coordinates_dict["test_dataset"], training_conf.data.datamodule.task
+                )
                 return test_bundle
             elif "validation_dataset" in coordinates_dict:
                 validation_bundle = load_bundle(
-                    coordinates_dict["validation_dataset"], training_conf.data.datamodule.task
+                    coordinates_dict["validation_dataset"],
+                    training_conf.data.datamodule.task,
                 )
                 return validation_bundle
 
         if dataset_path.is_dir():
-            possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
+            possible_test_files = [
+                fp for fp in dataset_path.iterdir() if fp.stem == "test"
+            ]
             if len(possible_test_files) == 1:
                 return str(possible_test_files[0])
 

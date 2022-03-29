@@ -61,7 +61,9 @@ def train(conf: DictConfig) -> None:
             )
 
             callbacks_store.append(
-                hydra.utils.instantiate(callback, path=validation_bundle, _recursive_=False)
+                hydra.utils.instantiate(
+                    callback, path=validation_bundle, _recursive_=False
+                )
             )
         else:
             callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
