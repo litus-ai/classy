@@ -8,12 +8,10 @@ from classy.utils.optional_deps import requires
 
 try:
     import plotly.express as px
-except ImportError:
-    px = None
 
-try:
     from classy.utils.plotly import boxplot
 except ImportError:
+    px = None
     boxplot = None
 
 try:
