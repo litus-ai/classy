@@ -1,7 +1,9 @@
 import collections
+import re
 from typing import Any, Callable, Dict, Generator, Iterator, List
 
 import torch
+from omegaconf import DictConfig, OmegaConf
 from transformers import MBartTokenizerFast
 from transformers.models.mbart.tokenization_mbart_fast import FAIRSEQ_LANGUAGE_CODES
 
@@ -12,6 +14,27 @@ from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
 
 logger = get_project_logger(__name__)
+
+
+def resolve_hf_generation_base_dataset_on_transformer_model(
+    transformer_model: str,
+) -> str:
+    if re.fullmatch("facebook/bart-(base|large)", transformer_model):
+        return "classy.data.dataset.hf.generation.BartHFGenerationDataset.from_file"
+    elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
+        return "classy.data.dataset.hf.generation.MBartHFGenerationDataset.from_file"
+    elif transformer_model.startswith("gpt2"):
+        return "classy.data.dataset.hf.generation.GPT2HFGenerationCataset.from_file"
+    else:
+        raise ValueError(
+            f"{transformer_model} not currently supported in automatic resolution. But you can still write your own dataset (write _target_ and its parameters)."
+        )
+
+
+OmegaConf.register_new_resolver(
+    "resolve_hf_generation_base_dataset_on_transformer_model",
+    resolve_hf_generation_base_dataset_on_transformer_model,
+)
 
 
 class HFGenerationBaseDataset(HFBaseDataset):

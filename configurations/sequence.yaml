@@ -28,7 +28,7 @@ defaults:
   - device: cuda
   - evaluation: sequence
   - model: sequence
-  - prediction: sequence
+  - prediction: default
   - training: default
   - logging: default
   - _self_

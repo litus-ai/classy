@@ -28,7 +28,7 @@ defaults:
   - device: cuda
   - evaluation: qa
   - model: qa
-  - prediction: qa
+  - prediction: default
   - training: default
   - logging: default
   - _self_
