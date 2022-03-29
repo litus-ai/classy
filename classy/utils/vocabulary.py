@@ -57,7 +57,7 @@ class Vocabulary:
                 idx = self.backend_vocab[k][Vocabulary.UNK]
             else:
                 logging.error(
-                    f"Unknown element found {elem} but no <unk> in vocabulary"
+                    f"Unknown element found {elem} but no {Vocabulary.UNK} in vocabulary"
                 )
                 raise KeyError
         return idx
