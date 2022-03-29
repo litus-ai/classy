@@ -240,7 +240,7 @@ class ClassyDataModule(pl.LightningDataModule):
         self,
         task: str,
         dataset_path: str,
-        train_dataset: omegaconf.DictConfig,
+        dataset: omegaconf.DictConfig,
         validation_dataset: Optional[omegaconf.DictConfig] = None,
         test_dataset: Optional[omegaconf.DictConfig] = None,
         validation_split_size: Optional[float] = None,
@@ -253,9 +253,9 @@ class ClassyDataModule(pl.LightningDataModule):
         self.task = task
         self.dataset_path = dataset_path
 
-        self.train_dataset_conf = train_dataset
-        self.validation_dataset_conf = validation_dataset or train_dataset
-        self.test_dataset_conf = test_dataset or validation_dataset or train_dataset
+        self.train_dataset_conf = dataset
+        self.validation_dataset_conf = validation_dataset or dataset
+        self.test_dataset_conf = test_dataset or validation_dataset or dataset
 
         self.train_coordinates: TrainCoordinates = None
 
