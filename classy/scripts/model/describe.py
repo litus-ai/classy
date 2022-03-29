@@ -5,22 +5,22 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 import numpy as np
 
 from classy.optional_deps import get_optional_requirement
+from classy.utils.optional_deps import requires
 
 try:
     import plotly.express as px
 except ImportError:
-    print(
-        f"classy describe [...] requires `pip install {get_optional_requirement('plotly')}`"
-    )
-    exit(1)
+    px = None
+
+try:
+    from classy.utils.plotly import boxplot
+except ImportError:
+    boxplot = None
 
 try:
     import streamlit as st
 except ImportError:
-    print(
-        f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
-    )
-    exit(1)
+    st = None
 
 from sacremoses import MosesTokenizer
 
@@ -37,7 +37,6 @@ from classy.data.data_drivers import (
     TokensSample,
     get_data_driver,
 )
-from classy.utils.plotly import boxplot
 
 # colors
 from classy.utils.streamlit import get_md_400_random_color_generator
@@ -732,6 +731,8 @@ def init_layout(task: str, dataset_path: str, metrics: Iterable[UIMetric]):
     st.title("Metrics Visualization")
 
 
+@requires("streamlit", "describe")
+@requires("plotly.express", "describe")
 def describe(task: str, dataset_path: str, tokenize: Optional[str]) -> None:
     """
     Main method - orchestrator

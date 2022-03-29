@@ -7,6 +7,7 @@ from classy.scripts.cli.utils import (
     get_device,
 )
 from classy.utils.help_cli import HELP_MODEL_PATH, HELP_PREDICTION_PARAMS
+from classy.utils.optional_deps import requires
 
 
 def populate_parser(parser: ArgumentParser):
@@ -54,17 +55,12 @@ def parse_args():
     return get_parser().parse_args()
 
 
+@requires("streamlit", "demo")
 def main(args):
     # import here to avoid importing before needed
     import sys
 
-    try:
-        from streamlit.cli import main as st_main
-    except ImportError:
-        print(
-            f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
-        )
-        exit(1)
+    from streamlit.cli import main as st_main
 
     device = get_device(args.device)
 
