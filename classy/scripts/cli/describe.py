@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 
 from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
-from classy.optional_deps import get_optional_requirement
 from classy.utils.help_cli import HELP_TASKS
 from classy.utils.optional_deps import requires
 

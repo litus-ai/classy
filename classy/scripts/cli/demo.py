@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 
-from classy.optional_deps import get_optional_requirement
 from classy.scripts.cli.utils import (
     autocomplete_model_path,
     checkpoint_path_from_user_input,

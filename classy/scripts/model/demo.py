@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
-from classy.optional_deps import get_optional_requirement
 from classy.utils.optional_deps import requires
 
 try:

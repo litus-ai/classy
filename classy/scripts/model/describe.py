@@ -4,7 +4,6 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 
-from classy.optional_deps import get_optional_requirement
 from classy.utils.optional_deps import requires
 
 try:
