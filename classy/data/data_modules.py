@@ -152,11 +152,11 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                         hydra.utils.to_absolute_path(path): get_data_driver(
                             task, file_extension
                         )
-                        for path, file_extension in bundle_conf
+                        for path, file_extension in bundle_conf.items()
                     }
                     if compute_main_extension:
                         main_extension = collections.Counter(
-                            bundle_store.values()
+                            bundle_conf.values()
                         ).most_common(1)[0][0]
                 else:
                     logger.error(
