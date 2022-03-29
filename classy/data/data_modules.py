@@ -1,4 +1,3 @@
-import collections
 import itertools
 import os
 from dataclasses import dataclass
@@ -8,12 +7,13 @@ from typing import Dict, List, Optional, Tuple, Union
 import hydra.utils
 import omegaconf
 import pytorch_lightning as pl
-from omegaconf import DictConfig, ListConfig, OmegaConf
+from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 
 from classy.data.data_drivers import DataDriver, get_data_driver
 from classy.utils.data import create_data_dir, shuffle_and_store_dataset, split_dataset
 from classy.utils.log import get_project_logger
+from classy.utils.train_coordinates import load_bundle
 from classy.utils.vocabulary import Vocabulary
 
 logger = get_project_logger(__name__)
@@ -116,61 +116,6 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
 
         if coordinates_path.split(".")[-1] == "yaml":
 
-            def load_bundle(
-                bundle_conf: Optional[Union[str, Dict[str, str]]],
-                compute_main_extension: bool = False,
-            ) -> Optional[
-                Union[Dict[str, DataDriver], Tuple[Dict[str, DataDriver], str]]
-            ]:
-                if bundle_conf is None:
-                    return None
-
-                main_extension = None
-                if type(bundle_conf) == str:
-                    file_extension = bundle_conf.split(".")[-1]
-                    bundle_store = {
-                        hydra.utils.to_absolute_path(bundle_conf): get_data_driver(
-                            task, file_extension
-                        )
-                    }
-                    if compute_main_extension:
-                        main_extension = file_extension
-                elif type(bundle_conf) == ListConfig:
-                    file_extensions = [path.split(".")[-1] for path in bundle_conf]
-                    bundle_store = {
-                        hydra.utils.to_absolute_path(path): get_data_driver(
-                            task, file_extension
-                        )
-                        for path, file_extension in zip(bundle_conf, file_extensions)
-                    }
-                    if compute_main_extension:
-                        main_extension = collections.Counter(
-                            file_extensions
-                        ).most_common(1)[0][0]
-                elif type(bundle_conf) == DictConfig:
-                    bundle_store = {
-                        hydra.utils.to_absolute_path(path): get_data_driver(
-                            task, file_extension
-                        )
-                        for path, file_extension in bundle_conf.items()
-                    }
-                    if compute_main_extension:
-                        main_extension = collections.Counter(
-                            bundle_conf.values()
-                        ).most_common(1)[0][0]
-                else:
-                    logger.error(
-                        "The value of the dataset in the coordinates file "
-                        "must be either a string indicating the dataset, a "
-                        "list of string or  a dict path -> file_extension"
-                    )
-                    raise NotImplementedError
-
-                if main_extension is not None:
-                    return bundle_store, main_extension
-                else:
-                    return bundle_store
-
             coordinates_dict = OmegaConf.load(coordinates_path)
 
             # this is not a resume from a previous run
@@ -196,6 +141,7 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                         train_coordinates.main_file_extension,
                     ) = load_bundle(
                         coordinates_dict.get("train_dataset"),
+                        task,
                         compute_main_extension=True,
                     )
                     logger.info(
@@ -203,7 +149,8 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
                     )
                 else:
                     train_coordinates.train_bundle = load_bundle(
-                        coordinates_dict.get("train_dataset")
+                        coordinates_dict.get("train_dataset"),
+                        task,
                     )
                 train_coordinates.main_data_driver = get_data_driver(
                     task, train_coordinates.main_file_extension
@@ -212,13 +159,13 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
             if train_coordinates.validation_bundle is None:
                 # validation_bundle
                 train_coordinates.validation_bundle = load_bundle(
-                    coordinates_dict.get("validation_dataset")
+                    coordinates_dict.get("validation_dataset"), task
                 )
 
             if train_coordinates.test_bundle is None:
                 # test_bundle
                 train_coordinates.test_bundle = load_bundle(
-                    coordinates_dict.get("test_dataset")
+                    coordinates_dict.get("test_dataset"), task
                 )
 
         else:

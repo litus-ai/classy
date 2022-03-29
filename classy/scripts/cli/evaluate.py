@@ -1,8 +1,11 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Union, Dict
 
 from argcomplete import FilesCompleter
+from omegaconf import OmegaConf
 
+from classy.data.data_drivers import DataDriver
 from classy.scripts.cli.utils import (
     autocomplete_model_path,
     checkpoint_path_from_user_input,
@@ -15,6 +18,7 @@ from classy.utils.help_cli import (
     HELP_PREDICTION_PARAMS,
     HELP_TOKEN_BATCH_SIZE,
 )
+from classy.utils.train_coordinates import load_bundle
 
 
 def populate_parser(parser: ArgumentParser):
@@ -77,7 +81,7 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def automatically_infer_test_path(model_path: str) -> str:
+def automatically_infer_test_path(model_path: str) -> Union[str, Dict[str, DataDriver]]:
     from classy.utils.lightning import load_training_conf_from_checkpoint
 
     checkpoint_path = Path(model_path)
@@ -94,10 +98,22 @@ def automatically_infer_test_path(model_path: str) -> str:
     # check if dataset_path provided at training time was a folder that contained a test set
     training_conf = load_training_conf_from_checkpoint(model_path)
     dataset_path = Path(training_conf.data.datamodule.dataset_path)
-    if dataset_path.exists() and dataset_path.is_dir():
-        possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
-        if len(possible_test_files) == 1:
-            return str(possible_test_files[0])
+    if dataset_path.exists():
+        if dataset_path.is_file():
+            coordinates_dict = OmegaConf.load(dataset_path)
+            if "test_dataset" in coordinates_dict:
+                test_bundle = load_bundle(coordinates_dict["test_dataset"], training_conf.data.datamodule.task)
+                return test_bundle
+            elif "validation_dataset" in coordinates_dict:
+                validation_bundle = load_bundle(
+                    coordinates_dict["validation_dataset"], training_conf.data.datamodule.task
+                )
+                return validation_bundle
+
+        if dataset_path.is_dir():
+            possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
+            if len(possible_test_files) == 1:
+                return str(possible_test_files[0])
 
     raise ValueError
 

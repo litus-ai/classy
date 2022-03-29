@@ -1,4 +1,5 @@
 import collections
+import logging
 from pathlib import Path
 from typing import Dict, Iterable
 
@@ -12,10 +13,13 @@ class Vocabulary:
     UNK = "<unk>"
 
     @classmethod
-    def from_samples(cls, samples: Iterable[Dict[str, str]]):
-        backend_vocab = collections.defaultdict(
-            lambda: {Vocabulary.PAD: 0, Vocabulary.UNK: 1}
-        )
+    def from_samples(cls, samples: Iterable[Dict[str, str]], add_pad_unk: bool = True):
+        if add_pad_unk:
+            backend_vocab = collections.defaultdict(
+                lambda: {Vocabulary.PAD: 0, Vocabulary.UNK: 1}
+            )
+        else:
+            backend_vocab = collections.defaultdict(dict)
         for sample in samples:
             for k, v in sample.items():
                 elem2idx = backend_vocab[k]
@@ -47,7 +51,16 @@ class Vocabulary:
         return len(self.backend_vocab[k])
 
     def get_idx(self, k: str, elem: str) -> int:
-        return self.backend_vocab[k].get(elem, self.backend_vocab[k][Vocabulary.UNK])
+        idx = self.backend_vocab[k].get(elem)
+        if idx is None:
+            if Vocabulary.UNK in self.backend_vocab[k]:
+                idx = self.backend_vocab[k][Vocabulary.UNK]
+            else:
+                logging.error(
+                    f"Unknown element found {elem} but no <unk> in vocabulary"
+                )
+                raise KeyError
+        return idx
 
     def get_elem(self, k: str, idx: int) -> str:
         return self.reverse_backend_vocab[k][idx]

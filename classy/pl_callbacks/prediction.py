@@ -171,14 +171,16 @@ class PredictionPLCallback(pl.Callback):
                     dict(OmegaConf.load(prediction_param_conf_path))
                 )
 
-            # build samples iterator
-            samples_it = iter([])
-            for _path in glob.iglob(path):
-                extension = _path.split(".")[-1]
+            if isinstance(path, str):
+                extension = path.split(".")[-1]
                 data_driver = get_data_driver(model.task, extension)
-                samples_it = itertools.chain(
-                    samples_it, data_driver.read_from_path(_path)
-                )
+                samples_it = data_driver.read_from_path(path)
+            elif isinstance(path, DictConfig):
+                path, data_driver = list(path.items())[0]
+                samples_it = data_driver.read_from_path(path)
+                extension = path.split(".")[-1]
+            else:
+                raise NotImplementedError
 
             # apply limits (changing path as well)
             if trainer.global_step == 0:
