@@ -10,7 +10,7 @@ Since we are doing *Named Entity Recognition*, and we want to go with a fast mod
 let's name this experiment *fast-ner*:
 
 <ReactTermynal>
-  <span data-ty="input">classy train token data/train.tsv -n fast-ner --profile distilbert</span>
+  <span data-ty="input">classy train token data/ner-data/ -n fast-ner --profile distilbert</span>
   <span data-ty="progress"></span>
   <span data-ty>Training completed</span>
 </ReactTermynal>

@@ -1,7 +1,9 @@
 ---
 sidebar_position: 2
-title: Formatting your data
+title: Organizing your data
 ---
+
+## Data Formatting
 
 `classy` requires data to be formatted in a specific way according to the task you're tackling (check out [Tasks and Input Formats](/docs/reference-manual/tasks-and-formats) in the documentation).
 
@@ -23,3 +25,22 @@ but you can [add custom formats](/docs/getting-started/customizing-things/custom
 If your dataset is already formatted like this, great! Otherwise, this is the only bit where coding is required.
 You can either convert it yourself (via a python or bash script, whatever you're comfortable with), or you can register
 a [custom data reader](/docs/getting-started/customizing-things/custom-data-format/) to support your dataset format.
+
+
+## Datasets Organization
+In `classy`, as in standard machine learning projects, the most simple way to organize your datasets is to create
+a directory containing the train, validation and test datasets.
+```
+data/ner-data
+├── train.tsv
+├── validation.tsv
+└── test.tsv
+```
+
+In this way, `classy` will automatically infer the splits of your dataset from the directory structure.
+
+:::tip
+If you have multiple training files, or you want to specify the splits using a different directory structure, you can 
+use a _training coordinates_ file. You can find a complete guide on how to do it in the 
+[Reference Manual](/docs/reference-manual/cli/train/).
+:::

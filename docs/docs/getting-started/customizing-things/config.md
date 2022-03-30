@@ -1,6 +1,6 @@
 ---
 sidebar_position: 0
-title: classy Configuration
+title: Classy Configuration
 ---
 
 Behind the scenes, ` classy` works with `.yaml` configuration files to configure your experiment. This allows to modify
