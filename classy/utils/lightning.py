@@ -57,7 +57,7 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     conf = load_training_conf_from_checkpoint(checkpoint_path)
 
     # check if the model requires a vocab
-    train_dataset_class = conf["data"]["datamodule"]["train_dataset"]["_target_"]
+    train_dataset_class = conf["data"]["datamodule"]["dataset"]["_target_"]
     if not train_dataset_class.split(".")[-1][
         0
     ].isupper():  # if it is not upper then it is a class method
