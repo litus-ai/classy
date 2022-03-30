@@ -328,7 +328,7 @@ def apply_profile_on_dir(
                                 k,
                                 v,
                                 target_node,
-                                (blame_prefix + "." + prefix).lstrip("."),
+                                (blame_prefix + "." + prefix).strip("."),
                                 path_to_target_config=None,
                                 defaults=None,
                                 potential_defaults=None,
@@ -588,6 +588,7 @@ def main(args):
             key = key.lstrip("+~")
             blames.append(([key], ClassyBlame(f"-c {override}")))
 
+        # we wrap this under a try-catch block because streamlit is an optional dependency
         try:
 
             # we import streamlit so that the stderr handler is added to the root logger here and we can remove it

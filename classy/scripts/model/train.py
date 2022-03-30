@@ -4,8 +4,12 @@ from pathlib import Path
 import hydra
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.callbacks import RichProgressBar
 
 from classy.data.data_modules import ClassyDataModule
+from classy.utils.log import get_project_logger
+
+python_logger = get_project_logger(__name__)
 
 
 def train(conf: DictConfig) -> None:
@@ -28,7 +32,7 @@ def train(conf: DictConfig) -> None:
     pl_module = hydra.utils.instantiate(conf.model, **pl_module_init)
 
     # callbacks declaration
-    callbacks_store = []
+    callbacks_store = [RichProgressBar()]
 
     # lightning callbacks
     if conf.training.early_stopping_callback is not None:
@@ -49,8 +53,20 @@ def train(conf: DictConfig) -> None:
             == "classy.pl_callbacks.prediction.PredictionPLCallback"
             and callback.get("path", None) is None
         ):
-            callback["path"] = pl_data_module.validation_path
-        callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
+            validation_bundle = pl_data_module.train_coordinates.validation_bundle
+            dataset_path = list(validation_bundle.items())[0][0]
+
+            python_logger.info(
+                f"Callback dataset path automatically set to: {dataset_path}"
+            )
+
+            callbacks_store.append(
+                hydra.utils.instantiate(
+                    callback, path=validation_bundle, _recursive_=False
+                )
+            )
+        else:
+            callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
     # logging
     logger = None

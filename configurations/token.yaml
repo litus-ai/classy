@@ -28,7 +28,7 @@ defaults:
   - device: cuda
   - evaluation: token
   - model: token
-  - prediction: token
+  - prediction: default
   - training: default
   - logging: default
   - _self_

@@ -1,11 +1,24 @@
 import functools
 import json
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Type, Union
 
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
+
+
+# TASK TYPES
+SEQUENCE = "sequence"
+SENTENCE_PAIR = "sentence-pair"
+TOKEN = "token"
+QA = "qa"
+GENERATION = "generation"
+
+
+# FILE EXTENSIONS
+TSV = "tsv"
+JSONL = "jsonl"
 
 
 class ClassySample:
@@ -300,6 +313,29 @@ class GenerationSample(ClassySample):
 
 
 class DataDriver:
+    _registry: Dict[Tuple[str, str], Type["DataDriver"]] = {}
+
+    @classmethod
+    def register(cls, task: str, extension: str):
+        def _register(data_driver: Type["DataDriver"]):
+            if (task, extension) in DataDriver._registry:
+                raise ValueError(
+                    f"Pair ({task}, {extension}) already registered as a DataDriver: found {DataDriver._registry[task, extension]}"
+                )
+            DataDriver._registry[task, extension] = data_driver
+            return data_driver
+
+        return _register
+
+    @classmethod
+    def from_task_and_extension(cls, task, extension):
+        if (task, extension) not in DataDriver._registry:
+            raise ValueError(
+                f"Extension '{extension}' does not appear to be supported for task {task}. "
+                f"Supported extensions are: {[e for t, e in DataDriver._registry.keys() if t == task]}"
+            )
+        return DataDriver._registry[task, extension]()
+
     def dataset_exists_at_path(self, path: str) -> bool:
         return Path(path).exists()
 
@@ -388,6 +424,7 @@ class GenerationDataDriver(DataDriver):
         raise NotImplementedError
 
 
+@DataDriver.register(SENTENCE_PAIR, TSV)
 class TSVSentencePairDataDriver(SentencePairDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[SentencePairSample]:
         for line in lines:
@@ -416,6 +453,7 @@ class TSVSentencePairDataDriver(SentencePairDataDriver):
                 f.write(f"{sample.sentence1}\t{sample.sentence2}\t{used_annotation}\n")
 
 
+@DataDriver.register(SENTENCE_PAIR, JSONL)
 class JSONLSentencePairDataDriver(SentencePairDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[SentencePairSample]:
         for line in lines:
@@ -447,6 +485,7 @@ class JSONLSentencePairDataDriver(SentencePairDataDriver):
                 )
 
 
+@DataDriver.register(SEQUENCE, TSV)
 class TSVSequenceDataDriver(SequenceDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
         for line in lines:
@@ -475,6 +514,7 @@ class TSVSequenceDataDriver(SequenceDataDriver):
                 f.write(f"{sample.sequence}\t{used_annotation}\n")
 
 
+@DataDriver.register(SEQUENCE, JSONL)
 class JSONLSequenceDataDriver(SequenceDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[SequenceSample]:
         for line in lines:
@@ -505,6 +545,7 @@ class JSONLSequenceDataDriver(SequenceDataDriver):
                 )
 
 
+@DataDriver.register(TOKEN, TSV)
 class TSVTokensDataDriver(TokensDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[TokensSample]:
         for line in lines:
@@ -540,6 +581,7 @@ class TSVTokensDataDriver(TokensDataDriver):
                 )
 
 
+@DataDriver.register(TOKEN, JSONL)
 class JSONLTokensDataDriver(TokensDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[TokensSample]:
         for line in lines:
@@ -578,6 +620,7 @@ class JSONLTokensDataDriver(TokensDataDriver):
                 f.write(json.dumps(d) + "\n")
 
 
+@DataDriver.register(QA, TSV)
 class TSVQADataDriver(QADataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[QASample]:
         for i, line in enumerate(lines):
@@ -614,6 +657,7 @@ class TSVQADataDriver(QADataDriver):
                 f.write("\n")
 
 
+@DataDriver.register(QA, JSONL)
 class JSONLQADataDriver(QADataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[QASample]:
         for line in lines:
@@ -649,6 +693,7 @@ class JSONLQADataDriver(QADataDriver):
                 )
 
 
+@DataDriver.register(GENERATION, TSV)
 class TSVGenerationDataDriver(GenerationDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[GenerationSample]:
         previous_line_parts = None
@@ -692,6 +737,7 @@ class TSVGenerationDataDriver(GenerationDataDriver):
                     f.write(f"{sample.source_sequence}\t{used_annotation}\n")
 
 
+@DataDriver.register(GENERATION, JSONL)
 class JSONLGenerationDataDriver(GenerationDataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[GenerationSample]:
         for line in lines:
@@ -724,40 +770,6 @@ class JSONLGenerationDataDriver(GenerationDataDriver):
                 )
 
 
-# TASK TYPES
-SEQUENCE = "sequence"
-SENTENCE_PAIR = "sentence-pair"
-TOKEN = "token"
-QA = "qa"
-GENERATION = "generation"
-
-# FILE EXTENSIONS
-TSV = "tsv"
-JSONL = "jsonl"
-
-READERS_DICT = {
-    (SEQUENCE, TSV): TSVSequenceDataDriver,
-    (SENTENCE_PAIR, TSV): TSVSentencePairDataDriver,
-    (SEQUENCE, JSONL): JSONLSequenceDataDriver,
-    (SENTENCE_PAIR, JSONL): JSONLSentencePairDataDriver,
-    (TOKEN, JSONL): JSONLTokensDataDriver,
-    (TOKEN, TSV): TSVTokensDataDriver,
-    (QA, TSV): TSVQADataDriver,
-    (QA, JSONL): JSONLQADataDriver,
-    (GENERATION, TSV): TSVGenerationDataDriver,
-    (GENERATION, JSONL): JSONLGenerationDataDriver,
-}
-
-
 @functools.lru_cache(maxsize=1_000)
-def get_data_driver(task_type: str, file_extension: str) -> DataDriver:
-    reader_identifier = (task_type, file_extension)
-    if reader_identifier not in READERS_DICT:
-        logger.info(
-            f"No reader available for task {task_type} and extension {file_extension}."
-        )
-    assert reader_identifier in READERS_DICT, (
-        f"Extension '{file_extension}' does not appear to be supported for task {task_type}. "
-        f"Supported extensions are: {[e for t, e in READERS_DICT.keys() if t == task_type]}"
-    )
-    return READERS_DICT[reader_identifier]()
+def get_data_driver(task: str, extension: str) -> DataDriver:
+    return DataDriver.from_task_and_extension(task, extension)

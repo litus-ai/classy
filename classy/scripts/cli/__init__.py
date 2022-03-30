@@ -135,7 +135,7 @@ def main():
         )
         exit(1)
 
-    to_import = args.package_dir or maybe_find_directory(("src", "source"))
+    to_import = args.package_dir or maybe_find_directory(("src", "source", "classy"))
 
     if to_import is not None:
         import_module_and_submodules(to_import)

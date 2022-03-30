@@ -1,0 +1,1 @@
+dataset: "${adapt_dataset_from:${data.datamodule.dataset},prediction}"

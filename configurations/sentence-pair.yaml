@@ -28,7 +28,7 @@ defaults:
   - device: cuda
   - evaluation: sentence-pair
   - model: sentence-pair
-  - prediction: sentence-pair
+  - prediction: default
   - training: default
   - logging: default
   - _self_
