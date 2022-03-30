@@ -53,17 +53,20 @@ def train(conf: DictConfig) -> None:
             == "classy.pl_callbacks.prediction.PredictionPLCallback"
             and callback.get("path", None) is None
         ):
-            callback_path = list(
-                pl_data_module.train_coordinates.validation_bundle.items()
-            )[0][0]
+            validation_bundle = pl_data_module.train_coordinates.validation_bundle
+            dataset_path = list(validation_bundle.items())[0][0]
 
             python_logger.info(
-                f"Callback dataset path automatically set to:  {callback_path}"
+                f"Callback dataset path automatically set to: {dataset_path}"
             )
 
-            callback["path"] = callback_path
-
-        callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
+            callbacks_store.append(
+                hydra.utils.instantiate(
+                    callback, path=validation_bundle, _recursive_=False
+                )
+            )
+        else:
+            callbacks_store.append(hydra.utils.instantiate(callback, _recursive_=False))
 
     # logging
     logger = None

@@ -1,10 +1,12 @@
-from typing import Callable, Dict, List, Optional, Tuple
+import itertools
+import logging
+from typing import Callable, Dict, List, Optional, Union
 
 import hydra
 import torch
 from omegaconf import OmegaConf
 
-from classy.data.data_drivers import ClassySample, get_data_driver
+from classy.data.data_drivers import ClassySample, DataDriver, get_data_driver
 from classy.utils.lightning import (
     load_classy_module_from_checkpoint,
     load_prediction_dataset_conf_from_checkpoint,
@@ -16,7 +18,7 @@ def evaluate(
     model_checkpoint_path: str,
     cuda_device: int,
     token_batch_size: int,
-    input_path: str,
+    input_path: Union[str, Dict[str, DataDriver]],
     output_path: Optional[str] = None,
     evaluate_config_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
@@ -38,8 +40,16 @@ def evaluate(
 
     # load dataset conf and driver
     dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-    input_extension = input_path.split(".")[-1]
-    data_driver = get_data_driver(model.task, input_extension)
+
+    if isinstance(input_path, str):
+        input_extension = input_path.split(".")[-1]
+        data_driver = get_data_driver(model.task, input_extension)
+        dataset_bundle = {input_path: data_driver}
+    elif isinstance(input_path, dict):
+        dataset_bundle = input_path
+    else:
+        logging.error("input_path must be a str or a DictConfig")
+        raise ValueError
 
     # load evaluation metric
     if metrics_fn is not None:
@@ -58,7 +68,9 @@ def evaluate(
     predicted_samples = list(
         model.predict(
             model=model,
-            samples=data_driver.read_from_path(input_path),
+            samples=itertools.chain(
+                *[dd.read_from_path(p) for p, dd in dataset_bundle.items()]
+            ),
             dataset_conf=dataset_conf,
             token_batch_size=token_batch_size,
             progress_bar=True,

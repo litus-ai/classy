@@ -162,23 +162,31 @@ class PredictionPLCallback(pl.Callback):
             on_result,
         ) in self.settings:
 
-            logger.info(
-                f"Prediction callback processing setting {name} with path={path}"
-            )
-
             if prediction_param_conf_path is not None:
                 model.load_prediction_params(
                     dict(OmegaConf.load(prediction_param_conf_path))
                 )
 
-            # build samples iterator
-            samples_it = iter([])
-            for _path in glob.iglob(path):
-                extension = _path.split(".")[-1]
+            if isinstance(path, str):
+                extension = path.split(".")[-1]
                 data_driver = get_data_driver(model.task, extension)
-                samples_it = itertools.chain(
-                    samples_it, data_driver.read_from_path(_path)
-                )
+                samples_it = data_driver.read_from_path(path)
+            elif isinstance(path, DictConfig):
+                if len(path) > 1:
+                    logger.warning(
+                        "The number of validation datasets is greater than 1."
+                        " At the moment, we automatically set the first validation"
+                        " dataset as the main dataset in the prediction callback."
+                    )
+                path, data_driver = list(path.items())[0]
+                samples_it = data_driver.read_from_path(path)
+                extension = path.split(".")[-1]
+            else:
+                raise NotImplementedError
+
+            logger.info(
+                f"Prediction callback processing setting {name} with path={path}"
+            )
 
             # apply limits (changing path as well)
             if trainer.global_step == 0:
