@@ -40,7 +40,7 @@ data/ner-data
 In this way, `classy` will automatically infer the splits of your dataset from the directory structure.
 
 :::tip
-If you have multiple training files, or you want to specify the splits using a different directory structure, you can 
-use a _training coordinates_ file. You can find a complete guide on how to do it in the 
+If you have multiple training files, or you want to specify the splits using a different directory structure, you can
+use a _training coordinates_ file. You can find a complete guide on how to do it in the
 [Reference Manual](/docs/reference-manual/cli/train/).
 :::
