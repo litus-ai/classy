@@ -27,7 +27,7 @@ You can either convert it yourself (via a python or bash script, whatever you're
 a [custom data reader](/docs/getting-started/customizing-things/custom-data-format/) to support your dataset format.
 
 
-## Datasets Organization
+## Organizing Datsets
 In `classy`, as in standard machine learning projects, the most simple way to organize your datasets is to create
 a directory containing the train, validation and test datasets.
 ```
