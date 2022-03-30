@@ -40,12 +40,12 @@ consider moving only one of them, for instance the best one, *checkpoints/best.c
 * a **yaml file**: classy reads the yaml file and infer the datasets involved in the training process from it. It should be organized as follows
 ```yaml
 # Optional parameter that tells classy which is your favourite format.
-# If classy has to save something, it will save it in the format you specify, 
+# If classy has to save something, it will save it in the format you specify,
 #  using the corresponding DataDriver.
 main_data_driver: json
 
 # You can specify a split using a dictionary path -> extension
-#  that tells classy the dataset involved and which DataDriver 
+#  that tells classy the dataset involved and which DataDriver
 #  to use for each dataset.
 train_dataset:
   "first-train-dataset-path.tsv": "tsv"
