@@ -118,7 +118,13 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
             ), f"BartHFGenerationSampleEncoder does not support language specification"
 
             tokenization_output = self.tokenizer(
-                sample.source_sequence, return_tensors="pt"
+                sample.source_sequence,
+                return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -128,7 +134,13 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
             if not self.for_inference:
                 if sample.reference_annotation is not None:
                     tokenization_output = self.tokenizer(
-                        sample.reference_annotation, return_tensors="pt"
+                        sample.reference_annotation,
+                        return_tensors="pt",
+                        **(
+                            {"truncation": True, "max_length": self.max_length}
+                            if self.truncation
+                            else {}
+                        ),
                     )
                     elem_dict.update(
                         **{
@@ -170,7 +182,13 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             )
 
             tokenization_output = self.tokenizer(
-                sample.source_sequence, return_tensors="pt"
+                sample.source_sequence,
+                return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -180,7 +198,13 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             if not self.for_inference:
                 with self.tokenizer.as_target_tokenizer():
                     tokenization_output = self.tokenizer(
-                        sample.reference_annotation, return_tensors="pt"
+                        sample.reference_annotation,
+                        return_tensors="pt",
+                        **(
+                            {"truncation": True, "max_length": self.max_length}
+                            if self.truncation
+                            else {}
+                        ),
                     )
                     elem_dict.update(
                         **{
@@ -235,7 +259,13 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
         for sample in self.samples_iterator():
 
             tokenization_output = self.tokenizer(
-                sample.source_sequence, return_tensors="pt"
+                sample.source_sequence,
+                return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -246,7 +276,13 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
                 if sample.reference_annotation is not None:
                     # assume masked clm
                     tokenization_output = self.tokenizer(
-                        sample.reference_annotation, return_tensors="pt"
+                        sample.reference_annotation,
+                        return_tensors="pt",
+                        **(
+                            {"truncation": True, "max_length": self.max_length}
+                            if self.truncation
+                            else {}
+                        ),
                     )
                     elem_dict["labels"] = torch.cat(
                         (

@@ -5,9 +5,10 @@ datamodule:
   dataset:
     _target_: 'classy.data.dataset.hf.classification.HFSequenceDataset.from_file'
     transformer_model: ${transformer_model}
+    truncation: true
     additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
     min_length: 5
-    max_length: 500
+    max_length: 512
     tokens_per_batch: 2000
     max_batch_size: 10
     section_size: 10000

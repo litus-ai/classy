@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from transformers import AutoTokenizer
 
@@ -15,6 +15,7 @@ class HFBaseDataset(BaseDataset):
         self,
         transformer_model: str,
         additional_special_tokens: Optional[List[str]] = None,
+        truncation: Union[bool, str] = False,
         max_length: int = -1,
         **kwargs,
     ):
@@ -33,6 +34,7 @@ class HFBaseDataset(BaseDataset):
             "tokenizer", tuple(additional_special_tokens or [])
         ]
         self.transformer_model = transformer_model
+        self.truncation = truncation
         self.additional_special_tokens = additional_special_tokens
         batching_fields = (
             kwargs.pop("batching_fields")
