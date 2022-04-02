@@ -58,6 +58,13 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS
     )
+    parser.add_argument(
+        "-t",
+        "--output-type",
+        type=str,
+        default="tree",
+        choices=("tree", "json", "list"),
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
@@ -146,7 +153,8 @@ def main(args):
         device,
         args.token_batch_size,
         input_path,
-        args.output_path,
+        output_type=args.output_type,
+        output_path=args.output_path,
         evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
         metrics_fn=None,

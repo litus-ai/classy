@@ -138,14 +138,16 @@ class ConfigPrinter:
         ),
         skip_remaining: bool = False,
         additional_blames: Optional[List[Tuple[List[str], "ConfigBlame"]]] = None,
+        label: str = "<root>",
     ):
         self.expl = ExplainableConfig(cfg, additional_blames)
         self.fields_order = fields_order
         self.skip_remaining = skip_remaining
+        self.label = label
 
     def get_rich_tree(self) -> Tree:
         style = "dim"
-        tree = Tree("<root>", guide_style=style)
+        tree = Tree(self.label, guide_style=style)
 
         ordered_keys = list(self.fields_order)
 
@@ -155,6 +157,9 @@ class ConfigPrinter:
             )
 
         for key in ordered_keys:
+            if key not in self.expl.cfg:
+                continue
+
             for branch in self.walk_config(key, sort=False):
                 tree.add(branch)
 
@@ -193,15 +198,21 @@ class ConfigPrinter:
 
 
 def get_rich_tree_config(
-    cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None
+    cfg: DictConfig,
+    blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None,
+    tree_label: str = "<root>",
 ):
-    return ConfigPrinter(cfg, additional_blames=blames).get_rich_tree()
+    return ConfigPrinter(
+        cfg, additional_blames=blames, label=tree_label
+    ).get_rich_tree()
 
 
 def print_config(
-    cfg: DictConfig, blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None
+    cfg: DictConfig,
+    blames: Optional[List[Tuple[List[str], ConfigBlame]]] = None,
+    tree_label: str = "<root>",
 ):
-    rich.print(get_rich_tree_config(cfg, blames))
+    rich.print(get_rich_tree_config(cfg, blames, tree_label))
 
 
 RICH_ST_CODE_FORMAT = (

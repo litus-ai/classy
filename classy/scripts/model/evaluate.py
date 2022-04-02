@@ -19,6 +19,7 @@ def evaluate(
     cuda_device: int,
     token_batch_size: int,
     input_path: Union[str, Dict[str, DataDriver]],
+    output_type: Optional[str] = None,
     output_path: Optional[str] = None,
     evaluate_config_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
@@ -86,5 +87,45 @@ def evaluate(
 
     # run evaluation and print metrics
     result = metrics_fn(input_path, predicted_samples)
-    for metric_name, metric_f in result.items():
-        print(f"* {metric_name}: {metric_f}")
+
+    def to_primitives(dictionary):
+        def to_primitive(v):
+            if hasattr(v, "item"):
+                return v.item()
+            return v
+
+        return {k: to_primitive(v) for k, v in dictionary.items()}
+
+    result = to_primitives(result)
+
+    output_type = output_type or "tree"
+
+    if output_type == "json":
+        import json
+
+        print(json.dumps(result))
+
+    elif output_type == "list":
+        for metric_name, metric_f in result.items():
+            print(f"* {metric_name}: {metric_f}")
+
+    elif output_type == "tree":
+        from classy.utils.rich_config import print_config
+
+        # taken from https://stackoverflow.com/a/35508197/1908499
+        def nest_dict(flat_dict, sep="_"):
+            """Return nested dict by splitting the keys on a delimiter."""
+            tree = {}
+            for key, val in flat_dict.items():
+                t = tree
+                prev = None
+                for part in key.split(sep):
+                    if prev is not None:
+                        t = t.setdefault(prev, {})
+                    prev = part
+                else:
+                    t.setdefault(prev, val)
+            return tree
+
+        c = OmegaConf.create(nest_dict(result))
+        print_config(c, tree_label="<scores>")
