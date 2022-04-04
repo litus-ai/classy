@@ -1,6 +1,6 @@
 import collections
 import re
-from typing import Any, Callable, Dict, Generator, Iterator, List
+from typing import Any, Callable, Dict, Generator, Iterator, List, Optional
 
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -46,42 +46,50 @@ class HFGenerationBaseDataset(HFBaseDataset):
     def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         raise NotImplementedError
 
-    def __init__(self, **kwargs):
+    @classmethod
+    def adapt_dataset_from(cls, training_dataset: DictConfig, setting: str):
+        dataset = super().adapt_dataset_from(training_dataset, setting)
+        if setting == "prediction":
+            dataset["teacher_forcing"] = False
+        return dataset
+
+    def __init__(self, teacher_forcing: Optional[bool] = True, **kwargs):
+        self.teacher_forcing = teacher_forcing
         super().__init__(
-            batching_fields=self.get_batching_fields(kwargs["for_inference"]), **kwargs
+            batching_fields=self.get_batching_fields(self.teacher_forcing), **kwargs
         )
 
-    def get_batching_fields(self, inference_mode: bool):
+    def get_batching_fields(self, teacher_forcing: bool):
         raise NotImplementedError
 
     def materialize_batches(
         self, dataset_elements: List[Dict[str, Any]]
     ) -> Generator[Dict[str, Any], None, None]:
         for group in self.group_elements_on_materializations(
-            dataset_elements, inference_mode=self.for_inference
+            dataset_elements, teacher_forcing=self.teacher_forcing
         ):
             yield from super().materialize_batches(group)
 
     def group_elements_on_materializations(
-        self, dataset_elements: List[Dict[str, Any]], inference_mode: bool
+        self, dataset_elements: List[Dict[str, Any]], teacher_forcing: bool
     ) -> List[List[Dict[str, Any]]]:
         return [dataset_elements]
 
 
 class EncDecHFGenerationBaseDataset(HFGenerationBaseDataset):
-    def get_batching_fields(self, inference_mode: bool) -> List[str]:
-        return ["input_ids", "labels"] if not inference_mode else ["input_ids"]
+    def get_batching_fields(self, teacher_forcing: bool) -> List[str]:
+        return ["input_ids", "labels"] if teacher_forcing else ["input_ids"]
 
 
 class DecHFGenerationBaseDataset(HFGenerationBaseDataset):
-    def get_batching_fields(self, inference_mode: bool) -> List[str]:
+    def get_batching_fields(self, teacher_forcing: bool) -> List[str]:
         return ["input_ids"]
 
     def group_elements_on_materializations(
-        self, dataset_elements: List[Dict[str, Any]], inference_mode: bool
+        self, dataset_elements: List[Dict[str, Any]], teacher_forcing: bool
     ) -> List[List[Dict[str, Any]]]:
 
-        if not inference_mode:
+        if teacher_forcing:
             return [dataset_elements]
 
         groups = collections.defaultdict(list)
@@ -131,7 +139,7 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
                 "attention_mask": tokenization_output["attention_mask"].squeeze(),
             }
 
-            if not self.for_inference:
+            if self.teacher_forcing:
                 if sample.reference_annotation is not None:
                     tokenization_output = self.tokenizer(
                         sample.reference_annotation,
@@ -195,7 +203,7 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
                 "attention_mask": tokenization_output["attention_mask"].squeeze(),
             }
 
-            if not self.for_inference:
+            if self.teacher_forcing:
                 with self.tokenizer.as_target_tokenizer():
                     tokenization_output = self.tokenizer(
                         sample.reference_annotation,
@@ -229,9 +237,9 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             yield elem_dict
 
     def group_elements_on_materializations(
-        self, dataset_elements: List[Dict[str, Any]], inference_mode: bool
+        self, dataset_elements: List[Dict[str, Any]], teacher_forcing: bool
     ) -> List[List[Dict[str, Any]]]:
-        if not inference_mode:
+        if teacher_forcing:
             return [dataset_elements]
 
         groups = collections.defaultdict(list)
@@ -272,7 +280,7 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
                 "attention_mask": tokenization_output["attention_mask"].squeeze(),
                 "samples": sample,
             }
-            if not self.for_inference:
+            if self.teacher_forcing:
                 if sample.reference_annotation is not None:
                     # assume masked clm
                     tokenization_output = self.tokenizer(

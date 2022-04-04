@@ -7,6 +7,7 @@ datamodule:
     transformer_model: ${transformer_model}
     truncation: true
     additional_special_tokens: "${oc.select:'model.additional_special_tokens',${oc.decode:'[]'}}"
+    teacher_forcing: True
     min_length: 5
     max_length: 512
     tokens_per_batch: 1000

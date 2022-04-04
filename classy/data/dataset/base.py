@@ -1,8 +1,11 @@
+import copy
 import itertools
+import re
 from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
 import numpy as np
 import torch
+from omegaconf import DictConfig
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
@@ -36,6 +39,27 @@ class BaseDataset(IterableDataset):
     @staticmethod
     def fit_vocabulary(samples: Iterator[ClassySample]) -> Vocabulary:
         raise NotImplementedError
+
+    @classmethod
+    def adapt_dataset_from(cls, training_dataset: DictConfig, setting: str):
+        if setting == "validation":
+            validation_dataset = copy.deepcopy(training_dataset)
+            validation_dataset["materialize"] = True
+            validation_dataset["for_inference"] = True
+            return validation_dataset
+        elif setting == "prediction":
+            prediction_dataset = copy.deepcopy(training_dataset)
+            prediction_dataset["_target_"] = re.sub(
+                ".from_file$", ".from_samples", prediction_dataset["_target_"]
+            )
+            prediction_dataset["min_length"] = -1
+            prediction_dataset["max_length"] = -1
+            prediction_dataset["for_inference"] = True
+            return prediction_dataset
+        else:
+            raise ValueError(
+                f"Setting {setting} not supported. Choose between [validation, prediction] or change config."
+            )
 
     @classmethod
     def from_file(
