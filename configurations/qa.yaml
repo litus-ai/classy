@@ -25,7 +25,6 @@ hydra:
 defaults:
   - callbacks: empty
   - data: qa
-  - device: cuda
   - evaluation: qa
   - model: qa
   - prediction: default

@@ -36,8 +36,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="The device you will use for the evaluation.",
+        default=None,
+        help="The device you will use for the evaluation. If not provided, classy will try to infer the desired behavior from the available environment.",
     )
     parser.add_argument(
         "-o",
@@ -132,6 +132,8 @@ def automatically_infer_test_path(model_path: str) -> Union[str, Dict[str, DataD
 
 def main(args):
     # import here to avoid importing torch before it's actually needed
+    import torch
+
     from classy.scripts.model.evaluate import evaluate
 
     # input_path: if provided, use default one
@@ -147,7 +149,12 @@ def main(args):
             print("Failed to automatically infer test path")
             input_path = input("Please, explicitly enter test path: ").strip()
 
-    device = get_device(args.device)
+    # read device
+    device = args.device
+    if device is None and torch.cuda.is_available():
+        device = 0
+    device = get_device(device)
+
     evaluate(
         args.model_path,
         device,

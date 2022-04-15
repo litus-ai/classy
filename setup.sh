@@ -33,6 +33,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
   # install black
   pip install black
+  # install pytest
+  pip install pytest
   # install and hook pre-commit
   pip install pre-commit
   pre-commit install

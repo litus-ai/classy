@@ -25,8 +25,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="On which device the model for the demo will be loaded.",
+        default=None,
+        help="On which device the model for the demo will be loaded. If not provided, classy will try to infer the desired behavior from the available environment.",
     )
     parser.add_argument(
         "--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS
@@ -65,8 +65,8 @@ def main(args):
 
     # script params
     script_params = [args.model_path]
-    if device != -1:
-        # todo ugly workaround for straemlit which interprets -1 as a streamlit param)
+    if device is not None and device != -1:
+        # todo ugly workaround for streamlit which interprets -1 as a streamlit param)
         script_params += ["cuda_device", str(device)]
     if args.prediction_params is not None:
         script_params += ["prediction_params", args.prediction_params]
