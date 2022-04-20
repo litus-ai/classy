@@ -384,16 +384,19 @@ def apply_profiles_and_cli(
 
     # apply edits over base_cfg
     profile_changes = classy_merge(base_cfg, profile_cfg, reference_folder=config_dir)
-    profile_blame_name = str(profile_path)
-    if not is_profile_path:
-        profile_blame_name = profile_blame_name.split("/")[-1]
-        profile_blame_name = profile_blame_name[: profile_blame_name.rindex(".")]
-    blames.append(
-        (
-            [change for change in profile_changes if change not in cli_changes],
-            ClassyBlame(f"--profile {profile_blame_name}"),
+
+    # add profile blames (if profile was passed)
+    if profile_path is not None:
+        profile_blame_name = str(profile_path)
+        if not is_profile_path:
+            profile_blame_name = profile_blame_name.split("/")[-1]
+            profile_blame_name = profile_blame_name[: profile_blame_name.rindex(".")]
+        blames.append(
+            (
+                [change for change in profile_changes if change not in cli_changes],
+                ClassyBlame(f"--profile {profile_blame_name}"),
+            )
         )
-    )
 
     # save and save
     OmegaConf.save(base_cfg, f"{config_dir}/{output_config_name}.yaml")
@@ -401,7 +404,7 @@ def apply_profiles_and_cli(
 
 
 def handle_device(
-    args, profile_path: Optional[str], cli_overrides: Dict[ClassyBlame, List[str]]
+    args, profile_path: Optional[Path], cli_overrides: Dict[ClassyBlame, List[str]]
 ):
 
     # read profile
@@ -569,7 +572,7 @@ def main(args):
             ]
 
         # read profile
-        profile, is_profile_path = args.profile, False
+        profile, profile_path, is_profile_path = args.profile, None, False
         if profile is not None:
             if profile.endswith(".yaml") or profile.endswith(".yml"):
                 logger.info(f"Passed profile {profile} was detected to be a path")
