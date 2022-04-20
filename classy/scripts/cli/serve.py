@@ -26,8 +26,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="On which device the model for the REST api will be loaded.",
+        default=None,
+        help="On which device the model for the REST api will be loaded. If not provided, classy will try to infer the desired behavior from the available environment.",
     )
     parser.add_argument(
         "--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE
@@ -60,9 +60,16 @@ def parse_args():
 
 def main(args):
     # import here to avoid importing torch before it's actually needed
+    import torch
+
     from classy.scripts.model.serve import serve
 
-    device = get_device(args.device)
+    # read device
+    device = args.device
+    if device is None and torch.cuda.is_available():
+        device = 0
+    device = get_device(device)
+
     serve(
         args.model_path,
         args.port,

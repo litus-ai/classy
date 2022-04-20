@@ -111,14 +111,12 @@ def train(conf: DictConfig) -> None:
             resume_from_checkpoint=conf.training.resume_from,
             callbacks=callbacks_store,
             logger=logger,
-            **conf.device,
         )
     else:
         trainer: pl.trainer.Trainer = hydra.utils.instantiate(
             conf.training.pl_trainer,
             callbacks=callbacks_store,
             logger=logger,
-            **conf.device,
         )
 
     # save resources
