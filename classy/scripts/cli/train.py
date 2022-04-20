@@ -1,4 +1,5 @@
 import copy
+import json
 import os
 import shutil
 import tempfile
@@ -7,10 +8,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import hydra
-import torch.cuda
 from omegaconf import DictConfig, OmegaConf
 
-import classy
 from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.help_cli import HELP_TASKS
@@ -351,10 +350,12 @@ def apply_profiles_and_cli(
             except ValueError:
                 o = s
         elif s.lower() in ["true", "false"]:
+            return s.lower() == "true"
+        else:
             try:
-                o = bool(s)
-            except ValueError:
-                o = s
+                return json.loads(s)
+            except json.JSONDecodeError:
+                return s
         return o
 
     # load initial configuration from folder
@@ -405,6 +406,8 @@ def apply_profiles_and_cli(
 def handle_device(
     args, profile_path: Optional[Path], cli_overrides: Dict[ClassyBlame, List[str]]
 ):
+
+    import torch.cuda
 
     # read profile
     profile_cfg = (
@@ -460,6 +463,8 @@ def handle_device(
 
 
 def main(args):
+
+    import classy
 
     if args.resume_from is not None:
         _main_resume(args.resume_from)

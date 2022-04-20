@@ -1,4 +1,4 @@
-_target_: 'classy.pl_modules.hf.generation.HFGenerationPLModule'
+_target_: "${resolve_hf_generation_module_on_transformer_model:${transformer_model}}"
 transformer_model: ${transformer_model}
 additional_special_tokens: []
 decoding_skip_special_tokens: True

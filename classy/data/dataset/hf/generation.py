@@ -25,6 +25,12 @@ def resolve_hf_generation_base_dataset_on_transformer_model(
         return "classy.data.dataset.hf.generation.MBartHFGenerationDataset.from_file"
     elif transformer_model.startswith("gpt2"):
         return "classy.data.dataset.hf.generation.GPT2HFGenerationCataset.from_file"
+    elif (
+        transformer_model.startswith("t5-")
+        or transformer_model.startswith("google/t5-")
+        or transformer_model.startswith("google/mt5-")
+    ):
+        return "classy.data.dataset.hf.generation.T5HFGenerationDataset.from_file"
     else:
         raise ValueError(
             f"{transformer_model} not currently supported in automatic resolution. But you can still write your own dataset (write _target_ and its parameters)."
@@ -179,7 +185,7 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             assert (
                 sample.source_language is not None
                 and sample.target_language is not None
-            ), f"MBARTHFGenerationSampleEncoder requires language specification"
+            ), f"MBartHFGenerationDataset requires language specification"
 
             self.tokenizer: MBartTokenizerFast
             self.tokenizer.src_lang = self.mbart_l2l_code.get(
@@ -248,6 +254,66 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             groups[de["samples"].target_language].append(de)
 
         return [group for group_len, group in groups.items()]
+
+
+class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
+    def init_fields_batcher(self) -> Dict:
+        return {
+            "input_ids": lambda lst: batchify(
+                lst, padding_value=self.tokenizer.pad_token_id
+            ),
+            "attention_mask": lambda lst: batchify(lst, padding_value=0),
+            "samples": None,
+            "labels": lambda lst: batchify(
+                lst, padding_value=-100
+            ),  # -100 == cross entropy ignore index
+            "decoder_attention_mask": lambda lst: batchify(lst, padding_value=0),
+        }
+
+    def dataset_iterator_func(self):
+        for sample in self.samples_iterator():
+
+            assert (
+                sample.source_language is None and sample.target_language is None
+            ), f"T5HFGenerationDataset requires task/language specification to be set in sample.source_sequence"
+
+            tokenization_output = self.tokenizer(
+                sample.source_sequence,
+                return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
+            )
+            elem_dict = {
+                "input_ids": tokenization_output["input_ids"].squeeze(),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(),
+            }
+
+            if self.teacher_forcing:
+                if sample.reference_annotation is not None:
+                    with self.tokenizer.as_target_tokenizer():
+                        tokenization_output = self.tokenizer(
+                            sample.reference_annotation,
+                            return_tensors="pt",
+                            **(
+                                {"truncation": True, "max_length": self.max_length}
+                                if self.truncation
+                                else {}
+                            ),
+                        )
+                        elem_dict.update(
+                            **{
+                                "labels": tokenization_output["input_ids"].squeeze(),
+                                "decoder_attention_mask": tokenization_output[
+                                    "attention_mask"
+                                ].squeeze(),
+                            }
+                        )
+
+            elem_dict["samples"] = sample
+            yield elem_dict
 
 
 class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
