@@ -357,11 +357,10 @@ def apply_profiles_and_cli(
                 o = s
         return o
 
-    blames = []
-
     # load initial configuration from folder
     with hydra.initialize_config_dir(config_dir=config_dir, job_name="train"):
         base_cfg = hydra.compose(config_name=config_name)
+        blames = base_cfg.__dict__["_blame"]
 
     # load profile
     profile_cfg = (
