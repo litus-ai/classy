@@ -313,7 +313,11 @@ def classy_merge(
         elif OmegaConf.is_list(node):
             # append
             OmegaConf.update(
-                base_cfg, key, base_cfg[key] + node, merge=False, force_add=True
+                base_cfg,
+                key,
+                OmegaConf.select(base_cfg, key) + node,
+                merge=False,
+                force_add=True,
             )
             changes.append(key)
         elif type(node) in [float, int, bool, str]:
@@ -360,7 +364,7 @@ def apply_profiles_and_cli(
 
     # load initial configuration from folder
     with hydra.initialize_config_dir(config_dir=config_dir, job_name="train"):
-        base_cfg = hydra.compose(config_name=config_name)
+        base_cfg = hydra.compose(config_name=config_name, return_hydra_config=True)
         blames = base_cfg.__dict__["_blame"]
 
     # load profile
@@ -485,9 +489,6 @@ def main(args):
             ]
         )
 
-        # set blames list
-        blames = []
-
         # copy config dir and installed classy configurations into tmp_dir
         classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
         shutil.copytree(classy_dir, tmp_dir, dirs_exist_ok=True)
@@ -594,7 +595,7 @@ def main(args):
         ]
 
         # apply profile and cli overrides
-        blames += apply_profiles_and_cli(
+        blames = apply_profiles_and_cli(
             config_name=config_name,
             config_dir=tmp_dir,
             profile_path=profile_path,

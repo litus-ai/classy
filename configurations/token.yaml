@@ -12,8 +12,6 @@ hydra:
   # customize working dir
   run:
     dir: ./experiments/${exp_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-  # customize logging
-  verbose: [ classy ]
   job_logging:
     formatters:
       simple:
