@@ -583,8 +583,19 @@ def main(args):
                 logger.info(f"Passed profile {profile} was detected to be a path")
                 profile_path = Path(profile)
                 is_profile_path = True
+                assert (
+                    profile_path.exists()
+                ), f"Passed profile {profile} does not seem to exist"
             else:
-                profile_path = Path(tmp_dir) / "profiles" / (profile + ".yaml")
+                for extension in ["yaml", "yml"]:
+                    profile_path = (
+                        Path(tmp_dir) / "profiles" / (profile + f".{extension}")
+                    )
+                    if profile_path.exists():
+                        break
+                assert (
+                    profile_path.exists()
+                ), f"Passed profile {profile} does not seem to exist"
 
         # handle device
         handle_device(args, profile_path=profile_path, cli_overrides=cli_overrides)
