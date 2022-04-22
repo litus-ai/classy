@@ -19,7 +19,7 @@ class ConfigBlamer:
 
         it = (k for k in self.iter_all() if k not in self.key2blame)
         for key in sorted(it, key=lambda e: e.count("."), reverse=True):
-            self.solve_unseen(key)
+            self.key2blame[key] = self.get_most_common_blame(key)
 
     @staticmethod
     def _expand(key):
@@ -34,17 +34,6 @@ class ConfigBlamer:
                     continue
                 yield k
                 seen.add(k)
-
-    def children(self, key):
-        return [
-            item
-            for item in self.key2blame
-            if item.startswith(key) and item.count(".") - 1 == key.count(".")
-        ]
-
-    def solve_unseen(self, key):
-        children = self.children(key)
-        self.key2blame[key] = self.get_most_common_blame(children[0])
 
     def blame(self, key):
         if key not in self.key2blame:

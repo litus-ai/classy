@@ -19,6 +19,7 @@ from setuptools import setup, find_packages, find_namespace_packages
 
 # version.py defines the VERSION and VERSION_SHORT variables.
 # We use exec here so we don't import classy whilst setting up.
+
 VERSION = {}  # type: ignore
 with open("classy/version.py", "r") as version_file:
     exec(version_file.read(), VERSION)
@@ -46,6 +47,7 @@ with open("extra-requirements.txt") as f:
             tags.add(re.split("[<=>]", k)[0])
             for tag in tags:
                 extra_requirements[tag].add(k)
+extra_requirements["all"] = set([req for reqs in extra_requirements.values() for req in reqs])
 
 setup(
     name="classy-core",

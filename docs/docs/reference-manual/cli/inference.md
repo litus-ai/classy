@@ -32,6 +32,12 @@ path explicitly should solve the issue.
 
 ## Serve
 
+:::info
+
+You need to have installed `classy` with serve support. You can do this with `pip install classy-core[serve]`
+
+:::
+
 You can use `classy serve` to expose your model via a REST API with [FastAPI](https://fastapi.tiangolo.com/).
 
 <ReactTermynal>
@@ -55,6 +61,12 @@ By default, `classy serve` uses port 8000. Use the *-p* parameter to specify a d
 :::
 
 ## Demo
+
+:::info
+
+You need to have installed `classy` with demo support. You can do this with `pip install classy-core[demo]`
+
+:::
 
 You can use `classy demo` to spawn a [Streamlit](https://streamlit.io/) demo of your model.
 

@@ -102,8 +102,7 @@ class RichNodeInfo:
                 ), f"Unknown blame: {blame}"
                 blame_val = blame[len("[source: ") : -1]
                 provider, config = blame_val.split("/", 1)
-                if provider == "classy":
-                    # if rich.console
+                if provider == "main":
                     config_url = (
                         f"{RichNodeInfo._CLASSY_GITHUB_CONFIG_URL}/{config}.yaml"
                     )

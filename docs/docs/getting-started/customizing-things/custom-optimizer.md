@@ -64,7 +64,7 @@ To use it, put the following yaml lines in your own profile or config.
 ```yaml
 model:
   optim_conf:
-    _target_: classy.optim.factories.AdamWWithWarmupFactory
+    _target_: classy.optim.factories.AdafactorWithWarmupFactory
     lr: 2e-5
     warmup_steps: 5000
     total_steps: ${training.pl_trainer.max_steps}

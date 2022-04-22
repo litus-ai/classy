@@ -12,7 +12,7 @@ before proceeding.
 
 :::
 
-Implementing your own model within classy is easy. You just need to:
+Implementing your own model within `classy` is easy. You just need to:
 * subclass `ClassyPLModule` and your task mixin (*SequenceTask*, *SentencePairTask*, *TokensTask*, *QATask*)
 * implement abstract methods
 * (optional) override any other method

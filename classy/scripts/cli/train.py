@@ -1,4 +1,5 @@
 import copy
+import json
 import os
 import shutil
 import tempfile
@@ -7,10 +8,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import hydra
-import torch.cuda
 from omegaconf import DictConfig, OmegaConf
 
-import classy
 from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.help_cli import HELP_TASKS
@@ -314,7 +313,11 @@ def classy_merge(
         elif OmegaConf.is_list(node):
             # append
             OmegaConf.update(
-                base_cfg, key, base_cfg[key] + node, merge=False, force_add=True
+                base_cfg,
+                key,
+                OmegaConf.select(base_cfg, key) + node,
+                merge=False,
+                force_add=True,
             )
             changes.append(key)
         elif type(node) in [float, int, bool, str]:
@@ -351,17 +354,18 @@ def apply_profiles_and_cli(
             except ValueError:
                 o = s
         elif s.lower() in ["true", "false"]:
+            return s.lower() == "true"
+        else:
             try:
-                o = bool(s)
-            except ValueError:
-                o = s
+                return json.loads(s)
+            except json.JSONDecodeError:
+                return s
         return o
-
-    blames = []
 
     # load initial configuration from folder
     with hydra.initialize_config_dir(config_dir=config_dir, job_name="train"):
-        base_cfg = hydra.compose(config_name=config_name)
+        base_cfg = hydra.compose(config_name=config_name, return_hydra_config=True)
+        blames = base_cfg.__dict__["_blame"]
 
     # load profile
     profile_cfg = (
@@ -384,16 +388,19 @@ def apply_profiles_and_cli(
 
     # apply edits over base_cfg
     profile_changes = classy_merge(base_cfg, profile_cfg, reference_folder=config_dir)
-    profile_blame_name = str(profile_path)
-    if not is_profile_path:
-        profile_blame_name = profile_blame_name.split("/")[-1]
-        profile_blame_name = profile_blame_name[: profile_blame_name.rindex(".")]
-    blames.append(
-        (
-            [change for change in profile_changes if change not in cli_changes],
-            ClassyBlame(f"--profile {profile_blame_name}"),
+
+    # add profile blames (if profile was passed)
+    if profile_path is not None:
+        profile_blame_name = str(profile_path)
+        if not is_profile_path:
+            profile_blame_name = profile_blame_name.split("/")[-1]
+            profile_blame_name = profile_blame_name[: profile_blame_name.rindex(".")]
+        blames.append(
+            (
+                [change for change in profile_changes if change not in cli_changes],
+                ClassyBlame(f"--profile {profile_blame_name}"),
+            )
         )
-    )
 
     # save and save
     OmegaConf.save(base_cfg, f"{config_dir}/{output_config_name}.yaml")
@@ -401,8 +408,10 @@ def apply_profiles_and_cli(
 
 
 def handle_device(
-    args, profile_path: Optional[str], cli_overrides: Dict[ClassyBlame, List[str]]
+    args, profile_path: Optional[Path], cli_overrides: Dict[ClassyBlame, List[str]]
 ):
+
+    import torch.cuda
 
     # read profile
     profile_cfg = (
@@ -459,6 +468,8 @@ def handle_device(
 
 def main(args):
 
+    import classy
+
     if args.resume_from is not None:
         _main_resume(args.resume_from)
         return
@@ -477,9 +488,6 @@ def main(args):
                 "confs",
             ]
         )
-
-        # set blames list
-        blames = []
 
         # copy config dir and installed classy configurations into tmp_dir
         classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
@@ -569,7 +577,7 @@ def main(args):
             ]
 
         # read profile
-        profile, is_profile_path = args.profile, False
+        profile, profile_path, is_profile_path = args.profile, None, False
         if profile is not None:
             if profile.endswith(".yaml") or profile.endswith(".yml"):
                 logger.info(f"Passed profile {profile} was detected to be a path")
@@ -587,7 +595,7 @@ def main(args):
         ]
 
         # apply profile and cli overrides
-        blames += apply_profiles_and_cli(
+        blames = apply_profiles_and_cli(
             config_name=config_name,
             config_dir=tmp_dir,
             profile_path=profile_path,
