@@ -127,14 +127,5 @@ def train(conf: DictConfig) -> None:
         data_module=pl_data_module,
     )
 
-    # save updated config (and bk old config)
-    Path(".hydra/config.yaml").rename(".hydra/config.bk.yaml")
-    with open(".hydra/config.yaml", "w") as f:
-        f.write(OmegaConf.to_yaml(conf))
-
-    # saving post trainer-init conf
-    with open(".hydra/config_post_trainer_init.yaml", "w") as f:
-        f.write(OmegaConf.to_yaml(conf))
-
     # module fit
     trainer.fit(pl_module, datamodule=pl_data_module)

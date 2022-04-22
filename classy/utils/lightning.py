@@ -18,9 +18,8 @@ def load_training_conf_from_checkpoint(
 ) -> DictConfig:
     # find hydra config path
     experiment_folder = Path(checkpoint_path).parent.parent
-    # load hydra config
-    conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
-    conf = OmegaConf.load(f"{experiment_folder}/.hydra/{conf_file}")
+    # load hydra configs
+    conf = OmegaConf.load(f"{experiment_folder}/.hydra/config.yaml")
 
     # fix paths
     def check_fn(path):
