@@ -1,6 +1,6 @@
 # FORMAT: put your extra requirements here in the following format
 # package[version_required]: tag1, tag2, ...
-streamlit==1.5.0	demo,describe
+streamlit>=1.4.0,<1.5.0	demo,describe
 st-annotated-text==2.0.0	demo,describe
 fastapi==0.68.1	serve
 uvicorn[standard]==0.15.0	serve
