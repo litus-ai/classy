@@ -8,7 +8,8 @@ In the following tutorial, we are going to go over a standard `classy` example, 
 
 ## The Task
 
-*Named Entity Recognition* is the task of identifying Named Entities (from a predefined set, e.g., **ORG**, **LOC** and **PER**) in a text.
+*Named Entity Recognition* is the task of identifying Named Entities in a text linking them to a predefined
+set of classes, e.g., **ORG** (organization), **LOC** (location), **PER** (person) and **O** (other) for non-entities.
 For instance, consider what will be our running example for this whole tutorial:
 
 

@@ -28,8 +28,7 @@ function ctrl_c() {
 
 docker exec $container_id bash -c "
   cd /classy && \
-  pip install -r requirements.txt && \
-  pip install -r <(python3 classy/optional_deps.py) && \
+  pip install -e .[all] && \
   pdoc -f --template-dir docs/pdoc/templates -o docs/docs classy && \
   rm -rf docs/docs/api && \
   mv docs/docs/classy docs/docs/api && \

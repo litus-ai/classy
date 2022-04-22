@@ -32,22 +32,45 @@ consider moving only one of them, for instance the best one, *checkpoints/best.c
 
 :::
 
-Note that *&lt;path-to-dataset&gt;* is a bit of a special parameter and can be either:
+**Note** that *&lt;path-to-dataset&gt;* is a bit of a special parameter and can be either:
 * a **folder**, or, actually, a *ML-ready* folder: that is, it must contain a training file, named *train.#*
   (# denotes a classy supported extension), and, optionally, a validation file and a test file, *validation.#* and *test.#*
 * a **file**: classy uses the file provided to automatically generate an ML-ready folder for you, storing it in the
   *data/* folder inside the current experiment
+* a **yaml file**: classy reads the yaml file and infer the datasets involved in the training process from it. It should be organized as follows:
+  ```yaml
+  # Optional parameter that tells classy which is your favourite format.
+  # If classy has to save something, it will save it in the format you specify,
+  #  using the corresponding DataDriver.
+  main_data_driver: "json"
+
+  # You can specify a split using a dictionary path -> extension
+  #  that tells classy the dataset involved and which DataDriver
+  #  to use for each dataset.
+  train_dataset:
+    "first-train-dataset-path.tsv": "tsv"
+    "second-train-dataset-path.json": "my-special-format"
+
+  # You can also specify a split as a list of paths, and the DataDriver
+  #  to use for each dataset will be inferred from the extension.
+  validation_dataset:
+    - "fist-validation-dataset.tsv"
+    - "second-validation-dataset.tsv"
+
+  # And finally, you can specify a split as single path
+  test_dataset: "test-dataset.json"
+  ```
 
 :::info
 
-In the folder case, if *validation.#* is not present, classy automatically generates it by reserving some samples
+In both _folder_ and _yaml file_ cases, if the validation dataset is not specified, classy automatically generates it by reserving some samples
 from the training file: the new training and validation files are saved in the *data/* folder inside the current experiment.
-This does not hold for *test.#* and, if not present, classy **will not** create it.
+This does not hold for the test set and, if not present, classy **will not** create it.
 
 :::
 
 <ReactTermynal>
-  <span data-ty="input">classy train sequence data/output.tsv -n sequence-example</span>
+  <span data-ty="input">classy train sequence data/sequence-dataset -n sequence-example</span>
   <span data-ty="progress"></span>
   <span data-ty>Training completed</span>
   <span data-ty="input">ls experiments</span>
@@ -55,14 +78,16 @@ This does not hold for *test.#* and, if not present, classy **will not** create 
   <span data-ty="input">tree -L 2 sequence-example</span>
   <span className="data-ty-treefix" data-ty>experiments/sequence-example/&lt;day&gt;/&lt;time&gt;/
     <div>
-        {`├── checkpoints
-            │   ├── best.ckpt
-            │   ├── epoch=00-val_loss=0.51.ckpt
-            │   └── last.ckpt
-            ├── data
-            │   ├── train.tsv
-            │   └── validation.tsv
-            └── ...
+        {`├── .hydra
+          │   └── config.yaml
+          ├── checkpoints
+          │   ├── best.ckpt
+          │   ├── epoch=00-val_loss=0.51.ckpt
+          │   └── last.ckpt
+          ├── data
+          │   ├── train.shuffled.tsv
+          │   └── validation.tsv
+          └── ...
         `.split('\n').map( (it, i) => <p key={i} style={{lineHeight: "1.0"}}>{it}</p>)}
     </div>
   </span>

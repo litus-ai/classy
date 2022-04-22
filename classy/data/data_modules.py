@@ -1,16 +1,19 @@
 import itertools
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import hydra.utils
 import omegaconf
 import pytorch_lightning as pl
+from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 
 from classy.data.data_drivers import DataDriver, get_data_driver
 from classy.utils.data import create_data_dir, shuffle_and_store_dataset, split_dataset
 from classy.utils.log import get_project_logger
+from classy.utils.train_coordinates import load_bundle
 from classy.utils.vocabulary import Vocabulary
 
 logger = get_project_logger(__name__)
@@ -20,12 +23,171 @@ def path_if_exists(path: str, data_driver: DataDriver) -> Optional[str]:
     return path if data_driver.dataset_exists_at_path(path) else None
 
 
+@dataclass
+class TrainCoordinates:
+    main_file_extension: str
+    main_data_driver: DataDriver
+    train_bundle: Dict[str, DataDriver]
+    validation_bundle: Optional[Dict[str, DataDriver]]
+    test_bundle: Optional[Dict[str, DataDriver]]
+
+
+def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
+    """
+    Computes the train coordinates of a training process.
+    Args:
+        coordinates_path:
+            a path to
+                - a file containing the training coordinates (check the documentation for more info)
+                - a single file containing the whole dataset to be split in train / dev
+                - directory containing two (three) files for train, validation (and test)
+        task:
+            one of the supported tasks in classy (e.g. sentence-pair)
+    Returns:
+        train_coordinates (TrainCoordinates): the train_coordinates containing
+         all the info on the datasets involved in the training.
+    """
+
+    train_coordinates = TrainCoordinates(None, None, None, None, None)
+
+    # If the "data" directory exists (and so this a resume from a previous run)
+    # or the "coordinates_path" point to a directory we have to retrieve the data
+    # from there.
+    if Path("data/").exists() or Path(coordinates_path).is_dir():
+
+        def scan_dir_for_file(
+            dir_path: str, file_name: str
+        ) -> Optional[Tuple[str, str, DataDriver]]:
+
+            if not Path(dir_path).is_dir():
+                return None
+
+            files_in_dir = os.listdir(dir_path)
+            matching_files = [fp for fp in files_in_dir if file_name in fp]
+
+            if len(matching_files) == 1:
+                matching_file = matching_files[0]
+                file_extension = matching_file.split(".")[-1]
+                data_driver = get_data_driver(task, file_extension)
+                return f"{dir_path}/{matching_file}", file_extension, data_driver
+
+            return None
+
+        previous_run_dir = "data/"
+
+        # check if a previous run stored a train file
+        train_scan_output = scan_dir_for_file(previous_run_dir, "train")
+        # if not retrieve it from the directory at the coordinates path
+        if train_scan_output is None:
+            train_scan_output = scan_dir_for_file(coordinates_path, "train")
+
+        assert train_scan_output is not None, "The training file could not be found."
+
+        # Load training data
+        train_file, train_file_extension, train_data_driver = train_scan_output
+        train_coordinates.main_file_extension = train_file_extension
+        train_coordinates.main_data_driver = train_data_driver
+        train_coordinates.train_bundle = {train_file: train_data_driver}
+
+        # check if the previous run stored a validation file
+        validation_scan_output = scan_dir_for_file(previous_run_dir, "validation")
+        # if not retrieve it from the directory at the coordinates path
+        if validation_scan_output is None:
+            validation_scan_output = scan_dir_for_file(coordinates_path, "validation")
+        if validation_scan_output is not None:
+            validation_file, _, validation_data_driver = validation_scan_output
+            train_coordinates.validation_bundle = {
+                validation_file: validation_data_driver
+            }
+
+        # check if the previous run stored a test file
+        test_scan_output = scan_dir_for_file(previous_run_dir, "test")
+        # if not retrieve it from the directory at the coordinates path
+        if test_scan_output is None:
+            test_scan_output = scan_dir_for_file(coordinates_path, "test")
+        if test_scan_output is not None:
+            test_file, _, test_data_driver = test_scan_output
+            train_coordinates.test_bundle = {test_file: test_data_driver}
+
+    # If the coordinates_path points to a file, it is either a yaml
+    # file containing the paths the datasets or a single file that
+    # we have to split in train and dev.
+    if Path(coordinates_path).is_file():
+
+        if coordinates_path.split(".")[-1] == "yaml":
+
+            coordinates_dict = OmegaConf.load(coordinates_path)
+
+            # this is not a resume from a previous run
+            if train_coordinates.train_bundle is None:
+
+                assert (
+                    "train_dataset" in coordinates_dict
+                ), "The coordinates file must specify the 'train_dataset' field"
+
+                # assign the main file extension if specified in the config
+                train_coordinates.main_file_extension = coordinates_dict.get(
+                    "main_file_extension", None
+                )
+
+                # train_bundle
+                if train_coordinates.main_file_extension is None:
+                    logger.info(
+                        "No main extension declared in coordinates file,"
+                        " inferring it from training datasets"
+                    )
+                    (
+                        train_coordinates.train_bundle,
+                        train_coordinates.main_file_extension,
+                    ) = load_bundle(
+                        coordinates_dict.get("train_dataset"),
+                        task,
+                        compute_main_extension=True,
+                    )
+                    logger.info(
+                        f"Main extension found: {train_coordinates.main_file_extension}"
+                    )
+                else:
+                    train_coordinates.train_bundle = load_bundle(
+                        coordinates_dict.get("train_dataset"),
+                        task,
+                    )
+                train_coordinates.main_data_driver = get_data_driver(
+                    task, train_coordinates.main_file_extension
+                )
+
+            if train_coordinates.validation_bundle is None:
+                # validation_bundle
+                train_coordinates.validation_bundle = load_bundle(
+                    coordinates_dict.get("validation_dataset"), task
+                )
+
+            if train_coordinates.test_bundle is None:
+                # test_bundle
+                train_coordinates.test_bundle = load_bundle(
+                    coordinates_dict.get("test_dataset"), task
+                )
+
+        else:
+            # just one file that will later be split in train and dev
+            if train_coordinates.train_bundle is None:
+                train_coordinates.main_file_extension = coordinates_path.split(".")[-1]
+                train_coordinates.main_data_driver = get_data_driver(
+                    task, train_coordinates.main_file_extension
+                )
+                train_coordinates.train_bundle = {
+                    coordinates_path: train_coordinates.main_data_driver
+                }
+
+    return train_coordinates
+
+
 class ClassyDataModule(pl.LightningDataModule):
     def __init__(
         self,
         task: str,
         dataset_path: str,
-        train_dataset: omegaconf.DictConfig,
+        dataset: omegaconf.DictConfig,
         validation_dataset: Optional[omegaconf.DictConfig] = None,
         test_dataset: Optional[omegaconf.DictConfig] = None,
         validation_split_size: Optional[float] = None,
@@ -37,18 +199,16 @@ class ClassyDataModule(pl.LightningDataModule):
         super().__init__()
         self.task = task
         self.dataset_path = dataset_path
-        self.file_extension = None
-        self.data_driver = None
 
-        self.train_path, self.validation_path, self.test_path = None, None, None
-        self.train_dataset, self.validation_dataset, self.test_dataset = (
-            None,
-            None,
-            None,
-        )
-        self.train_dataset_conf = train_dataset
-        self.validation_dataset_conf = validation_dataset or train_dataset
-        self.test_dataset_conf = test_dataset or validation_dataset or train_dataset
+        self.train_dataset_conf = dataset
+        self.validation_dataset_conf = validation_dataset or dataset
+        self.test_dataset_conf = test_dataset or validation_dataset or dataset
+
+        self.train_coordinates: TrainCoordinates = None
+
+        self.train_dataset = None
+        self.validation_dataset = None
+        self.test_dataset = None
 
         self.validation_split_size = validation_split_size
         self.test_split_size = test_split_size
@@ -58,183 +218,19 @@ class ClassyDataModule(pl.LightningDataModule):
         self.external_vocabulary_path = external_vocabulary_path
         self.vocabulary = None
 
-        # If the data directory exists this run is being resumed from a previous one.
-        # If the previous run stored some data we have to load them instead of recomputing
-        # the splits or the shuffling.
-        if Path("data/").exists():
-            files_in_dir = os.listdir("data/")
-
-            # check if the previous run stored a train file
-            possible_train_paths = [fp for fp in files_in_dir if "train" in fp]
-            if len(possible_train_paths) == 1:
-                self.train_path = possible_train_paths[0]
-
-            # check if the previous run stored a validation file
-            possible_validation_paths = [
-                fp for fp in files_in_dir if "validation" in fp
-            ]
-            if len(possible_validation_paths) == 1:
-                self.validation_path = possible_validation_paths[0]
-
-            # check if the previous run stored a test file
-            possible_test_paths = [fp for fp in files_in_dir if "test" in fp]
-            if len(possible_test_paths) == 1:
-                self.test_path = possible_test_paths[0]
-
     def get_examples(self, n: int) -> Tuple[str, List]:
-        source = self.test_path or self.validation_path
+        source = (
+            self.train_coordinates.test_bundle
+            or self.train_coordinates.validation_bundle
+        )
+        dataset_path, data_driver = list(source.items())[0]
         assert source is not None
-        return "test" if self.test_path is not None else "validation", list(
-            itertools.islice(self.data_driver.read_from_path(source), n)
+        return (
+            "test" if self.train_coordinates.test_bundle is not None else "validation",
+            list(itertools.islice(data_driver.read_from_path(dataset_path), n)),
         )
 
-    def prepare_data(self) -> None:
-
-        # TODO: we should improve the flow of this code
-        if (
-            self.train_path is not None
-            and self.validation_path is not None
-            and self.test_path is not None
-        ):
-            logger.info(
-                "Using train dev and test splits produced by the run being resumed"
-            )
-        elif Path(
-            self.dataset_path
-        ).is_dir():  # the user provided a directory containing the datasets
-            dir_train_files = [
-                fp for fp in os.listdir(self.dataset_path) if "train" in fp
-            ]
-
-            assert (
-                len(dir_train_files) == 1
-            ), f"Expected one file with 'train' in its name, but {len(dir_train_files)} were found in {self.dataset_path}: {dir_train_files}"
-
-            train_file = dir_train_files[0]
-            self.file_extension = train_file.split(".")[-1]
-            self.data_driver = get_data_driver(self.task, self.file_extension)
-
-            if (
-                self.train_path is None
-            ):  # does not belong to the train shuffling of a resume run
-                self.train_path = path_if_exists(
-                    os.path.join(self.dataset_path, f"train.{self.file_extension}"),
-                    self.data_driver,
-                )
-
-            if self.validation_path is None:
-                self.validation_path = path_if_exists(
-                    os.path.join(
-                        self.dataset_path, f"validation.{self.file_extension}"
-                    ),
-                    self.data_driver,
-                )
-
-            self.test_path = path_if_exists(
-                os.path.join(self.dataset_path, f"test.{self.file_extension}"),
-                self.data_driver,
-            )
-
-            assert (
-                self.train_path is not None
-            ), f"Cannot find the training file '{self.train_path}'"
-
-            must_shuffle_dataset = (
-                self.shuffle_dataset
-                and not self.data_driver.dataset_exists_at_path(
-                    f"data/train.shuffled.{self.file_extension}"
-                )
-                and not self.data_driver.dataset_exists_at_path(
-                    f"data/dataset.shuffled.{self.file_extension}"
-                )
-            )
-
-            if must_shuffle_dataset:
-                # create data folder
-                create_data_dir()
-                # shuffle input dataset
-                shuffled_dataset_path = f"data/train.shuffled.{self.file_extension}"
-                logger.info(
-                    f"Shuffling training dataset. The shuffled dataset "
-                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
-                )
-                shuffle_and_store_dataset(
-                    self.train_path, self.data_driver, output_path=shuffled_dataset_path
-                )
-                self.train_path = shuffled_dataset_path
-
-            if self.validation_path is None:
-                logger.info(
-                    f"Validation dataset not found: splitting the training dataset "
-                    f"(split_size: {1 - self.validation_split_size} / {self.validation_split_size})"
-                    f"enforcing a maximum of {self.max_nontrain_split_size} instances on validation dataset"
-                )
-
-                # if we must split the shuffled train dataset in two, then we must change its name
-                if must_shuffle_dataset:
-                    shuffled_dataset_path = (
-                        f"data/dataset.shuffled.{self.file_extension}"
-                    )
-                    os.rename(self.train_path, shuffled_dataset_path)
-                    self.train_path = shuffled_dataset_path  # will be modified in the next lines of code
-
-                self.train_path, self.validation_path, _ = split_dataset(
-                    self.train_path,
-                    self.data_driver,
-                    "data/",  # hydra takes care of placing this folder within the appropriate folder
-                    validation_split_size=self.validation_split_size,
-                    data_max_split=self.max_nontrain_split_size,
-                    shuffle=False,
-                )
-                logger.info(
-                    f"Storing the newly created datasets at '{self.train_path}' and '{self.validation_path}'"
-                )
-
-        else:  # the user provided just one file that must be split in train, dev and test
-            self.file_extension = self.dataset_path.split(".")[-1]
-            self.data_driver = get_data_driver(self.task, self.file_extension)
-
-            if self.shuffle_dataset and not self.data_driver.dataset_exists_at_path(
-                f"data/dataset.shuffled.{self.file_extension}"
-            ):
-                # create data folder
-                create_data_dir()
-                # shuffle training dataset
-                shuffled_dataset_path = f"data/dataset.shuffled.{self.file_extension}"
-                logger.info(
-                    f"Shuffling input dataset. The shuffled dataset "
-                    f"will be stored at: {os.getcwd()}/{shuffled_dataset_path}"
-                )
-                shuffle_and_store_dataset(
-                    self.dataset_path,
-                    self.data_driver,
-                    output_path=shuffled_dataset_path,
-                )
-                self.dataset_path = shuffled_dataset_path
-
-            # splitting dataset in train, validation and test
-            logger.info(
-                "Splitting the dataset in train, validation and test. "
-                f"(split_size: {1 - self.validation_split_size - self.test_split_size} "
-                f"/ {self.validation_split_size}, {self.test_split_size}) "
-                f"enforcing a maximum of {self.max_nontrain_split_size} instances on non-train splits"
-            )
-
-            self.train_path, self.validation_path, self.test_path = split_dataset(
-                self.dataset_path,
-                self.data_driver,
-                "data/",  # hydra takes care of placing this folder within the appropriate folder
-                validation_split_size=self.validation_split_size,
-                test_split_size=self.test_split_size,
-                data_max_split=self.max_nontrain_split_size,
-                shuffle=False,
-            )
-
-            logger.info(
-                f"Storing the newly created datasets at '{self.train_path}', "
-                f"'{self.validation_path}'and '{self.test_path}'"
-            )
-
+    def build_vocabulary(self) -> None:
         # todo: can we improve it?
         if Path("vocabulary/").exists():
             logger.info("Loading vocabulary from previous run")
@@ -246,32 +242,99 @@ class ClassyDataModule(pl.LightningDataModule):
         else:
             self.vocabulary = hydra.utils.instantiate(
                 self.train_dataset_conf,
-                path=self.train_path,
-                data_driver=self.data_driver,
+                path=self.train_coordinates.train_bundle,
             ).vocabulary
             if self.vocabulary is not None:
                 self.vocabulary.save("vocabulary")
+
+    def prepare_data(self) -> None:
+        train_coordinates = load_coordinates(self.dataset_path, self.task)
+
+        shuffled_train_dataset_path = (
+            f"data/train.shuffled.{train_coordinates.main_file_extension}"
+        )
+        must_shuffle_dataset = (
+            self.shuffle_dataset
+            and not train_coordinates.main_data_driver.dataset_exists_at_path(
+                shuffled_train_dataset_path
+            )
+        )
+
+        if must_shuffle_dataset:
+            # create data folder
+            create_data_dir()
+            logger.info(
+                f"Shuffling training dataset. The shuffled dataset "
+                f"will be stored at: {os.getcwd()}/{shuffled_train_dataset_path}"
+            )
+            shuffle_and_store_dataset(
+                train_coordinates.train_bundle,
+                train_coordinates.main_data_driver,
+                output_path=shuffled_train_dataset_path,
+            )
+            train_coordinates.train_bundle = {
+                shuffled_train_dataset_path: train_coordinates.main_data_driver
+            }
+
+        if train_coordinates.validation_bundle is None:
+            logger.info(
+                f"Validation dataset not found: splitting the training dataset "
+                f"(split_size: {1 - self.validation_split_size} / {self.validation_split_size})"
+                f"enforcing a maximum of {self.max_nontrain_split_size} instances on validation dataset"
+            )
+
+            # if we must split the shuffled train dataset in two, then we must change its name
+            if must_shuffle_dataset:
+                shuffled_dataset_path = (
+                    f"data/dataset.shuffled.{train_coordinates.main_file_extension}"
+                )
+                os.rename(shuffled_train_dataset_path, shuffled_dataset_path)
+                train_coordinates.train_bundle = {
+                    shuffled_dataset_path: train_coordinates.main_data_driver
+                }
+
+            # split and assign
+            (
+                train_coordinates.train_bundle,
+                train_coordinates.validation_bundle,
+                _,
+            ) = split_dataset(
+                train_coordinates.train_bundle,
+                train_coordinates.main_data_driver,
+                train_coordinates.main_file_extension,
+                "data/",  # hydra takes care of placing this folder within the appropriate folder
+                validation_split_size=self.validation_split_size,
+                data_max_split=self.max_nontrain_split_size,
+                shuffle=False,
+            )
+            logger.info(
+                f"Storing the newly created datasets at"
+                f" '{list(train_coordinates.train_bundle.keys())[0]}'"
+                f" and '{list(train_coordinates.validation_bundle.keys())[0]}'"
+            )
+
+        self.train_coordinates = train_coordinates
+
+        # build vocabulary
+        self.build_vocabulary()
 
     def setup(self, stage: Optional[str] = None) -> None:
 
         if stage == "fit":
             self.train_dataset = hydra.utils.instantiate(
                 self.train_dataset_conf,
-                path=self.train_path,
-                data_driver=self.data_driver,
+                path=self.train_coordinates.train_bundle,
                 vocabulary=self.vocabulary,
             )
             self.validation_dataset = hydra.utils.instantiate(
                 self.validation_dataset_conf,
-                path=self.validation_path,
-                data_driver=self.data_driver,
+                path=self.train_coordinates.validation_bundle,
                 vocabulary=self.vocabulary,
             )
         if stage == "test":
             self.test_dataset = hydra.utils.instantiate(
                 self.test_dataset_conf,
-                path=self.test_path,
-                data_driver=self.data_driver,
+                path=self.train_coordinates.test_bundle,
                 vocabulary=self.vocabulary,
             )
 

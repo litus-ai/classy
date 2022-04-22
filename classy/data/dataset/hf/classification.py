@@ -36,9 +36,15 @@ class HFSequenceDataset(HFBaseDataset):
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
 
         for sequence_sample in self.samples_iterator():
-            input_ids = self.tokenizer(sequence_sample.sequence, return_tensors="pt")[
-                "input_ids"
-            ][0]
+            input_ids = self.tokenizer(
+                sequence_sample.sequence,
+                return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
+            )["input_ids"][0]
             elem_dict = {
                 "input_ids": input_ids,
                 "attention_mask": torch.ones_like(input_ids),
@@ -87,14 +93,15 @@ class HFTokenDataset(HFBaseDataset):
                 "token_offsets": token_offsets,
             }
             if token_sample.reference_annotation is not None:
-                elem_dict["labels"] = torch.tensor(
-                    [
-                        self.vocabulary.get_idx(
-                            k="labels", elem=token_sample.reference_annotation[idx]
-                        )
-                        for idx in token_sample.target
-                    ]
-                )
+                # -100 == cross entropy ignore index
+                labels = [-100] * len(token_sample.reference_annotation)
+
+                for target_idx in token_sample.target:
+                    labels[target_idx] = self.vocabulary.get_idx(
+                        k="labels", elem=token_sample.reference_annotation[target_idx]
+                    )
+
+                elem_dict["labels"] = torch.tensor(labels, dtype=input_ids.dtype)
 
             elem_dict["samples"] = token_sample
             yield elem_dict
@@ -103,7 +110,14 @@ class HFTokenDataset(HFBaseDataset):
         self, tokens: List[str]
     ) -> Optional[Tuple[torch.Tensor, List[Tuple[int, int]]]]:
         tok_encoding = self.tokenizer.encode_plus(
-            tokens, return_tensors="pt", is_split_into_words=True
+            tokens,
+            return_tensors="pt",
+            is_split_into_words=True,
+            **(
+                {"truncation": True, "max_length": self.max_length}
+                if self.truncation
+                else {}
+            ),
         )
         try:
             return tok_encoding.input_ids.squeeze(0), [
@@ -128,6 +142,11 @@ class HFSentencePairDataset(HFSequenceDataset):
                 sequence_sample.sentence1,
                 sequence_sample.sentence2,
                 return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
             )
 
             elem_dict = {
@@ -170,6 +189,11 @@ class HFQADataset(HFBaseDataset):
                 qa_sample.context,
                 return_offsets_mapping=True,
                 return_tensors="pt",
+                **(
+                    {"truncation": True, "max_length": self.max_length}
+                    if self.truncation
+                    else {}
+                ),
             )
 
             elem_dict = {

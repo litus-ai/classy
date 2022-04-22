@@ -30,8 +30,8 @@ def populate_parser(parser: ArgumentParser):
     interactive_parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="The device where the dataset prediction will be run.",
+        default=None,
+        help="The device where the dataset prediction will be run. If not provided, classy will try to infer the desired behavior from the available environment.",
     )
     interactive_parser.add_argument(
         "--prediction-params", type=str, default=None, help="Path to prediction params."
@@ -87,11 +87,17 @@ def parse_args():
 
 def main(args):
     # import here to avoid importing torch before it's actually needed
+    import torch
+
     from classy.scripts.model.predict import file_main, interactive_main
 
     subcmd = args.subcmd
 
-    device = get_device(args.device)
+    # read device
+    device = args.device
+    if device is None and torch.cuda.is_available():
+        device = 0
+    device = get_device(device)
 
     if subcmd == "file":
         file_main(

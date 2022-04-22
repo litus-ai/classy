@@ -18,9 +18,8 @@ def load_training_conf_from_checkpoint(
 ) -> DictConfig:
     # find hydra config path
     experiment_folder = Path(checkpoint_path).parent.parent
-    # load hydra config
-    conf_file = "config_post_trainer_init.yaml" if post_trainer_init else "config.yaml"
-    conf = OmegaConf.load(f"{experiment_folder}/.hydra/{conf_file}")
+    # load hydra configs
+    conf = OmegaConf.load(f"{experiment_folder}/.hydra/config.yaml")
 
     # fix paths
     def check_fn(path):
@@ -57,7 +56,7 @@ def load_classy_module_from_checkpoint(checkpoint_path: str) -> ClassyPLModule:
     conf = load_training_conf_from_checkpoint(checkpoint_path)
 
     # check if the model requires a vocab
-    train_dataset_class = conf["data"]["datamodule"]["train_dataset"]["_target_"]
+    train_dataset_class = conf["data"]["datamodule"]["dataset"]["_target_"]
     if not train_dataset_class.split(".")[-1][
         0
     ].isupper():  # if it is not upper then it is a class method

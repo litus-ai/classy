@@ -12,8 +12,6 @@ hydra:
   # customize working dir
   run:
     dir: ./experiments/${exp_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-  # customize logging
-  verbose: [ classy ]
   job_logging:
     formatters:
       simple:
@@ -25,10 +23,9 @@ hydra:
 defaults:
   - callbacks: empty
   - data: token
-  - device: cuda
   - evaluation: token
   - model: token
-  - prediction: token
+  - prediction: default
   - training: default
   - logging: default
   - _self_

@@ -4,15 +4,12 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
-from classy.optional_deps import get_optional_requirement
+from classy.utils.optional_deps import requires
 
 try:
     import streamlit as st
 except ImportError:
-    print(
-        f"classy demo [...] requires `pip install {get_optional_requirement('streamlit')}`"
-    )
-    exit(1)
+    st = None
 
 import torch
 from omegaconf import OmegaConf
@@ -25,6 +22,7 @@ from classy.utils.lightning import (
 )
 
 
+@requires("streamlit", "demo")
 def auto_infer_examples(
     task: str, model_checkpoint_path: str
 ) -> Tuple[str, List[ClassySample]]:
@@ -50,6 +48,7 @@ def auto_infer_examples(
         )
 
 
+@requires("streamlit", "demo")
 def tabbed_navigation(
     tabs: Dict[str, Tuple[str, Callable[[], None]]], default_tab: Optional[str] = None
 ):
@@ -100,6 +99,7 @@ def tabbed_navigation(
     tabs.get(active_tab)[1]()
 
 
+@requires("streamlit", "demo")
 def demo(
     model_checkpoint_path: str,
     cuda_device: int,
@@ -195,6 +195,7 @@ def demo(
     tabbed_navigation(tabs, "model")
 
 
+@requires("streamlit", "demo")
 def main():
     args = parse_args()
     # todo proper solution with argparse named arguments
