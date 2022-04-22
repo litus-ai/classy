@@ -5,3 +5,4 @@ st-annotated-text==2.0.0	demo,describe
 fastapi==0.68.1	serve
 uvicorn[standard]==0.15.0	serve
 plotly==5.5.0	describe
+pdoc3==0.10.0	docs

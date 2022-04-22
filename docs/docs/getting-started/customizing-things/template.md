@@ -3,7 +3,7 @@ sidebar_position: 1
 title: Classy Template
 ---
 
-Welcome! If you're reading this, it's probably because you want to do something that `classy` does not support natively.
+If you're reading this, it's probably because you want to do something that `classy` does not support natively.
 
 We have prepared a [GitHub template](https://github.com/sunglasses-ai/classy-template) that you can use to start things off without having to worry about folder structure and so on.
 

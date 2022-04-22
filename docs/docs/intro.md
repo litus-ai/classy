@@ -8,7 +8,7 @@ import ReactTermynal from '/src/components/termynal';
 
 `classy` is a simple-to-use library for building high-performance Machine Learning models in NLP.
 It wraps the best libraries around ([PyTorch](https://pytorch.org/), [PyTorch Lightning](https://www.pytorchlightning.ai/),
-[Transformers](https://huggingface.co/transformers/), [Streamlit](https://streamlit.io/), ...)
+[Transformers](https://huggingface.co/transformers/), [Hydra](https://hydra.cc), [Streamlit](https://streamlit.io/), ...)
 and offers them to users with a simple CLI interface.
 
 ## Installation
@@ -81,7 +81,7 @@ organizing data, that classy expects you to do. We'll go back to this later on.
 
 Now that we have trained our model, `classy` offers a number of commands that let you use it:
 
-- `classy demo` spawns a [Streamlit](https://streamlit.io/)-based interface that lets you query your model visually;
-- `classy predict` lets you choose whether to use your model for file prediction or in bash-interactive mode (similarly to `demo`, but in the terminal);
-- `classy serve` spawns a REST API (through [FastAPI](https://fastapi.tiangolo.com/)) that you can query using any REST-compatible client (`requests`, `curl`, you name it);
-- `classy evaluate` runs your model on a given test set and reports metrics on the task.
+- [`classy demo`](/docs/reference-manual/cli/inference/#demo) spawns a [Streamlit](https://streamlit.io/)-based interface that lets you query your model visually;
+- [`classy predict`](/docs/reference-manual/cli/predict) lets you choose whether to use your model for file prediction or in bash-interactive mode (similarly to `demo`, but in the terminal);
+- [`classy serve`](/docs/reference-manual/cli/inference/#serve) spawns a REST API (through [FastAPI](https://fastapi.tiangolo.com/)) that you can query using any REST-compatible client (`requests`, `curl`, you name it);
+- [`classy evaluate`](/docs/reference-manual/cli/inference/#evaluate) runs your model on a given test set and reports metrics on the task.

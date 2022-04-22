@@ -5,7 +5,7 @@ title: Classy Configuration
 
 Behind the scenes, ` classy` works with `.yaml` configuration files to configure your experiment. This allows to modify
 its behavior without having to change a single line of code! You can use `classy train [...] --print` to visualize the
-underlying configuration structure (there's actually more to it, but we'll come back later).
+underlying configuration structure (we'll come back to it later with more details).
 
 ![Classy Train Print - Token](/img/intro/classy-train-print-tok.png)
 
@@ -20,7 +20,7 @@ You can change the config from the command line by using the `-c` parameter of `
 :::tip
 
 For example, say you want to specify the min and max number of steps your train can run, you can do that by adding
-`-c trainer.pl_trainer.max_steps=X trainer.pl_trainer.min_steps=Y` to your `classy train` command.
+`-c trainer.pl_trainer.min_steps=X trainer.pl_trainer.max_steps=Y` to your `classy train` command.
 
 :::
 

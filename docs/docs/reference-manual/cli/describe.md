@@ -3,6 +3,12 @@ sidebar_position: 5
 title: describe
 ---
 
+:::info
+
+You need to have installed `classy` with describe support. You can do this with `pip install classy-core[describe]`
+
+:::
+
 `classy describe` is a data analysis tool with general and task-specific stats over your dataset.
 
 Say that you have a Sequence Classification dataset, and you want some preliminary information about the data itself
