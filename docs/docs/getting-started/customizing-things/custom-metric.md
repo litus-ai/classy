@@ -14,6 +14,7 @@ Adding a custom metric for evaluation is easy in `classy`, and you can use it fo
 class Evaluation:
     def __call__(
         self,
+        path: str,
         predicted_samples: List[ClassySample],
     ) -> Dict:
         raise NotImplementedError

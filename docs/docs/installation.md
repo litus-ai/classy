@@ -7,7 +7,7 @@ title: Installation
 We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning.
 :::
 
-`classy` requires Python 3.7 or later, and is built on [PyTorch Lightning](https://pytorchlightning.ai/).
+`classy` requires Python 3.8 or later, and is built on [PyTorch Lightning](https://pytorchlightning.ai/).
 It's recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/).
 
 Or, simply put:
@@ -30,11 +30,12 @@ The preferred way to install `classy` is via `pip`. Just run `pip install classy
 
 [Conda](https://conda.io/) can be used set up a virtual environment with the
 version of Python required for `classy`.  If you already have a Python 3
-environment you want to use, you can skip to the 'installing via pip' section.
+environment you want to use, you can skip to the
+[Installing the library and dependencies](/docs/installation/#installing-the-library-and-dependencies) section.
 
 1.  [Download and install Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
-2.  Create a Conda environment with Python 3.7-3.9:
+2.  Create a Conda environment with Python 3.8+:
 
     ```yaml
     conda create -n classy python=3.8

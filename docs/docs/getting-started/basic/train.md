@@ -10,7 +10,7 @@ Since we are doing *Named Entity Recognition*, and we want to go with a fast mod
 let's name this experiment *fast-ner*:
 
 <ReactTermynal>
-  <span data-ty="input">classy train token data/train.tsv -n fast-ner --profile distilbert</span>
+  <span data-ty="input">classy train token data/ner-data/ --exp-name fast-ner --profile distilbert</span>
   <span data-ty="progress"></span>
   <span data-ty>Training completed</span>
 </ReactTermynal>
@@ -22,7 +22,7 @@ let's name this experiment *fast-ner*:
 
 Your model and experiment data will be saved in `experiments/<exp-name>/YYYY-MM-DD/HH-mm-ss/`.
 
-`classy` automatically saves *best* and *last* checkpoints, as well as pre- and post-trainer initialization configurations.
+`classy` automatically saves *best* and *last* checkpoints, as well as the training configuration.
 
 :::
 

@@ -15,6 +15,10 @@ def get_commands():
     from classy.scripts.cli.download import main as download_main
     from classy.scripts.cli.evaluate import get_parser as evaluate_parser
     from classy.scripts.cli.evaluate import main as evaluate_main
+    from classy.scripts.cli.export import get_parser as export_parser
+    from classy.scripts.cli.export import main as export_main
+    from classy.scripts.cli.import_ import get_parser as import_parser
+    from classy.scripts.cli.import_ import main as import_main
     from classy.scripts.cli.predict import get_parser as predict_parser
     from classy.scripts.cli.predict import main as predict_main
     from classy.scripts.cli.serve import get_parser as serve_parser
@@ -24,7 +28,7 @@ def get_commands():
     from classy.scripts.cli.upload import get_parser as upload_parser
     from classy.scripts.cli.upload import main as upload_main
 
-    return dict(
+    commands = dict(
         train=dict(
             parser=train_parser,
             main=train_main,
@@ -57,7 +61,12 @@ def get_commands():
             parser=upload_parser,
             main=upload_main,
         ),
+        export=dict(parser=export_parser, main=export_main),
     )
+
+    commands["import"] = dict(parser=import_parser, main=import_main)
+
+    return commands
 
 
 def parse_args(commands: dict):
@@ -135,7 +144,7 @@ def main():
         )
         exit(1)
 
-    to_import = args.package_dir or maybe_find_directory(("src", "source"))
+    to_import = args.package_dir or maybe_find_directory(("src", "source", "classy"))
 
     if to_import is not None:
         import_module_and_submodules(to_import)

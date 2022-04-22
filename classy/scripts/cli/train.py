@@ -1,13 +1,15 @@
+import copy
+import json
 import os
 import shutil
 import tempfile
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
+import hydra
 from omegaconf import DictConfig, OmegaConf
 
-import classy
 from classy.data.data_drivers import GENERATION, QA, SENTENCE_PAIR, SEQUENCE, TOKEN
 from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.help_cli import HELP_TASKS
@@ -67,8 +69,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="The device you will use for the training of your model.",
+        default=None,
+        help="The device you will use for the training of your model. If not provided, classy will try to infer the desired behavior from the available environment.",
     )  # TODO: add validator?
     parser.add_argument(
         "-cn",
@@ -251,174 +253,222 @@ def _main_resume(model_dir: str):
     hydra.main(config_path=None)(_main_mock)()
 
 
-def apply_profile_on_dir(
-    profile: DictConfig, profile_name: str, config_name: str, config_dir: str
-):
+def classy_merge(
+    base_cfg: DictConfig,
+    updating_cfg: DictConfig,
+    reference_folder: Optional[str] = None,
+) -> List[str]:
 
-    blames = []
+    changes = []
 
-    def recurse_and_fix(
-        prefix,
-        profile_node,
-        cfg,
-        blame_prefix,
-        path_to_target_config,
-        defaults,
-        potential_defaults,
-    ):
+    def is_interpolation(key):
+        # OmegaConf.is_interpolation(base_cfg, key) requires key to be a direct children of base_cfg
+        # this function patch this behavior so as to support any successor
+        parent = base_cfg
+        if "." in key:
+            parent = OmegaConf.select(base_cfg, key[: key.rindex(".")])
+            key = key[key.rindex(".") + 1 :]
+        return OmegaConf.is_interpolation(parent, key)
 
-        if OmegaConf.is_dict(profile_node):
-            # if profile overrides a dict, the original dict should be:
-            target_node = OmegaConf.select(cfg, prefix)
-            if target_node is None:
-                # inserted if the dict was not present
-                OmegaConf.update(cfg, prefix, profile_node, force_add=True)
-                blames.append(
-                    (
-                        [(blame_prefix + "." + prefix).lstrip(".")],
-                        ClassyBlame(f"--profile {profile_name}"),
-                    )
-                )
-            else:
-                if "_target_" in profile_node:
-                    # discarded if _target_ is changed
-                    if prefix == "":
-                        cfg = profile_node
-                        assert potential_defaults is not None
-                        for k in potential_defaults:
-                            if k in cfg:
-                                assert type(cfg[k]) == str
-                                defaults[k] = cfg[k]
-                                cfg.pop(k)
-                    else:
-                        OmegaConf.update(
-                            cfg, prefix, profile_node, merge=False, force_add=True
-                        )
-                    blames.append(
-                        (
-                            [(blame_prefix + "." + prefix).lstrip(".")],
-                            ClassyBlame(f"--profile {profile_name}"),
-                        )
-                    )
-                else:
-                    # merged and updated recursively if it was present
-                    for k, v in profile_node.items():
-                        if potential_defaults is not None and k in potential_defaults:
-                            # potential defaults is not None only for direct children of a root (where the defaults logic should be applied)
-                            # if (k, v) refers to a new default
-                            if type(v) == str:
-                                # this should be added
-                                defaults[k] = v
-                            else:
-                                # launch fixing logic on child file
-                                child_file = (
-                                    path_to_target_config.parent
-                                    / k
-                                    / (defaults[k] + ".yaml")
-                                )
-                                assert (
-                                    child_file.exists()
-                                ), f"{child_file} not found in config dir"
-                                apply_recursively(
-                                    v, child_file, (prefix + "." + k).lstrip(".")
-                                )
-                        else:
-                            # otherwise, standard recursion
-                            recurse_and_fix(
-                                k,
-                                v,
-                                target_node,
-                                (blame_prefix + "." + prefix).lstrip("."),
-                                path_to_target_config=None,
-                                defaults=None,
-                                potential_defaults=None,
-                            )
-        elif OmegaConf.is_list(profile_node):
-            # if profile overrides a list, the original list should be completely overwritten
-            if prefix == "":
-                cfg = profile_node
-            else:
-                OmegaConf.update(cfg, prefix, profile_node, merge=False, force_add=True)
-            blames.append(
-                (
-                    [(blame_prefix + "." + prefix).lstrip(".")],
-                    ClassyBlame(f"--profile {profile_name}"),
-                )
+    def rec(node, key):
+
+        original_node = OmegaConf.select(base_cfg, key)
+
+        # check if node is interpolation and, if it is, duplicate it
+        if original_node is not None and is_interpolation(key):
+            OmegaConf.update(
+                base_cfg, key, copy.deepcopy(original_node), force_add=True
             )
-        elif type(profile_node) in [str, float, int, bool] or profile_node is None:
-            OmegaConf.update(cfg, prefix, profile_node, force_add=True)
-            blames.append(
-                (
-                    [(blame_prefix + "." + prefix).lstrip(".")],
-                    ClassyBlame(f"--profile {profile_name}"),
+
+        # check if node refers to a config group and, if it does, read it
+        # and replace node
+        if type(node) == str and reference_folder is not None:
+            # check whether key is a primitive or if it refers to a config group
+            for extension in ["yaml", "yml"]:
+                config_group_path = (
+                    Path(reference_folder)
+                    / key.replace(".", "/")
+                    / f"{node}.{extension}"
                 )
+                if config_group_path.exists():
+                    # update node to be the config in the file
+                    node = OmegaConf.load(config_group_path)
+                    break
+
+        # handle node
+        if type(original_node) != type(node):
+            # if types differ, overwrite
+            # note that this is also handle the case when one is None and the other is not
+            OmegaConf.update(base_cfg, key, node, merge=False, force_add=True)
+            changes.append(key)
+        elif OmegaConf.is_dict(node):
+            if "_target_" in node:
+                # overwrite dictionary
+                OmegaConf.update(base_cfg, key, node, merge=False, force_add=True)
+                changes.append(key)
+            else:
+                # recurse
+                for k, v in node.items():
+                    rec(v, f"{key}.{k}")
+        elif OmegaConf.is_list(node):
+            # append
+            OmegaConf.update(
+                base_cfg,
+                key,
+                OmegaConf.select(base_cfg, key) + node,
+                merge=False,
+                force_add=True,
             )
+            changes.append(key)
+        elif type(node) in [float, int, bool, str]:
+            # overwrite
+            OmegaConf.update(base_cfg, key, node, force_add=True)
+            changes.append(key)
         else:
-            raise ValueError(f"Unexpected type {type(profile_node)}: {profile_node}")
+            raise ValueError(f"Unexpected type {type(node)}: {node}")
 
-        return cfg
+    for k, v in updating_cfg.items():
+        rec(v, k)
 
-    def apply_recursively(profile_node, path_to_target_config: Path, prefix: str):
+    return changes
 
-        # load conf
-        cfg = OmegaConf.load(path_to_target_config)
 
-        # compute potential defaults dict (folders present)
-        potential_defaults = set(
-            [
-                d.name
-                for d in path_to_target_config.parent.iterdir()
-                if d.is_dir() and d.name != "__pycache__"
-            ]
+def apply_profiles_and_cli(
+    config_name: str,
+    config_dir: str,
+    profile_path: Optional[str],
+    cli: Dict[ClassyBlame, List[str]],
+    output_config_name: str,
+    is_profile_path: bool = False,
+) -> List[Tuple[List[str], ClassyBlame]]:
+    def parse_primitive(s: str):
+        o = s
+        if "." in s:
+            try:
+                o = float(s)
+            except ValueError:
+                o = s
+        elif s.isdigit():
+            try:
+                o = int(s)
+            except ValueError:
+                o = s
+        elif s.lower() in ["true", "false"]:
+            return s.lower() == "true"
+        else:
+            try:
+                return json.loads(s)
+            except json.JSONDecodeError:
+                return s
+        return o
+
+    # load initial configuration from folder
+    with hydra.initialize_config_dir(config_dir=config_dir, job_name="train"):
+        base_cfg = hydra.compose(config_name=config_name, return_hydra_config=True)
+        blames = base_cfg.__dict__["_blame"]
+
+    # load profile
+    profile_cfg = (
+        OmegaConf.load(profile_path)
+        if profile_path is not None
+        else OmegaConf.create({})
+    )
+
+    # apply cli edits on profile
+    cli_changes = set()
+    for blame, changes in cli.items():
+        _changes = []
+        for change in changes:
+            _k, _v = change.split("=")
+            _changes.extend(
+                classy_merge(profile_cfg, OmegaConf.create({_k: parse_primitive(_v)}))
+            )
+        cli_changes.update(_changes)
+        blames.append((_changes, blame))
+
+    # apply edits over base_cfg
+    profile_changes = classy_merge(base_cfg, profile_cfg, reference_folder=config_dir)
+
+    # add profile blames (if profile was passed)
+    if profile_path is not None:
+        profile_blame_name = str(profile_path)
+        if not is_profile_path:
+            profile_blame_name = profile_blame_name.split("/")[-1]
+            profile_blame_name = profile_blame_name[: profile_blame_name.rindex(".")]
+        blames.append(
+            (
+                [change for change in profile_changes if change not in cli_changes],
+                ClassyBlame(f"--profile {profile_blame_name}"),
+            )
         )
 
-        # extract defaults dict
-        is_self_first = None
-        defaults = {}
-
-        if "defaults" in cfg:
-            for i, d in enumerate(cfg.defaults):
-                if d == "_self_":
-                    is_self_first = i == 0
-                    continue
-                for k, v in d.items():
-                    assert (
-                        k not in defaults
-                    ), f"Key {k} already present in defaults list. Check your defaults list"
-                    defaults[k] = v
-
-        # check all defaults are in potential defaults
-        assert all(d in potential_defaults for d in defaults)
-
-        # apply profile
-        cfg = recurse_and_fix(
-            "",
-            profile_node,
-            cfg,
-            blame_prefix=prefix,
-            path_to_target_config=path_to_target_config,
-            defaults=defaults,
-            potential_defaults=potential_defaults,
-        )
-
-        # update defaults
-        if len(defaults) > 0:
-            cfg.defaults = [{k: v} for k, v in defaults.items()]
-            if is_self_first is not None:
-                if is_self_first:
-                    cfg.defaults = ["_self_"] + cfg.defaults
-                else:
-                    cfg.defaults = cfg.defaults + ["_self_"]
-
-        # update config
-        OmegaConf.save(cfg, path_to_target_config)
-
-    apply_recursively(profile, Path(config_dir) / (config_name + ".yaml"), prefix="")
-
+    # save and save
+    OmegaConf.save(base_cfg, f"{config_dir}/{output_config_name}.yaml")
     return blames
 
 
+def handle_device(
+    args, profile_path: Optional[Path], cli_overrides: Dict[ClassyBlame, List[str]]
+):
+
+    import torch.cuda
+
+    # read profile
+    profile_cfg = (
+        OmegaConf.load(profile_path)
+        if profile_path is not None
+        else OmegaConf.create({})
+    )
+
+    # check that either user used cli params (-d 0, --fp16, ...) or profile or neither of the two
+    profile_overrides_device = "device" in profile_cfg
+    cli_specifies_device = args.device is not None
+    assert int(profile_overrides_device) + int(cli_specifies_device) in [
+        0,
+        1,
+    ], f"You are specifying your device in both profile ({profile_cfg.device}) and cli (-d {args.device}. This is not supported: either specify everything in profile or use only CLI"
+
+    if profile_overrides_device:
+        # here we can do nothing and return as profile logic will handle it
+        return
+    elif cli_specifies_device:
+        # here we need to side-effect on cli_overrides
+        device = get_device(args.device)
+        if device != -1:
+            if args.fp16:
+                cli_overrides[ClassyBlame(f"-d {args.device} --fp16")] = [
+                    f"training.pl_trainer.gpus=[{device}]",
+                    "training.pl_trainer.precision=16",
+                ]
+            else:
+                cli_overrides[ClassyBlame(f"-d {args.device}")] = [
+                    f"training.pl_trainer.gpus=[{device}]",
+                    "training.pl_trainer.precision=32",
+                ]
+        else:
+            # user requested to train on cpu
+            # we just need to check that fp16 has not been requested
+            if args.fp16:
+                logger.error("fp16 is only available when training on a GPU")
+                exit(1)
+    else:
+        # auto-mode: infer what we should be doing from the environment
+        # todo should this code be improved?
+        if torch.cuda.is_available():
+            # use first gpu
+            cli_overrides[ClassyBlame(f"[-d {args.device}]")] = [
+                "training.pl_trainer.accelerator=gpu",
+                "training.pl_trainer.devices=1",
+                "training.pl_trainer.auto_select_gpus=True",
+            ]
+        else:
+            # use cpu
+            pass
+
+
 def main(args):
+
+    import classy
 
     if args.resume_from is not None:
         _main_resume(args.resume_from)
@@ -439,9 +489,6 @@ def main(args):
             ]
         )
 
-        # set blames list
-        blames = []
-
         # copy config dir and installed classy configurations into tmp_dir
         classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
         shutil.copytree(classy_dir, tmp_dir, dirs_exist_ok=True)
@@ -451,70 +498,40 @@ def main(args):
             Path(tmp_dir) / (config_name + ".yaml")
         ).exists(), f"No config name file {config_name} found in temporary config dir"
 
-        # apply profile on config dir
-        if args.profile is not None:
-            if args.profile.endswith(".yaml") or args.profile.endswith(".yml"):
-                logger.info(f"Passed profile {args.profile} was detected to be a path")
-                profile_path = Path(args.profile)
-            else:
-                profile_path = Path(tmp_dir) / "profiles" / (args.profile + ".yaml")
-            assert profile_path.exists(), f"No profile found at {profile_path}"
-            blames += apply_profile_on_dir(
-                OmegaConf.load(profile_path), args.profile, config_name, tmp_dir
-            )
+        # read user-provided configuration overrides from cli
+        cli_overrides = {}
 
-        cmd = ["classy-train", "-cn", args.config_name or args.task, "-cd", tmp_dir]
-
-        # choose device
-        device = get_device(args.device)
-        if device != -1:
-            if args.fp16:
-                cmd.append("device=cuda_amp")
-            else:
-                cmd.append(f"device=cuda")
-            if not isinstance(device, int) or device > 0:
-                cmd.append(f"device.gpus=[{device}]")
-        else:
-            if args.fp16:
-                logger.error("fp16 is only available when training on a GPU")
-                return
-            cmd.append(f"device=cpu")
-        blames.append((["device"], ClassyBlame(f"-d {args.device}")))
-
-        cmd.append(f"exp_name={args.exp_name}")
-        blames.append((["exp_name"], ClassyBlame(f"-n {args.exp_name}")))
+        # read args.config
+        for override in args.config:
+            if "~" in override:
+                raise NotImplementedError('Usage of "~" is currently not supported')
+            cli_overrides[ClassyBlame(f"-c {override}")] = [override]
 
         # add dataset path
-        cmd.append(f"data.datamodule.dataset_path={args.dataset}")
-        blames.append(
-            (["data.datamodule.dataset_path"], ClassyBlame(f"{args.dataset}"))
-        )
+        cli_overrides[ClassyBlame(f"{args.dataset}")] = [
+            f"data.datamodule.dataset_path={args.dataset}"
+        ]
 
         # turn off shuffling if requested
         if args.no_shuffle:
-            cmd.append("data.datamodule.shuffle_dataset=False")
-            blames.append(
-                (["data.datamodule.shuffle_dataset"], ClassyBlame("--no-shuffle"))
-            )
+            cli_overrides[ClassyBlame("--no-shuffle")] = [
+                "data.datamodule.shuffle_dataset=False"
+            ]
 
+        # set number of epochs
         if args.epochs:
-            cmd.append(f"++training.pl_trainer.max_epochs={args.epochs}")
-            blames.append(
-                (
-                    ["training.pl_trainer.max_epochs"],
-                    ClassyBlame(f"--epochs {args.epochs}"),
-                )
-            )
+            cli_overrides[ClassyBlame(f"--epochs {args.epochs}")] = [
+                f"training.pl_trainer.max_epochs={args.epochs}"
+            ]
 
-        # wandb logging
+        # setup wandb logging
         if args.wandb is not None:
-            cmd.append(f"logging.wandb.use_wandb=True")
-            configs = ["logging.wandb.use_wandb"]
+            wandb_overrides = []
+            wandb_overrides.append(f"logging.wandb.use_wandb=True")
 
             if args.wandb == "anonymous":
-                cmd.append(f"logging.wandb.anonymous=allow")
-                configs.append("logging.wandb.anonymous")
-                to_blame = ClassyBlame("--wandb anonymous")
+                wandb_overrides.append(f"logging.wandb.anonymous=allow")
+                wandb_blame = ClassyBlame("--wandb anonymous")
             else:
                 if "@" not in args.wandb:
                     print(
@@ -525,69 +542,83 @@ def main(args):
                     exit(1)
 
                 project, experiment = args.wandb.split("@")
-                cmd.append(f"logging.wandb.project_name={project}")
-                cmd.append(f"logging.wandb.experiment_name={experiment}")
-                configs.extend(
-                    ("logging.wandb.project_name", "logging.wandb.experiment_name")
-                )
-                to_blame = ClassyBlame(f"--wandb {args.wandb}")
+                wandb_overrides.append(f"logging.wandb.project_name={project}")
+                wandb_overrides.append(f"logging.wandb.experiment_name={experiment}")
+                wandb_blame = ClassyBlame(f"--wandb {args.wandb}")
 
-            blames.append((configs, to_blame))
+            cli_overrides[wandb_blame] = wandb_overrides
 
         # change the underlying transformer model
         if args.transformer_model is not None:
-            cmd.append(f"transformer_model={args.transformer_model}")
-            blames.append(
-                (
-                    ["transformer_model"],
-                    ClassyBlame(f"--transformer-model {args.transformer_model}"),
-                )
-            )
+            cli_overrides[
+                ClassyBlame(f"--transformer-model {args.transformer_model}")
+            ] = [f"transformer_model={args.transformer_model}"]
 
-        # precomputed vocabulary from the user
+        # check if the user provided a pre-computed vocabulary
         if args.vocabulary_dir is not None:
-            cmd.append(f"data.vocabulary_dir={args.vocabulary_dir}")
-            blames.append(
-                (
-                    ["data.vocabulary_dir"],
-                    ClassyBlame(f"--vocabulary-dir {args.vocabulary_dir}"),
-                )
-            )
+            cli_overrides[ClassyBlame(f"--vocabulary-dir {args.vocabulary_dir}")] = [
+                f"data.vocabulary_dir={args.vocabulary_dir}"
+            ]
 
         # bid-dataset option
         if args.big_dataset:
             logger.info(
-                "The user selected the --big-dataset option. "
+                "The --big-dataset option has been selected. "
                 "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
                 "2) evaluate the model performance every 2 thousand steps"
                 "3) If the dataset provided is a file path when splitting the whole dataset in train, validation and test"
                 "we will partition with the following ratio: 0.90 / 0.05 / 0.05"
             )
-            cmd.append("data.datamodule.shuffle_dataset=False")
-            cmd.append(
-                "training.pl_trainer.val_check_interval=2000"
-            )  # TODO: 2K steps seems quite arbitrary
-            cmd.append("data.datamodule.validation_split_size=0.05")
-            cmd.append("data.datamodule.test_split_size=0.05")
-            blames.append(
-                (
-                    [
-                        "data.datamodule.shuffle_dataset",
-                        "training.pl_trainer.val_check_interval",
-                        "data.datamodule.validation_split_size",
-                        "data.datamodule.test_split_size",
-                    ],
-                    ClassyBlame("--big-dataset"),
-                )
-            )
+            cli_overrides[ClassyBlame("--big-dataset")] = [
+                "data.datamodule.shuffle_dataset=False",
+                "training.pl_trainer.val_check_interval=2000",  # TODO: 2K steps seems quite arbitrary
+                "data.datamodule.validation_split_size=0.05",
+                "data.datamodule.test_split_size=0.05",
+            ]
 
-        # append all user-provided configuration overrides
-        cmd += args.config
-        for override in args.config:
-            key, value = override.split("=")
-            key = key.lstrip("+~")
-            blames.append(([key], ClassyBlame(f"-c {override}")))
+        # read profile
+        profile, profile_path, is_profile_path = args.profile, None, False
+        if profile is not None:
+            if profile.endswith(".yaml") or profile.endswith(".yml"):
+                logger.info(f"Passed profile {profile} was detected to be a path")
+                profile_path = Path(profile)
+                is_profile_path = True
+                assert (
+                    profile_path.exists()
+                ), f"Passed profile {profile} does not seem to exist"
+            else:
+                for extension in ["yaml", "yml"]:
+                    profile_path = (
+                        Path(tmp_dir) / "profiles" / (profile + f".{extension}")
+                    )
+                    if profile_path.exists():
+                        break
+                assert (
+                    profile_path.exists()
+                ), f"Passed profile {profile} does not seem to exist"
 
+        # handle device
+        handle_device(args, profile_path=profile_path, cli_overrides=cli_overrides)
+
+        # set experiment name
+        cli_overrides[ClassyBlame(f"-n {args.exp_name}")] = [
+            f"exp_name={args.exp_name}"
+        ]
+
+        # apply profile and cli overrides
+        blames = apply_profiles_and_cli(
+            config_name=config_name,
+            config_dir=tmp_dir,
+            profile_path=profile_path,
+            is_profile_path=is_profile_path,
+            cli=cli_overrides,
+            output_config_name="run",
+        )
+
+        # setup cmd
+        cmd = ["classy-train", "-cn", "run", "-cd", tmp_dir]
+
+        # we wrap this under a try-catch block because streamlit is an optional dependency
         try:
 
             # we import streamlit so that the stderr handler is added to the root logger here and we can remove it

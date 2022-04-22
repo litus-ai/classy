@@ -1,8 +1,11 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Dict, Union
 
 from argcomplete import FilesCompleter
+from omegaconf import OmegaConf
 
+from classy.data.data_drivers import DataDriver
 from classy.scripts.cli.utils import (
     autocomplete_model_path,
     checkpoint_path_from_user_input,
@@ -15,6 +18,7 @@ from classy.utils.help_cli import (
     HELP_PREDICTION_PARAMS,
     HELP_TOKEN_BATCH_SIZE,
 )
+from classy.utils.train_coordinates import load_bundle
 
 
 def populate_parser(parser: ArgumentParser):
@@ -32,8 +36,8 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "-d",
         "--device",
-        default="gpu",
-        help="The device you will use for the evaluation.",
+        default=None,
+        help="The device you will use for the evaluation. If not provided, classy will try to infer the desired behavior from the available environment.",
     )
     parser.add_argument(
         "-o",
@@ -53,6 +57,13 @@ def populate_parser(parser: ArgumentParser):
     )
     parser.add_argument(
         "--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS
+    )
+    parser.add_argument(
+        "-t",
+        "--output-type",
+        type=str,
+        default="tree",
+        choices=("tree", "json", "list"),
     )
 
 
@@ -77,7 +88,7 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def automatically_infer_test_path(model_path: str) -> str:
+def automatically_infer_test_path(model_path: str) -> Union[str, Dict[str, DataDriver]]:
     from classy.utils.lightning import load_training_conf_from_checkpoint
 
     checkpoint_path = Path(model_path)
@@ -94,16 +105,35 @@ def automatically_infer_test_path(model_path: str) -> str:
     # check if dataset_path provided at training time was a folder that contained a test set
     training_conf = load_training_conf_from_checkpoint(model_path)
     dataset_path = Path(training_conf.data.datamodule.dataset_path)
-    if dataset_path.exists() and dataset_path.is_dir():
-        possible_test_files = [fp for fp in dataset_path.iterdir() if fp.stem == "test"]
-        if len(possible_test_files) == 1:
-            return str(possible_test_files[0])
+    if dataset_path.exists():
+        if dataset_path.is_file():
+            coordinates_dict = OmegaConf.load(dataset_path)
+            if "test_dataset" in coordinates_dict:
+                test_bundle = load_bundle(
+                    coordinates_dict["test_dataset"], training_conf.data.datamodule.task
+                )
+                return test_bundle
+            elif "validation_dataset" in coordinates_dict:
+                validation_bundle = load_bundle(
+                    coordinates_dict["validation_dataset"],
+                    training_conf.data.datamodule.task,
+                )
+                return validation_bundle
+
+        if dataset_path.is_dir():
+            possible_test_files = [
+                fp for fp in dataset_path.iterdir() if fp.stem == "test"
+            ]
+            if len(possible_test_files) == 1:
+                return str(possible_test_files[0])
 
     raise ValueError
 
 
 def main(args):
     # import here to avoid importing torch before it's actually needed
+    import torch
+
     from classy.scripts.model.evaluate import evaluate
 
     # input_path: if provided, use default one
@@ -119,13 +149,19 @@ def main(args):
             print("Failed to automatically infer test path")
             input_path = input("Please, explicitly enter test path: ").strip()
 
-    device = get_device(args.device)
+    # read device
+    device = args.device
+    if device is None and torch.cuda.is_available():
+        device = 0
+    device = get_device(device)
+
     evaluate(
         args.model_path,
         device,
         args.token_batch_size,
         input_path,
-        args.output_path,
+        output_type=args.output_type,
+        output_path=args.output_path,
         evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
         metrics_fn=None,

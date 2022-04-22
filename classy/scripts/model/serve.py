@@ -4,16 +4,14 @@ from typing import List, Optional
 import torch
 from omegaconf import OmegaConf
 
-from classy.optional_deps import get_optional_requirement
+from classy.utils.optional_deps import requires
 
 try:
     import uvicorn
     from fastapi import FastAPI
 except ImportError:
-    print(
-        f"classy serve [...] requires `pip install {get_optional_requirement('fastapi')} {get_optional_requirement('uvicorn')}`"
-    )
-    exit(1)
+    uvicorn = None
+    FastAPI = None
 
 from classy.utils.commons import get_local_ip_address
 from classy.utils.lightning import (
@@ -25,6 +23,8 @@ from classy.utils.log import get_project_logger
 logger = get_project_logger(__name__)
 
 
+@requires("uvicorn", "serve")
+@requires("fastapi", "serve")
 def serve(
     model_checkpoint_path: str,
     port: int,

@@ -1,19 +1,15 @@
+import copy
+import itertools
+import re
 from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
 import numpy as np
 import torch
+from omegaconf import DictConfig
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import IterableDataset
 
-from classy.data.data_drivers import (
-    ClassySample,
-    DataDriver,
-    GenerationSample,
-    QASample,
-    SentencePairSample,
-    SequenceSample,
-    TokensSample,
-)
+from classy.data.data_drivers import ClassySample, DataDriver
 from classy.utils.commons import add_noise_to_value, chunks, flatten
 from classy.utils.log import get_project_logger
 from classy.utils.vocabulary import Vocabulary
@@ -45,18 +41,53 @@ class BaseDataset(IterableDataset):
         raise NotImplementedError
 
     @classmethod
+    def adapt_dataset_from(cls, training_dataset: DictConfig, setting: str):
+        if setting == "validation":
+            validation_dataset = copy.deepcopy(training_dataset)
+            validation_dataset["materialize"] = True
+            validation_dataset["for_inference"] = True
+            return validation_dataset
+        elif setting == "prediction":
+            prediction_dataset = copy.deepcopy(training_dataset)
+            prediction_dataset["_target_"] = re.sub(
+                ".from_file$", ".from_samples", prediction_dataset["_target_"]
+            )
+            prediction_dataset["min_length"] = -1
+            prediction_dataset["max_length"] = -1
+            prediction_dataset["for_inference"] = True
+            return prediction_dataset
+        else:
+            raise ValueError(
+                f"Setting {setting} not supported. Choose between [validation, prediction] or change config."
+            )
+
+    @classmethod
     def from_file(
-        cls, path: str, data_driver: DataDriver, vocabulary: Vocabulary = None, **kwargs
+        cls,
+        path: Union[str, Dict[str, DataDriver]],
+        data_driver: Optional[DataDriver] = None,
+        vocabulary: Vocabulary = None,
+        **kwargs,
     ) -> "BaseDataset":
+
+        dataset_bundle: Dict[str, Any] = (
+            {path: data_driver} if type(path) == str else path
+        )
 
         if vocabulary is None and cls.requires_vocab():
             # vocabulary fitting here
             logger.info("Fitting vocabulary")
-            vocabulary = cls.fit_vocabulary(data_driver.read_from_path(path))
+            vocabulary = cls.fit_vocabulary(
+                itertools.chain(
+                    *[dd.read_from_path(p) for p, dd in dataset_bundle.items()]
+                )
+            )
             logger.info("Vocabulary fitting completed")
 
         return cls(
-            samples_iterator=lambda: data_driver.read_from_path(path),
+            samples_iterator=lambda: itertools.chain(
+                *[dd.read_from_path(p) for p, dd in dataset_bundle.items()]
+            ),
             vocabulary=vocabulary,
             **kwargs,
         )

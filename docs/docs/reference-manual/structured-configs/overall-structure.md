@@ -106,7 +106,7 @@ Besides, there are 5 root `.yaml` files already defined, one for each task:
 
 :::info
 
-If you manually inspect the `configurations/` folder, you'll see there are 3 additional folders: `device/`, `logging/` and
+If you manually inspect the `configurations/` folder, you'll see there are 3 additional folders: `logging/` and
 `profiles/`. You can safely ignore the first two, and we cover `profiles/` in depth [here](/docs/getting-started/customizing-things/changing-profile).
 
 :::

@@ -1,7 +1,14 @@
 import numpy as np
-import plotly.graph_objects as go
+
+from classy.utils.optional_deps import requires
+
+try:
+    import plotly.graph_objects as go
+except ImportError:
+    go = None
 
 
+@requires("plotly.graph_objects")
 def boxplot(y: np.ndarray, x_name: str, y_name: str, color: str):
     fig = go.Figure()
     fig.add_trace(

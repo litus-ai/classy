@@ -1,3 +1,6 @@
+import collections
+import re
+
 from setuptools import setup, find_packages, find_namespace_packages
 
 # PEP0440 compatible formatted version, see:
@@ -16,13 +19,35 @@ from setuptools import setup, find_packages, find_namespace_packages
 
 # version.py defines the VERSION and VERSION_SHORT variables.
 # We use exec here so we don't import classy whilst setting up.
+
 VERSION = {}  # type: ignore
 with open("classy/version.py", "r") as version_file:
     exec(version_file.read(), VERSION)
 
 
+# read requirements
+requirements = []
 with open("requirements.txt") as f:
-    requirements = f.readlines()
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith("#"):
+            requirements.append(line)
+
+
+# read extra requirements
+extra_requirements = collections.defaultdict(set)
+with open("extra-requirements.txt") as f:
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith("#"):
+            k, tags = line, set()
+            if '\t' in k:
+                k, _tags = k.split('\t')
+                tags.update(_tag.strip() for _tag in _tags.split(','))
+            tags.add(re.split("[<=>]", k)[0])
+            for tag in tags:
+                extra_requirements[tag].add(k)
+extra_requirements["all"] = set([req for reqs in extra_requirements.values() for req in reqs])
 
 setup(
     name="classy-core",
@@ -49,6 +74,7 @@ setup(
     packages=find_packages(),
     package_data={"configurations": ["*.yaml", "*/*.yaml"]},
     install_requires=requirements,
+    extras_require=extra_requirements,
     entry_points={"console_scripts": ["classy=classy.scripts.cli.__init__:main"]},
     python_requires=">=3.8.0",
     zip_safe=False,

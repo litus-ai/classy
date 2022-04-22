@@ -9,6 +9,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from classy.data.data_drivers import ClassySample
+from classy.utils.log import get_project_logger
+
+logger = get_project_logger(__name__)
 
 
 class PredictionMixin:
@@ -77,6 +80,13 @@ class PredictionMixin:
                     yield position2predicted_sample[next_prediction_position]
                     del position2predicted_sample[next_prediction_position]
                     next_prediction_position += 1
+
+        if len(position2predicted_sample) > 0:
+            logger.warning(
+                "It seems samples have been discarded in your dataset. This means that you WON'T have a prediction for each input sample. Prediction order will also be partially disrupted"
+            )
+            for k, v in sorted(position2predicted_sample.items(), key=lambda x: x[0]):
+                yield v
 
         if progress_bar:
             iterator.close()

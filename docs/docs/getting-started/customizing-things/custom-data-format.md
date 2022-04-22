@@ -8,6 +8,7 @@ You just need to implement your own data driver and register it:
 
 ```python
 # implement your data driver
+@DataDriver.register(YOUR_TASK, YOUR_FILE_EXTENSION)
 class CustomDataDriver(DataDriver):
     def read(self, lines: Iterator[str]) -> Iterator[ClassySample]:
         raise NotImplementedError
@@ -16,12 +17,9 @@ class CustomDataDriver(DataDriver):
         self,
         samples: Iterator[ClassySample],
         path: str,
+        use_predicted_annotation: bool = False,
     ):
         raise NotImplementedError
-
-
-# register it
-READERS_DICT[(YOUR_TASK, YOUR_FILE_EXTENSION)] = CustomDataDriver
 ```
 
 :::caution
@@ -36,6 +34,7 @@ postpending file extensions is mandatory, even on Unix systems.
 For instance, imagine you were to reimplement the `.jsonl` data driver for Sequence Classification:
 
 ```python
+@DataDriver.register(SEQUENCE, "jsonl")
 class JSONLSequenceDataDriver(SequenceDataDriver):
     pass
 ```
