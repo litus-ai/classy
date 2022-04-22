@@ -23,6 +23,10 @@ class Experiment:
         return max(self.iter_runs(), key=lambda r: r.date, default=None)
 
     @property
+    def last_valid_run(self) -> Optional["Run"]:
+        return max(self.iter_candidate_runs(), key=lambda r: r.date, default=None)
+
+    @property
     def has_checkpoint(self):
         return any(run.has_checkpoints for run in self.iter_runs())
 
@@ -82,6 +86,19 @@ class Experiment:
     @classmethod
     def list_downloaded_experiments(cls) -> List[str]:
         return cls.list_available_experiments(CLASSY_MODELS_CACHE_PATH)
+
+    @classmethod
+    def try_get_experiment_dir(cls) -> Optional[Path]:
+        cwd = Path.cwd()
+
+        if cwd.name == "experiments":
+            return cwd
+
+        exp_tentative = cwd / "experiments"
+        if exp_tentative.exists() and exp_tentative.is_dir():
+            return exp_tentative
+
+        return None
 
     def iter_runs(self) -> Iterator["Run"]:
         for config_file in self.directory.rglob(".hydra/config.yaml"):

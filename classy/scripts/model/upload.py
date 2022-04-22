@@ -2,7 +2,6 @@ import argparse
 import json
 import logging
 import tempfile
-import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -10,57 +9,10 @@ from typing import Optional
 import huggingface_hub
 
 from classy.scripts.model.download import CLASSY_DATE_FORMAT, get_md5
-from classy.utils.experiment import Experiment, Run
+from classy.scripts.model.export import zip_run
+from classy.utils.experiment import Experiment
 
 logger = logging.getLogger(__name__)
-
-
-def strip_checkpoint(
-    checkpoint_path: Path,
-    destination: Path,
-    keys_to_remove=("callbacks", "optimizer_states", "lr_schedulers"),
-):
-    import torch
-
-    logger.debug(f"loading checkpoint {checkpoint_path}")
-    ckpt = torch.load(checkpoint_path, map_location="cpu")
-
-    for key in keys_to_remove:
-        ckpt.pop(key, None)
-        logger.debug(f"key {key} did not exist in checkpoint {checkpoint_path}")
-
-    logger.debug(f"saving stripped checkpoint to {destination}")
-    torch.save(ckpt, destination)
-
-
-def zip_run(run: Run, tmpdir: Path) -> Path:
-    logger.debug(f"zipping run {run} to {tmpdir}")
-    # creates a zip version of the provided Run (with a single stripped checkpoint) in a model.zip file under `tmpdir`
-    run_dir = run.directory
-    ckpt_path = tmpdir / "best.ckpt"
-    zip_path = tmpdir / "model.zip"
-
-    with zipfile.ZipFile(zip_path, "w") as zip_file:
-
-        # fully zip the run directory maintaining its structure
-        for file in run_dir.rglob("*.*"):
-            relative_name = file.relative_to(run_dir)
-
-            # skip checkpoints as we add a single checkpoint later
-            if file.is_dir() or str(relative_name).startswith("checkpoints"):
-                continue
-
-            zip_file.write(file, arcname=file.relative_to(run_dir))
-
-        logger.debug("Stripping checkpoint before writing to zip file")
-        strip_checkpoint(run.best_checkpoint, ckpt_path)
-        logger.debug("Writing stripped checkpoint to zip file")
-        zip_file.write(ckpt_path, arcname="checkpoints/best.ckpt")
-
-    # remove stripped checkpoint as we don't need to upload it to the hub
-    ckpt_path.unlink()
-
-    return zip_path
 
 
 def create_info_file(tmpdir: Path):
@@ -91,7 +43,7 @@ def upload(
         print(f"No experiment named {model_name} found. Exiting...")
         return
 
-    run = exp.last_run
+    run = exp.last_valid_run
     if run is None:
         print(f"No valid run found for experiment {model_name}. Exiting...")
         return
