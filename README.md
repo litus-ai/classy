@@ -84,7 +84,7 @@ Also, we have [a few examples](https://github.com/sunglasses-ai/classy-examples)
 
 ## Installation
 
-*For a more in-depth installation guide (covering also installing from source and through docker), please visit our [installation page](http://sunglasses-ai.github.io/classy/docs/getting-started/installation).*
+*For a more in-depth installation guide (covering also installing from source and through docker), please visit our [installation page](https://sunglasses-ai.github.io/classy/docs/installation/).*
 
 If you are using one of our [templates](https://github.com/sunglasses-ai/classy-template), there is a handy `setup.sh` script you can use that will execute the commands to create the environment and install `classy` for you.
 
@@ -94,14 +94,14 @@ If you are using one of our [templates](https://github.com/sunglasses-ai/classy-
 
 We strongly recommend using [Conda](https://conda.io/) as the environment manager when dealing with deep learning / data science / machine learning. It's also recommended that you install the PyTorch ecosystem **before** installing `classy` by following the instructions on [pytorch.org](https://pytorch.org/)
 
-If you already have a Python 3 environment you want to use, you can skip to the [installing via pip](#installing-via-pip) section.
+If you already have a Python 3 environment you want to use, you can skip to the [Installing the library and dependencies](#Installing-the-library-and-dependencies) section.
 
 1.  [Download and install Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
-2.  Create a Conda environment with Python 3.7-3.9:
+2.  Create a Conda environment with Python 3.8+:
 
     ```yaml
-    conda create -n classy python=3.7
+    conda create -n classy python=3.8
     ```
 
 3.  Activate the Conda environment:
@@ -124,11 +124,11 @@ and voilà! You're all set.
 
 
 ## Running `classy`
-Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/cli/).
+Once it is installed, `classy` is available as a command line tool. It offers a wide variety of subcommands, all listed below. Detailed guides and references for each command is available [in the documentation](https://sunglasses-ai.github.io/classy/docs/reference-manual/cli/train/).
 Every one of `classy`'s subcommands have a `-h|--help` flag available which details the various arguments & options you can use (e.g., `classy train -h`).
 
 ### `classy train`
-In its simplest form, `classy train` lets you train a transformer-based neural network for one of the tasks supported by `classy` (see [the documentation](https://sunglasses-ai.github.io/classy/docs/getting-started/no-code/tasks/)).
+In its simplest form, `classy train` lets you train a transformer-based neural network for one of the tasks supported by `classy` (see [the documentation](https://sunglasses-ai.github.io/classy/docs/reference-manual/tasks-and-formats/)).
 
 ```yaml
 classy train sentence-pair path/to/dataset/folder-or-file -n my-model
@@ -161,8 +161,6 @@ Models uploaded via `classy upload` will be available for download by other clas
 
 ### `classy download`
 `classy download <model>` downloads a previously uploaded `classy`-trained model from the [HuggingFace Hub](https://huggingface.co) and stores it on your machine so that it is usable with any other `classy` command which requires a trained model (`predict`, `evaluate`, `serve`, `demo`, `upload`).
-
-You can find [SunglassesAI](http://sunglasses-ai.github.io/)'s list of pre-trained models [here](https://huggingface.co/sunglasses-ai).
 
 Models uploaded via `classy upload` are available by doing `classy download username@model`.
 
