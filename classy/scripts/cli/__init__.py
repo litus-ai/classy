@@ -144,11 +144,15 @@ def main():
         )
         exit(1)
 
-    to_import = args.package_dir or maybe_find_directory(("src", "source", "classy"))
+    # import classy components
+    import_module_and_submodules("classy")
 
+    # import user-defined component
+    to_import = args.package_dir or maybe_find_directory(("src", "source"))
     if to_import is not None:
         import_module_and_submodules(to_import)
 
+    # run command
     commands[args.action]["main"](args)
 
 
