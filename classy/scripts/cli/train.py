@@ -359,7 +359,7 @@ def classy_merge(
                 force_add=True,
             )
             changes.append(key)
-        elif type(node) in [float, int, bool, str]:
+        elif type(node) in [float, int, bool, str] or OmegaConf.is_none(node):
             # overwrite
             OmegaConf.update(base_cfg, key, node, force_add=True)
             changes.append(key)
