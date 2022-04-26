@@ -79,6 +79,20 @@ class TestProfiles:
         cfg, blames = self._compute_final_config(spec, hydra_test_env)
         assert cfg == {"a": 0, "b": 1}
 
+    def test_cli_adds_value(self, hydra_test_env):
+        """
+        Check profile can add values
+        """
+        spec = """
+        root.yaml               | a: 0
+
+        profiles/profile.yaml   | b: 1
+
+        cli                     | c: 2
+        """
+        cfg, blames = self._compute_final_config(spec, hydra_test_env)
+        assert cfg == {"a": 0, "b": 1, "c": 2}
+
     def test_profile_and_cli_override_value(self, hydra_test_env):
         """
         Check cli edits are prioritized over profile's
@@ -92,6 +106,55 @@ class TestProfiles:
         """
         cfg, blames = self._compute_final_config(spec, hydra_test_env)
         assert cfg.a == 2
+
+    def test_profile_override_from_file_in_defaults(self, hydra_test_env):
+        """
+        Check profile overrides from file are correctly applied (file in root defaults)
+        """
+        spec = """
+        root.yaml               | defaults:
+                                |   - a: a1
+
+        a/a1.yaml               | b: 0
+
+        a/a2.yaml               | b: 1
+
+        profiles/profile.yaml   | a: a2
+        """
+        cfg, blames = self._compute_final_config(spec, hydra_test_env)
+        assert cfg.a == {"b": 1}
+
+    def test_profile_override_from_file_not_in_defaults(self, hydra_test_env):
+        """
+        Check profile overrides from file are correctly applied (file not in root defaults)
+        """
+        spec = """
+        root.yaml               | a: {}
+
+        a/a2.yaml               | b: 1
+
+        profiles/profile.yaml   | a: a2
+        """
+        cfg, blames = self._compute_final_config(spec, hydra_test_env)
+        assert cfg.a == {"b": 1}
+
+    def test_cli_override_on_profile_from_file(self, hydra_test_env):
+        """
+        Check cli edits are correctly applied over specs from file in profile
+        """
+        spec = """
+        root.yaml               | a: {}
+
+        a/a1.yaml               | b:
+                                |   c: 0
+                                |   d: 0
+
+        profiles/profile.yaml   | a: a1
+
+        cli                     | a.b.c: 1
+        """
+        cfg, blames = self._compute_final_config(spec, hydra_test_env)
+        assert cfg.a.b == {"c": 1, "d": 0}
 
     def test_profile_override_target(self, hydra_test_env):
         """
@@ -220,6 +283,26 @@ class TestProfiles:
         cfg, blames = self._compute_final_config(spec, hydra_test_env)
         assert cfg.b.c == 1
         assert cfg.e.c == 2
+
+    def test_cli_override_on_profile_from_file_on_interpolation(self, hydra_test_env):
+        """
+        Check cli edits are correctly applied over specs from file in profile
+        """
+        spec = """
+        root.yaml               | a: {}
+
+        a/a1.yaml               | b:
+                                |   c:
+                                |     d: 0
+                                |   e: ${a.b.c}
+
+        profiles/profile.yaml   | a: a1
+
+        cli                     | a.b.e.d: 1
+        """
+        cfg, blames = self._compute_final_config(spec, hydra_test_env)
+        assert cfg.a.b.c == {"d": 0}
+        assert cfg.a.b.e == {"d": 1}
 
     def test_interpolation_node_with_interpolation_preserved(self, hydra_test_env):
         """

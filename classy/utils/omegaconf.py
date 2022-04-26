@@ -5,6 +5,16 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 
+def is_interpolation(cfg, key):
+    # OmegaConf.is_interpolation(base_cfg, key) requires key to be a direct children of base_cfg
+    # this function patch this behavior so as to support any successor
+    parent = cfg
+    if "." in key:
+        parent = OmegaConf.select(cfg, key[: key.rindex(".")])
+        key = key[key.rindex(".") + 1 :]
+    return OmegaConf.is_interpolation(parent, key)
+
+
 def adapt_dataset_from(training_dataset: DictConfig, setting: str):
     # duplicate configuration
     training_dataset = copy.deepcopy(training_dataset)

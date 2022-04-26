@@ -15,6 +15,7 @@ from classy.scripts.cli.utils import get_device, maybe_find_directory
 from classy.utils.help_cli import HELP_TASKS
 from classy.utils.hydra_patch import ConfigBlame
 from classy.utils.log import get_project_logger
+from classy.utils.omegaconf import is_interpolation
 
 logger = get_project_logger(__name__)
 
@@ -257,25 +258,57 @@ def classy_merge(
     base_cfg: DictConfig,
     updating_cfg: DictConfig,
     reference_folder: Optional[str] = None,
+    replace_on_config_group: bool = False,
 ) -> List[str]:
 
     changes = []
 
-    def is_interpolation(key):
-        # OmegaConf.is_interpolation(base_cfg, key) requires key to be a direct children of base_cfg
-        # this function patch this behavior so as to support any successor
-        parent = base_cfg
-        if "." in key:
-            parent = OmegaConf.select(base_cfg, key[: key.rindex(".")])
-            key = key[key.rindex(".") + 1 :]
-        return OmegaConf.is_interpolation(parent, key)
+    def select_with_config_group_resolution(key):
+
+        node = OmegaConf.select(base_cfg, key)
+
+        # if node is not None, resolution was not needed and we can return
+        if node is not None:
+            return node
+
+        # otherwise, we need to iterate on key_prefix
+        prefix = []
+        for _key in key.split("."):
+            prefix.append(_key)
+            _key = ".".join(prefix)
+            # select node based on prefix
+            node = OmegaConf.select(base_cfg, ".".join(prefix))
+            # check if node is interpolation and, if it is, duplicate it
+            if node is not None and is_interpolation(base_cfg, _key):
+                OmegaConf.update(base_cfg, _key, copy.deepcopy(node), force_add=True)
+            # check if node refers to a config group and, if it does, read and replace
+            if reference_folder is not None and type(node) == str:
+                for extension in ["yaml", "yml"]:
+                    config_group_path = (
+                        Path(reference_folder)
+                        / _key.replace(".", "/")
+                        / f"{node}.{extension}"
+                    )
+                    if config_group_path.exists():
+                        # side-effect on base_cfg, updating node to be the config gorup
+                        OmegaConf.update(
+                            base_cfg,
+                            _key,
+                            OmegaConf.load(config_group_path),
+                            merge=False,
+                            force_add=True,
+                        )
+                        break
+
+        # re-run selection
+        return OmegaConf.select(base_cfg, key)
 
     def rec(node, key):
 
-        original_node = OmegaConf.select(base_cfg, key)
+        original_node = select_with_config_group_resolution(key)
 
         # check if node is interpolation and, if it is, duplicate it
-        if original_node is not None and is_interpolation(key):
+        if original_node is not None and is_interpolation(base_cfg, key):
             OmegaConf.update(
                 base_cfg, key, copy.deepcopy(original_node), force_add=True
             )
@@ -293,6 +326,12 @@ def classy_merge(
                 if config_group_path.exists():
                     # update node to be the config in the file
                     node = OmegaConf.load(config_group_path)
+                    # if replace_on_config_group, replace and return
+                    if replace_on_config_group:
+                        OmegaConf.update(
+                            base_cfg, key, node, merge=False, force_add=True
+                        )
+                        return
                     break
 
         # handle node
@@ -381,13 +420,23 @@ def apply_profiles_and_cli(
         for change in changes:
             _k, _v = change.split("=")
             _changes.extend(
-                classy_merge(profile_cfg, OmegaConf.create({_k: parse_primitive(_v)}))
+                classy_merge(
+                    profile_cfg,
+                    OmegaConf.create({_k: parse_primitive(_v)}),
+                    reference_folder=config_dir,
+                    replace_on_config_group=True,
+                )
             )
         cli_changes.update(_changes)
         blames.append((_changes, blame))
 
     # apply edits over base_cfg
-    profile_changes = classy_merge(base_cfg, profile_cfg, reference_folder=config_dir)
+    profile_changes = classy_merge(
+        base_cfg,
+        profile_cfg,
+        reference_folder=config_dir,
+        replace_on_config_group=False,
+    )
 
     # add profile blames (if profile was passed)
     if profile_path is not None:
