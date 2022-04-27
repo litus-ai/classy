@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 import torch
 
@@ -23,7 +23,10 @@ class HFSequenceDataset(HFBaseDataset):
             [{"labels": sample.reference_annotation} for sample in samples]
         )
 
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=self.tokenizer.pad_token_id
@@ -70,7 +73,10 @@ class HFTokenDataset(HFBaseDataset):
             ]
         )
 
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=self.tokenizer.pad_token_id
@@ -129,7 +135,10 @@ class HFTokenDataset(HFBaseDataset):
 
 
 class HFSentencePairDataset(HFSequenceDataset):
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         fields_batcher = super(HFSentencePairDataset, self).init_fields_batcher()
         fields_batcher["token_type_ids"] = lambda lst: batchify(lst, padding_value=0)
         return fields_batcher
@@ -269,7 +278,10 @@ class HFQADataset(HFBaseDataset):
 
             yield elem_dict
 
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=self.tokenizer.pad_token_id
