@@ -119,7 +119,7 @@ class BaseDataset(IterableDataset):
     ):
         super().__init__()
 
-        self.samples_iterator = samples_iterator
+        self._samples_iterator = samples_iterator
         self.vocabulary = vocabulary
 
         self.prebatch, self.section_size = prebatch, section_size
@@ -156,6 +156,10 @@ class BaseDataset(IterableDataset):
             logger.warning(
                 "Materialization set to True. Dataset will be materialized at its first iteration"
             )
+
+    @property
+    def samples_iterator(self) -> Callable[[], Iterator[ClassySample]]:
+        return self._samples_iterator
 
     @property
     def fields_batcher(
