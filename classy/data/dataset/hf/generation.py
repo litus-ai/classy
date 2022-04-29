@@ -1,5 +1,5 @@
 import collections
-from typing import Any, Callable, Dict, Generator, Iterator, List, Optional
+from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
 import torch
 from omegaconf import DictConfig
@@ -53,14 +53,18 @@ class HFGenerationBaseDataset(HFBaseDataset):
     ) -> List[List[Dict[str, Any]]]:
         return [dataset_elements]
 
+    @property
+    def default_batching_fields(self) -> Optional[List[str]]:
+        raise NotImplementedError
+
 
 class EncDecHFGenerationBaseDataset(HFGenerationBaseDataset):
-    def get_batching_fields(self, teacher_forcing: bool) -> List[str]:
-        return ["input_ids", "labels"] if teacher_forcing else ["input_ids"]
+    def get_batching_fields(self, teacher_forcing: bool) -> Optional[List[str]]:
+        return ["input_ids", "labels"] if self.teacher_forcing else ["input_ids"]
 
 
 class DecHFGenerationBaseDataset(HFGenerationBaseDataset):
-    def get_batching_fields(self, teacher_forcing: bool) -> List[str]:
+    def get_batching_fields(self, teacher_forcing: bool) -> Optional[List[str]]:
         return ["input_ids"]
 
     def group_elements_on_materializations(
@@ -80,7 +84,10 @@ class DecHFGenerationBaseDataset(HFGenerationBaseDataset):
 
 
 class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=self.tokenizer.pad_token_id
@@ -229,7 +236,10 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
 
 
 class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
-    def init_fields_batcher(self) -> Dict:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=self.tokenizer.pad_token_id
@@ -289,7 +299,10 @@ class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
 
 
 class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
-    def init_fields_batcher(self) -> Dict[str, Callable]:
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
         return {
             "input_ids": lambda lst: batchify(
                 lst, padding_value=0
