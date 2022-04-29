@@ -333,7 +333,7 @@ class BaseDataset(IterableDataset):
     def __iter__(self):
 
         # check if should materialize
-        if self.materialize:
+        if self.materialize and self._dataset_store is None:
             self.materialize_dataset()
 
         dataset_iterator = (
