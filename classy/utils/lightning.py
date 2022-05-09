@@ -23,19 +23,14 @@ def load_training_conf_from_checkpoint(
 
     # fix paths
     def check_fn(path):
-        try:
-            # check whether the path exists as is (absolute / relative)
-            # or if the path is relative to the experiment folder
-            # if it does not, it will be fixed by prepending the experiment folder
-            # TODO: check that the joined path actually exists and raise an exception when it doesn't
-            return Path(path).exists() or experiment_folder.joinpath(path).exists()
-        except PermissionError:
-            return False
+        # check whether path exists relative in the experiment resources folder
+        # if it does, fix it
+        return (experiment_folder / "resources").joinpath(path).exists()
 
     fix_paths(
         conf,
         check_fn=check_fn,
-        fix_fn=lambda path: str(experiment_folder.joinpath(path)),
+        fix_fn=lambda path: str((experiment_folder / "resources").joinpath(path)),
     )
     # return
     return conf
