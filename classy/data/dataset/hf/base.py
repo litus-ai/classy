@@ -50,5 +50,14 @@ class HFBaseDataset(BaseDataset):
             **kwargs,
         )
 
+    @property
+    def truncation_dict(self):
+        if not self.truncation:
+            return {}
+        return dict(
+            max_length=self.max_length,
+            truncation=True,
+        )
+
     def init_fields_batcher(self) -> Dict:
         raise NotImplementedError

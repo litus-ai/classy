@@ -106,11 +106,7 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
             tokenization_output = self.tokenizer(
                 sample.source_sequence,
                 return_tensors="pt",
-                **(
-                    {"truncation": True, "max_length": self.max_length}
-                    if self.truncation
-                    else {}
-                ),
+                **self.truncation_dict,
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -122,11 +118,7 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
                     tokenization_output = self.tokenizer(
                         sample.reference_annotation,
                         return_tensors="pt",
-                        **(
-                            {"truncation": True, "max_length": self.max_length}
-                            if self.truncation
-                            else {}
-                        ),
+                        **self.truncation_dict,
                     )
                     elem_dict.update(
                         **{
@@ -170,11 +162,7 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
             tokenization_output = self.tokenizer(
                 sample.source_sequence,
                 return_tensors="pt",
-                **(
-                    {"truncation": True, "max_length": self.max_length}
-                    if self.truncation
-                    else {}
-                ),
+                **self.truncation_dict,
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -186,11 +174,7 @@ class MBartHFGenerationDataset(BartHFGenerationDataset):
                     tokenization_output = self.tokenizer(
                         sample.reference_annotation,
                         return_tensors="pt",
-                        **(
-                            {"truncation": True, "max_length": self.max_length}
-                            if self.truncation
-                            else {}
-                        ),
+                        **self.truncation_dict,
                     )
                     elem_dict.update(
                         **{
@@ -252,11 +236,7 @@ class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
             tokenization_output = self.tokenizer(
                 sample.source_sequence,
                 return_tensors="pt",
-                **(
-                    {"truncation": True, "max_length": self.max_length}
-                    if self.truncation
-                    else {}
-                ),
+                **self.truncation_dict,
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -269,11 +249,7 @@ class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
                         tokenization_output = self.tokenizer(
                             sample.reference_annotation,
                             return_tensors="pt",
-                            **(
-                                {"truncation": True, "max_length": self.max_length}
-                                if self.truncation
-                                else {}
-                            ),
+                            **self.truncation_dict,
                         )
                         elem_dict.update(
                             **{
@@ -307,11 +283,7 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
             tokenization_output = self.tokenizer(
                 sample.source_sequence,
                 return_tensors="pt",
-                **(
-                    {"truncation": True, "max_length": self.max_length}
-                    if self.truncation
-                    else {}
-                ),
+                **self.truncation_dict,
             )
             elem_dict = {
                 "input_ids": tokenization_output["input_ids"].squeeze(),
@@ -324,11 +296,7 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
                     tokenization_output = self.tokenizer(
                         sample.reference_annotation,
                         return_tensors="pt",
-                        **(
-                            {"truncation": True, "max_length": self.max_length}
-                            if self.truncation
-                            else {}
-                        ),
+                        **self.truncation_dict,
                     )
                     elem_dict["labels"] = torch.cat(
                         (
@@ -357,4 +325,42 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
                         tokenization_output["input_ids"].squeeze().clone()
                     )
 
+            yield elem_dict
+
+
+class OPUSHFGenerationDataset(EncDecHFGenerationBaseDataset):
+    def init_fields_batcher(self) -> Dict:
+        return {
+            "input_ids": lambda lst: batchify(
+                lst, padding_value=self.tokenizer.pad_token_id
+            ),
+            "attention_mask": lambda lst: batchify(lst, padding_value=0),
+            "samples": None,
+            "labels": lambda lst: batchify(
+                lst, padding_value=-100
+            ),  # -100 == cross entropy ignore index
+        }
+
+    def dataset_iterator_func(self):
+        for sample in self.samples_iterator():
+
+            tokenization_output = self.tokenizer(
+                sample.source_sequence,
+                return_tensors="pt",
+                **self.truncation_dict,
+            )
+            elem_dict = {
+                "input_ids": tokenization_output["input_ids"].squeeze(),
+                "attention_mask": tokenization_output["attention_mask"].squeeze(),
+            }
+
+            if self.teacher_forcing and sample.reference_annotation is not None:
+                tokenization_output = self.tokenizer(
+                    sample.reference_annotation,
+                    return_tensors="pt",
+                    **self.truncation_dict,
+                )
+                elem_dict["labels"] = tokenization_output["input_ids"].squeeze()
+
+            elem_dict["samples"] = sample
             yield elem_dict

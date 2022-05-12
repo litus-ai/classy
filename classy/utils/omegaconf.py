@@ -3,6 +3,7 @@ import re
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
+from transformers import AutoConfig
 
 
 def adapt_dataset_from(training_dataset: DictConfig, setting: str):
@@ -35,6 +36,8 @@ def resolve_hf_generation_base_dataset_on_transformer_model(
         return "classy.data.dataset.hf.generation.BartHFGenerationDataset.from_file"
     elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
         return "classy.data.dataset.hf.generation.MBartHFGenerationDataset.from_file"
+    elif transformer_model.startswith("Helsinki-NLP/opus-mt"):
+        return "classy.data.dataset.hf.generation.OPUSHFGenerationDataset.from_file"
     elif transformer_model.startswith("gpt2"):
         return "classy.data.dataset.hf.generation.GPT2HFGenerationCataset.from_file"
     elif (
@@ -62,6 +65,8 @@ def resolve_hf_generation_module_on_transformer_model(
         return "classy.pl_modules.hf.generation.BartGenerativeModule"
     elif re.fullmatch("facebook/mbart-large-(cc25|50)", transformer_model):
         return "classy.pl_modules.hf.generation.MBartGenerativeModule"
+    elif transformer_model.startswith("Helsinki-NLP/opus-mt"):
+        return "classy.pl_modules.hf.generation.OPUSGenerativeModule"
     elif transformer_model.startswith("gpt2"):
         return "classy.pl_modules.hf.generation.GPT2GenerativeModule"
     elif (

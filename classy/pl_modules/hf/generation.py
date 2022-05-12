@@ -302,3 +302,84 @@ class GPT2GenerativeModule(HFGenerationPLModule):
             if num_sequences > 1:
                 sample.predicted_annotation_group = prediction
             yield sample
+
+
+class OPUSGenerativeModule(HFGenerationPLModule):
+    def __init__(
+        self,
+        transformer_model: str,
+        decoding_skip_special_tokens: bool,
+        decoding_clean_up_tokenization_spaces: bool,
+        optim_conf: omegaconf.DictConfig,
+        additional_special_tokens: Optional[List[str]] = None,
+    ):
+        super().__init__(vocabulary=None, optim_conf=optim_conf)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            transformer_model,
+            additional_special_tokens=list(additional_special_tokens)
+            if additional_special_tokens is not None
+            else None,
+            use_fast=True,
+        )
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(transformer_model)
+        if additional_special_tokens is not None and len(additional_special_tokens) > 0:
+            self.model.resize_token_embeddings(len(self.tokenizer))
+        self.decoding_skip_special_tokens = decoding_skip_special_tokens
+        self.decoding_clean_up_tokenization_spaces = (
+            decoding_clean_up_tokenization_spaces
+        )
+        self.forced_bos_token_id = self.tokenizer.bos_token_id
+        self.generation_params = {}
+
+    def load_prediction_params(self, prediction_params: Dict):
+        self.generation_params = prediction_params
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        labels: Optional[torch.Tensor],
+        **kwargs,
+    ) -> ClassificationOutput:
+        model_out = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+        )
+        return ClassificationOutput(
+            loss=model_out.loss,
+            logits=model_out.logits,
+            probabilities=model_out.logits.softmax(dim=-1),
+            predictions=model_out.logits.argmax(dim=-1),
+        )
+
+    def batch_predict(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        **kwargs,
+    ) -> Iterator[GenerationSample]:
+        # generate
+        model_out = self.model.generate(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            **self.generation_params,
+        )
+        # decode
+        decoded_model_out = self.tokenizer.batch_decode(
+            model_out,
+            skip_special_tokens=self.decoding_skip_special_tokens,
+            clean_up_tokenization_spaces=self.decoding_clean_up_tokenization_spaces,
+        )
+        # handle num sequences
+        num_sequences = int(len(decoded_model_out) / input_ids.shape[0])
+        grouped_decoded_bart_out = []
+        for i in range(0, len(decoded_model_out), num_sequences):
+            grouped_decoded_bart_out.append(decoded_model_out[i : i + num_sequences])
+        # postprocess
+        samples = kwargs.get("samples")
+        for sample, prediction in zip(samples, grouped_decoded_bart_out):
+            sample.predicted_annotation = prediction[0]
+            if num_sequences > 1:
+                sample.predicted_annotation_group = prediction
+            yield sample
