@@ -115,7 +115,7 @@ def train(conf: DictConfig) -> None:
         conf.training.pl_trainer,
         callbacks=callbacks_store,
         logger=logger,
-        resume_from_checkpoint=resume_from_checkpoint
+        resume_from_checkpoint=resume_from_checkpoint,
     )
 
     # save resources
