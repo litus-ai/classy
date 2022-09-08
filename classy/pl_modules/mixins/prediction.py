@@ -64,22 +64,20 @@ class PredictionMixin:
         if progress_bar:
             iterator = tqdm(iterator, desc="Predicting")
 
-        with torch.inference_mode():
-            for batch in iterator:
-                # do batch predict
+        for batch in iterator:
+            # do batch predict
+            with torch.inference_mode():
                 with autocast(enabled=True):  # todo: always enabled?
                     batch = move_data_to_device(batch, self.device)
                     batch_out = self.batch_predict(**batch)
-                # update prediction position position
-                for sample in batch_out:
-                    position2predicted_sample[
-                        sample._mixin_prediction_position
-                    ] = sample
-                # yield
-                while next_prediction_position in position2predicted_sample:
-                    yield position2predicted_sample[next_prediction_position]
-                    del position2predicted_sample[next_prediction_position]
-                    next_prediction_position += 1
+            # update prediction position position
+            for sample in batch_out:
+                position2predicted_sample[sample._mixin_prediction_position] = sample
+            # yield
+            while next_prediction_position in position2predicted_sample:
+                yield position2predicted_sample[next_prediction_position]
+                del position2predicted_sample[next_prediction_position]
+                next_prediction_position += 1
 
         if len(position2predicted_sample) > 0:
             logger.warning(

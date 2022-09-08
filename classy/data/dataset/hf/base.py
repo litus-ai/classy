@@ -19,6 +19,7 @@ class HFBaseDataset(BaseDataset):
         max_length: int = -1,
         **kwargs,
     ):
+
         if "tokenizer" not in self._shared_state:
             self._shared_state[
                 "tokenizer", tuple(additional_special_tokens or [])
@@ -36,19 +37,13 @@ class HFBaseDataset(BaseDataset):
         self.transformer_model = transformer_model
         self.truncation = truncation
         self.additional_special_tokens = additional_special_tokens
-        batching_fields = (
-            kwargs.pop("batching_fields")
-            if "batching_fields" in kwargs
-            else ["input_ids"]
-        )
+
         super().__init__(
-            fields_batchers=self.init_fields_batcher(),
-            batching_fields=batching_fields,
+            batching_fields=kwargs.pop("batching_fields")
+            if "batching_fields" in kwargs
+            else ["input_ids"],
             max_length=max_length
             if max_length != -1
             else self.tokenizer.model_max_length,
             **kwargs,
         )
-
-    def init_fields_batcher(self) -> Dict:
-        raise NotImplementedError

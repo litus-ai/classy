@@ -105,7 +105,6 @@ class BaseDataset(IterableDataset):
         self,
         samples_iterator: Callable[[], Iterator[ClassySample]],
         vocabulary: Vocabulary,
-        fields_batchers: Optional[Dict[str, Union[None, Callable[[list], Any]]]],
         for_inference: bool,
         batch_size: Optional[int] = None,
         tokens_per_batch: Optional[int] = None,
@@ -120,12 +119,10 @@ class BaseDataset(IterableDataset):
     ):
         super().__init__()
 
-        self.samples_iterator = samples_iterator
+        self._samples_iterator = samples_iterator
         self.vocabulary = vocabulary
 
-        self.fields_batcher = fields_batchers
         self.prebatch, self.section_size = prebatch, section_size
-        self.materialize = materialize
         self.drop_last = drop_last
         self.min_length, self.max_length = min_length, max_length
         self.for_inference = for_inference
@@ -152,11 +149,23 @@ class BaseDataset(IterableDataset):
                     f"Token batch size {self.tokens_per_batch} < max length {self.max_length}. This might result in batches with only 1 sample that contain more token than the specified token batch size"
                 )
 
-        # used to store the materialized dataset
+        # materialization variables
+        self.materialize = materialize
         self._dataset_store = None
-        if materialize:
-            logger.warning("Materializing dataset.")
-            self.materialize_dataset()
+        if self.materialize:
+            logger.warning(
+                "Materialization set to True. Dataset will be materialized at its first iteration"
+            )
+
+    @property
+    def samples_iterator(self) -> Callable[[], Iterator[ClassySample]]:
+        return self._samples_iterator
+
+    @property
+    def fields_batcher(
+        self,
+    ) -> Optional[Dict[str, Union[None, Callable[[list], Any]]]]:
+        raise NotImplementedError
 
     def dataset_iterator_func(self):
         raise NotImplementedError
@@ -176,7 +185,7 @@ class BaseDataset(IterableDataset):
 
     def materialize_dataset(self) -> None:
         if self._dataset_store is not None:
-            logger.info("The dataset is already materialized skipping materialization")
+            logger.info("The dataset is already materialized, skipping materialization")
             return
         logger.info("Starting dataset materialization")
         self._dataset_store = list(self.dataset_iterator_func())
@@ -322,6 +331,10 @@ class BaseDataset(IterableDataset):
                 )
 
     def __iter__(self):
+
+        # check if should materialize
+        if self.materialize and self._dataset_store is None:
+            self.materialize_dataset()
 
         dataset_iterator = (
             self.dataset_iterator_func()
