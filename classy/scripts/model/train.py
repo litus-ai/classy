@@ -107,15 +107,10 @@ def train(conf: DictConfig) -> None:
         callbacks_store.append(learning_rate_monitor)
 
     # trainer
-    resume_from_checkpoint: Optional[Union[Path, str]] = None
-    if conf.training.resume_from is not None:
-        resume_from_checkpoint = conf.training.resume_from
-
     trainer: pl.trainer.Trainer = hydra.utils.instantiate(
         conf.training.pl_trainer,
         callbacks=callbacks_store,
         logger=logger,
-        resume_from_checkpoint=resume_from_checkpoint,
     )
 
     # save resources
@@ -127,4 +122,4 @@ def train(conf: DictConfig) -> None:
     )
 
     # module fit
-    trainer.fit(pl_module, datamodule=pl_data_module)
+    trainer.fit(pl_module, datamodule=pl_data_module, ckpt_path=conf.training.resume_from)
