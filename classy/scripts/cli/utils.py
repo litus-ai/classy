@@ -110,7 +110,6 @@ def checkpoint_path_from_user_input(model_path: str) -> str:
 
 
 def try_get_checkpoint_path_from_user_input(model_path: str) -> Optional[str]:
-
     # immediately check if the path exists and is a checkpoint, in which case we return it
     if model_path.endswith(".ckpt") and Path(model_path).exists():
         return model_path

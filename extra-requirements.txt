@@ -1,8 +1,9 @@
 # FORMAT: put your extra requirements here in the following format
 # package[version_required]: tag1, tag2, ...
-streamlit>=1.4.0,<1.5.0	demo,describe
-st-annotated-text==2.0.0	demo,describe
-fastapi==0.68.1	serve
-uvicorn[standard]==0.15.0	serve
-plotly==5.5.0	describe
+sacremoses>=0.0.41	describe
+streamlit>=1.20.0	demo,describe
+st-annotated-text>=3.0.0,<=4.0.0	demo,describe
+fastapi>=0.70.0,<=1.0.0	serve
+uvicorn[standard]>=0.15.0	serve
+plotly>=5.5.0,<=6.0.0	describe
 pdoc3==0.10.0	docs

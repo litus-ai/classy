@@ -34,7 +34,6 @@ def zip_run(
     is_export: bool = False,
     best_only: bool = True,
 ) -> Path:
-
     logger.debug(f"zipping run {run} to {tmpdir}")
     # creates a zip version of the provided Run (with a single stripped checkpoint) in a model.zip file under `tmpdir`
     run_dir = run.directory
@@ -44,7 +43,6 @@ def zip_run(
     relative_directory = run.experiment.directory.parent if is_export else run_dir
 
     with zipfile.ZipFile(zip_path, "w") as zip_file:
-
         # fully zip the run directory maintaining its structure
         for file in run_dir.rglob("*.*"):
             relative_name = file.relative_to(relative_directory)

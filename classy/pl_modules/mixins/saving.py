@@ -18,7 +18,6 @@ class SavingMixin:
         experiment_folder: str,
         data_module: ClassyDataModule,
     ):
-
         working_folder = Path(working_folder)
         experiment_folder = Path(experiment_folder)
 

@@ -69,7 +69,6 @@ class BaseDataset(IterableDataset):
         vocabulary: Vocabulary = None,
         **kwargs,
     ) -> "BaseDataset":
-
         dataset_bundle: Dict[str, Any] = (
             {path: data_driver} if type(path) == str else path
         )
@@ -194,7 +193,6 @@ class BaseDataset(IterableDataset):
     def materialize_batches(
         self, dataset_elements: List[Dict[str, Any]]
     ) -> Generator[Dict[str, Any], None, None]:
-
         if self.prebatch:
             dataset_elements = self.prebatch_elements(dataset_elements)
 
@@ -202,7 +200,6 @@ class BaseDataset(IterableDataset):
 
         # function that creates a batch from the 'current_batch' list
         def output_batch() -> Dict[str, Any]:
-
             batch_dict = dict()
 
             de_values_by_field = {
@@ -240,7 +237,6 @@ class BaseDataset(IterableDataset):
         should_token_batch = self.batch_size is None
 
         for de in dataset_elements:
-
             if (
                 should_token_batch
                 and self.max_batch_size != -1
@@ -274,7 +270,6 @@ class BaseDataset(IterableDataset):
                 continue
 
             if should_token_batch:
-
                 de_len = sum(len(de[k]) for k in self.batching_fields)
 
                 future_max_len = max(
@@ -331,7 +326,6 @@ class BaseDataset(IterableDataset):
                 )
 
     def __iter__(self):
-
         # check if should materialize
         if self.materialize and self._dataset_store is None:
             self.materialize_dataset()
@@ -346,7 +340,6 @@ class BaseDataset(IterableDataset):
 
         i = None
         for i, dataset_elem in enumerate(dataset_iterator, start=1):
-
             if (
                 self.section_size is not None
                 and len(current_dataset_elements) == self.section_size

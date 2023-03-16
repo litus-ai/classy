@@ -669,7 +669,6 @@ class UIMetricsManager:
                 ui_metric.update_metric(dataset_sample)
 
     def write_metrics(self) -> None:
-
         if self.max_displayable_samples_flag:
             self.ui_metrics.insert(
                 0,

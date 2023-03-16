@@ -21,7 +21,6 @@ logger = get_project_logger(__name__)
 
 
 def populate_parser(parser: ArgumentParser):
-
     parser.add_argument(
         "task",
         choices=[SEQUENCE, SENTENCE_PAIR, TOKEN, QA, GENERATION],
@@ -147,7 +146,6 @@ def populate_parser(parser: ArgumentParser):
 
 
 def get_parser(subparser=None) -> ArgumentParser:
-
     parser_kwargs = dict(
         name="train",
         description="train a model with classy",
@@ -178,7 +176,6 @@ def parse_args():
 
 
 def _main_mock(cfg, blames: Optional[List] = None):
-
     dry_run_for_print = blames is not None
     blames = blames or []
 
@@ -212,7 +209,6 @@ def _main_mock(cfg, blames: Optional[List] = None):
 
 
 def _main_resume(model_dir: str):
-
     if not os.path.isdir(model_dir):
         logger.error(
             f"The previous run directory provided: '{model_dir}' does not exist."
@@ -260,11 +256,9 @@ def classy_merge(
     reference_folder: Optional[str] = None,
     replace_on_config_group: bool = False,
 ) -> List[str]:
-
     changes = []
 
     def select_with_config_group_resolution(key):
-
         node = OmegaConf.select(base_cfg, key)
 
         # if node is not None, resolution was not needed and we can return
@@ -304,7 +298,6 @@ def classy_merge(
         return OmegaConf.select(base_cfg, key)
 
     def rec(node, key):
-
         original_node = select_with_config_group_resolution(key)
 
         # check if node is interpolation and, if it is, duplicate it
@@ -459,7 +452,6 @@ def apply_profiles_and_cli(
 def handle_device(
     args, profile_path: Optional[Path], cli_overrides: Dict[ClassyBlame, List[str]]
 ):
-
     import torch.cuda
 
     # read profile
@@ -516,7 +508,6 @@ def handle_device(
 
 
 def main(args):
-
     import classy
 
     if args.resume_from is not None:
@@ -524,7 +515,6 @@ def main(args):
         return
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-
         # hydra config name and config dir
         config_name = args.config_name or args.task
         config_dir = args.config_dir or maybe_find_directory(
@@ -669,7 +659,6 @@ def main(args):
 
         # we wrap this under a try-catch block because streamlit is an optional dependency
         try:
-
             # we import streamlit so that the stderr handler is added to the root logger here and we can remove it
             # it was imported in task_ui.py and was double-logging stuff...
             # this is the best workaround at this time, but we should investigate and / or (re-)open an issue

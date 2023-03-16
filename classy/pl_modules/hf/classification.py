@@ -202,7 +202,6 @@ class HFTokensPLModule(TokensTask, ClassyPLModule):
         token_type_ids: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
     ) -> ClassificationOutput:
-
         # encode bpes and merge them (sum strategy)
         if self.use_last_n_layers > 1:
             encoded_bpes = torch.stack(
@@ -327,7 +326,6 @@ class HFQAPLModule(QATask, ClassyPLModule):
         end_position: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> ClassificationOutput:
-
         model_input = {"input_ids": input_ids, "attention_mask": attention_mask}
 
         if token_type_ids is not None:
@@ -423,7 +421,6 @@ class HFQAPLModule(QATask, ClassyPLModule):
         )[:, :, :5].tolist()
 
         for i in range(len(samples)):
-
             # sort possible combinations
             indexes = []
             for start_index in start_indexes[i]:

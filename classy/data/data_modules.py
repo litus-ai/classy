@@ -58,7 +58,6 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
         def scan_dir_for_file(
             dir_path: str, file_name: str
         ) -> Optional[Tuple[str, str, DataDriver]]:
-
             if not Path(dir_path).is_dir():
                 return None
 
@@ -113,14 +112,11 @@ def load_coordinates(coordinates_path: str, task: str) -> TrainCoordinates:
     # file containing the paths the datasets or a single file that
     # we have to split in train and dev.
     if Path(coordinates_path).is_file():
-
         if coordinates_path.split(".")[-1] == "yaml":
-
             coordinates_dict = OmegaConf.load(coordinates_path)
 
             # this is not a resume from a previous run
             if train_coordinates.train_bundle is None:
-
                 assert (
                     "train_dataset" in coordinates_dict
                 ), "The coordinates file must specify the 'train_dataset' field"
@@ -319,7 +315,6 @@ class ClassyDataModule(pl.LightningDataModule):
         self.build_vocabulary()
 
     def setup(self, stage: Optional[str] = None) -> None:
-
         if stage == "fit":
             self.train_dataset = hydra.utils.instantiate(
                 self.train_dataset_conf,

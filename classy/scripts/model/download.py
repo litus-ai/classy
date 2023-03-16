@@ -75,7 +75,6 @@ def request_file(url, path):
 
 
 def download(model_name: str, force_download: bool = False):
-
     if "@" in model_name:
         user_name, model_name = model_name.split("@")
     else:
@@ -109,7 +108,6 @@ def download(model_name: str, force_download: bool = False):
 
         # we only perform sanity / existence checks if the user has not explicitly request to re-download
         if not force_download:
-
             # check if a model with the same name is in the cache
             # we treat it as an Experiment whose creation date is the actual download date
             # the creation date is stored in the info file, we compare the two and decide whether the

@@ -71,7 +71,6 @@ class ConfigBlamer:
         blames = {}
 
         for k, v in self.key2blame.items():
-
             if not k.startswith(key):
                 continue
 

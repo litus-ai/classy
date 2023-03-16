@@ -57,7 +57,6 @@ def split_dataset(
     Optional[Dict[str, DataDriver]],
     Optional[Dict[str, DataDriver]],
 ]:
-
     assert (
         sum([validation_split_size or 0.0, test_split_size or 0.0]) > 0.0
     ), "At least one between validation_split_size and test_split_size must be provided with a value > 0"

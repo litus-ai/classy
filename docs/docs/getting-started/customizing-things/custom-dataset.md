@@ -84,7 +84,6 @@ def __init__(
     max_length: int,
     for_inference: bool,
 ):
-
     # load bert tokenizer
     self.tokenizer = AutoTokenizer.from_pretrained(
         transformer_model, use_fast=True, add_prefix_space=True

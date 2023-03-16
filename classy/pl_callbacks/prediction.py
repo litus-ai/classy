@@ -150,7 +150,6 @@ class PredictionPLCallback(pl.Callback):
     def on_validation_epoch_start(
         self, trainer: pl.Trainer, model: ClassyPLModule
     ) -> None:
-
         logger.info("Executing prediction callback")
 
         for (
@@ -161,7 +160,6 @@ class PredictionPLCallback(pl.Callback):
             limit,
             on_result,
         ) in self.settings:
-
             if prediction_param_conf_path is not None:
                 model.load_prediction_params(
                     dict(OmegaConf.load(prediction_param_conf_path))

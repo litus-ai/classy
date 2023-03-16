@@ -70,7 +70,6 @@ class DecHFGenerationBaseDataset(HFGenerationBaseDataset):
     def group_elements_on_materializations(
         self, dataset_elements: List[Dict[str, Any]], teacher_forcing: bool
     ) -> List[List[Dict[str, Any]]]:
-
         if teacher_forcing:
             return [dataset_elements]
 
@@ -105,7 +104,6 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
 
     def dataset_iterator_func(self):
         for sample in self.samples_iterator():
-
             assert (
                 sample.source_language is None and sample.target_language is None
             ), f"BartHFGenerationSampleEncoder does not support language specification"
@@ -153,7 +151,6 @@ class BartHFGenerationDataset(EncDecHFGenerationBaseDataset):
 
 
 class MBartHFGenerationDataset(BartHFGenerationDataset):
-
     mbart_l2l_code = {}
     for l_code in FAIRSEQ_LANGUAGE_CODES:
         l = l_code[: l_code.index("_")]
@@ -254,7 +251,6 @@ class T5HFGenerationDataset(EncDecHFGenerationBaseDataset):
 
     def dataset_iterator_func(self):
         for sample in self.samples_iterator():
-
             assert (
                 sample.source_language is None and sample.target_language is None
             ), f"T5HFGenerationDataset requires task/language specification to be set in sample.source_sequence"
@@ -316,7 +312,6 @@ class GPT2HFGenerationCataset(DecHFGenerationBaseDataset):
 
     def dataset_iterator_func(self):
         for sample in self.samples_iterator():
-
             tokenization_output = self.tokenizer(
                 sample.source_sequence,
                 return_tensors="pt",

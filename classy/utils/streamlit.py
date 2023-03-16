@@ -5,7 +5,6 @@ import numpy as np
 
 
 def get_random_color_generator(colors: List[str]) -> Callable[[], str]:
-
     random.shuffle(colors)
 
     colors = iter(colors)
@@ -20,7 +19,6 @@ def get_random_color_generator(colors: List[str]) -> Callable[[], str]:
 
 
 def get_md_200_random_color_generator() -> Callable[[], str]:
-
     # colors taken from https://gist.githubusercontent.com/daniellevass/b0b8cfa773488e138037/raw/d2182c212a4132c0f3bb093fd0010395f927a219/android_material_design_colours.xml
     # md_.*_200
     colors_md_200 = [
@@ -48,7 +46,6 @@ def get_md_200_random_color_generator() -> Callable[[], str]:
 
 
 def get_md_400_random_color_generator() -> Callable[[], str]:
-
     # colors taken from https://gist.githubusercontent.com/daniellevass/b0b8cfa773488e138037/raw/d2182c212a4132c0f3bb093fd0010395f927a219/android_material_design_colours.xml
     # md_.*_400
     colors_md_400 = [

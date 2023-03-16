@@ -19,7 +19,6 @@ class HFBaseDataset(BaseDataset):
         max_length: int = -1,
         **kwargs,
     ):
-
         if "tokenizer" not in self._shared_state:
             self._shared_state[
                 "tokenizer", tuple(additional_special_tokens or [])

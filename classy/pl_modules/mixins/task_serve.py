@@ -46,7 +46,6 @@ class TaskServeMixin:
 
 
 class SequenceTaskServeMixin(TaskServeMixin):
-
     if pydantic is not None:
 
         class MarshalInputSequenceSample(pydantic.BaseModel, MarshalInputSample):
@@ -67,7 +66,6 @@ class SequenceTaskServeMixin(TaskServeMixin):
                 return cls(sequence=sample.sequence, label=sample.predicted_annotation)
 
     else:
-
         MarshalInputSequenceSample, MarshalOutputSequenceSample = None, None
 
     @property
@@ -82,7 +80,6 @@ class SequenceTaskServeMixin(TaskServeMixin):
 
 
 class SentencePairTaskServeMixin(TaskServeMixin):
-
     if pydantic is not None:
 
         class MarshalInputSentencePairSample(pydantic.BaseModel, MarshalInputSample):
@@ -110,7 +107,6 @@ class SentencePairTaskServeMixin(TaskServeMixin):
                 )
 
     else:
-
         MarshalInputSentencePairSample, MarshalOutputSentencePairSample = None, None
 
     @property
@@ -125,7 +121,6 @@ class SentencePairTaskServeMixin(TaskServeMixin):
 
 
 class TokenTaskServeMixin(TaskServeMixin):
-
     if pydantic is not None:
 
         class MarshalInputTokensSample(pydantic.BaseModel, MarshalInputSample):
@@ -145,7 +140,6 @@ class TokenTaskServeMixin(TaskServeMixin):
                 return cls(tokens=sample.tokens, labels=sample.predicted_annotation)
 
     else:
-
         MarshalInputTokensSample, MarshalOutputTokensSample = None, None
 
     @property
@@ -160,7 +154,6 @@ class TokenTaskServeMixin(TaskServeMixin):
 
 
 class QATaskServeMixin(TaskServeMixin):
-
     if pydantic is not None:
 
         class MarshalInputQASample(pydantic.BaseModel, MarshalInputSample):
@@ -189,7 +182,6 @@ class QATaskServeMixin(TaskServeMixin):
                 )
 
     else:
-
         MarshalInputQASample, MarshalOutputQASample = None, None
 
     @property
@@ -204,7 +196,6 @@ class QATaskServeMixin(TaskServeMixin):
 
 
 class GenerationTaskServeMixin(TaskServeMixin):
-
     if pydantic is not None:
 
         class MarshalInputGenerationSample(pydantic.BaseModel, MarshalInputSample):
@@ -236,7 +227,6 @@ class GenerationTaskServeMixin(TaskServeMixin):
                 )
 
     else:
-
         MarshalInputGenerationSample, MarshalOutputGenerationSample = None, None
 
     @property

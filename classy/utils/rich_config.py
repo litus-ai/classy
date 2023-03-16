@@ -62,7 +62,6 @@ class RichNodeInfo:
         return Text(value, style=Style(color="hot_pink"))
 
     def __rich__(self):
-
         key_name = self.info.key.split(".")[-1]
 
         parts = [

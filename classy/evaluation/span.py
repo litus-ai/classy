@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from datasets import load_metric
+from evaluate import load
 
 from classy.data.data_drivers import TokensSample
 from classy.evaluation.base import Evaluation
@@ -8,10 +8,9 @@ from classy.evaluation.base import Evaluation
 
 class SeqEvalSpanEvaluation(Evaluation):
     def __init__(self):
-        self.backend_metric = load_metric("seqeval")
+        self.backend_metric = load("seqeval")
 
     def __call__(self, path: str, predicted_samples: List[TokensSample]) -> Dict:
-
         metric_out = self.backend_metric.compute(
             predictions=[sample.predicted_annotation for sample in predicted_samples],
             references=[sample.reference_annotation for sample in predicted_samples],

@@ -50,7 +50,6 @@ class TaskUIMixin:
 
 
 class SentencePairTaskUIMixin(TaskUIMixin):
-
     __data_driver = get_data_driver(SENTENCE_PAIR, JSONL)
     truncate_k = 40
 
@@ -187,7 +186,6 @@ class TokenTaskUIMixin(TaskUIMixin):
 
     @requires("streamlit")
     def ui_render(self, predicted_sample: TokensSample, time: float):
-
         tokens, labels = (
             predicted_sample.tokens,
             predicted_sample.predicted_annotation,

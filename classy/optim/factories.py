@@ -49,9 +49,7 @@ class WeightDecayOptimizer(Factory, ABC):
         self.no_decay_params = no_decay_params
 
     def group_params(self, module: torch.nn.Module) -> list:
-
         if self.no_decay_params is not None:
-
             optimizer_grouped_parameters = [
                 {
                     "params": [
@@ -72,7 +70,6 @@ class WeightDecayOptimizer(Factory, ABC):
             ]
 
         else:
-
             optimizer_grouped_parameters = [
                 {"params": module.parameters(), "weight_decay": self.weight_decay}
             ]

@@ -37,7 +37,6 @@ class HFSequenceDataset(HFBaseDataset):
         }
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-
         for sequence_sample in self.samples_iterator():
             input_ids = self.tokenizer(
                 sequence_sample.sequence,
@@ -90,7 +89,6 @@ class HFTokenDataset(HFBaseDataset):
         }
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-
         for token_sample in self.samples_iterator():
             input_ids, token_offsets = self.tokenize(token_sample.tokens)
             elem_dict = {
@@ -144,7 +142,6 @@ class HFSentencePairDataset(HFSequenceDataset):
         return fields_batcher
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-
         for sequence_sample in self.samples_iterator():
             sequence_sample: SentencePairSample
             tokenization_output = self.tokenizer(
@@ -189,7 +186,6 @@ class HFQADataset(HFBaseDataset):
         raise NotImplementedError
 
     def dataset_iterator_func(self) -> Iterable[Dict[str, Any]]:
-
         for qa_sample in self.samples_iterator():
             qa_sample: QASample
 
@@ -233,7 +229,6 @@ class HFQADataset(HFBaseDataset):
                 )
             ):
                 if m:
-
                     # postprocess token2chars
                     # some tokenizers (microsoft/deberta-base) include in the token-offsets also the white space
                     # e.g. 'In Italy' => ' Italy' => (2, 8)

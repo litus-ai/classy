@@ -15,7 +15,6 @@ def interactive_main(
     prediction_params: str,
     cuda_device: int,
 ):
-
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
@@ -46,7 +45,6 @@ def file_main(
     cuda_device: int,
     token_batch_size: int,
 ):
-
     model = load_classy_module_from_checkpoint(model_checkpoint_path)
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()

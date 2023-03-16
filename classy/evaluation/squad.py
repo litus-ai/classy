@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from datasets import load_metric
+from evaluate import load
 
 from classy.data.data_drivers import QASample
 from classy.evaluation.base import Evaluation
@@ -8,14 +8,13 @@ from classy.evaluation.base import Evaluation
 
 class SQuADV1Evaluation(Evaluation):
     def __init__(self):
-        self.squad = load_metric("squad")
+        self.squad = load("squad")
 
     def __call__(
         self,
         path: str,
         predicted_samples: List[QASample],
     ) -> Dict:
-
         pred = [
             {
                 "id": sample.squad_id,

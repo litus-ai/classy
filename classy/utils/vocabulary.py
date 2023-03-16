@@ -8,7 +8,6 @@ LABELS_VOCABULARY_PATH = "labels_vocabulary_path.tsv"
 
 
 class Vocabulary:
-
     PAD = "<pad>"
     UNK = "<unk>"
 

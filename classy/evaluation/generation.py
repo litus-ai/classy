@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
 import nltk
-from datasets import load_metric
+from evaluate import load
 
 from classy.data.data_drivers import GenerationSample
 from classy.evaluation.base import Evaluation
@@ -12,7 +12,7 @@ logger = get_project_logger(__name__)
 
 class RougeEvaluation(Evaluation):
     def __init__(self):
-        self.rouge = load_metric("rouge")
+        self.rouge = load("rouge")
 
     def __call__(self, path: str, predicted_samples: List[GenerationSample]) -> Dict:
         assert all(
@@ -53,7 +53,6 @@ class SacreBleuEvaluation(Evaluation):
         path: str,
         predicted_samples: List[GenerationSample],
     ):
-
         assert all(
             sample.reference_annotation is not None for sample in predicted_samples
         )

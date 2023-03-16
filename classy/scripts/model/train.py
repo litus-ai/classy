@@ -14,7 +14,6 @@ python_logger = get_project_logger(__name__)
 
 
 def train(conf: DictConfig) -> None:
-
     # reproducibility
     pl.seed_everything(conf.training.seed)
 
@@ -122,4 +121,6 @@ def train(conf: DictConfig) -> None:
     )
 
     # module fit
-    trainer.fit(pl_module, datamodule=pl_data_module, ckpt_path=conf.training.resume_from)
+    trainer.fit(
+        pl_module, datamodule=pl_data_module, ckpt_path=conf.training.resume_from
+    )

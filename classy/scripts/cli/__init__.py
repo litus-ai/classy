@@ -70,7 +70,6 @@ def get_commands():
 
 
 def parse_args(commands: dict):
-
     parser = ArgumentParser()
 
     grp = parser.add_mutually_exclusive_group()

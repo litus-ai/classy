@@ -43,7 +43,6 @@ class TaskMixin:
 
 
 class SequenceTask(SequenceTaskServeMixin, SequenceTaskUIMixin, TaskMixin):
-
     __data_driver = get_data_driver(SEQUENCE, JSONL)
 
     def read_input_from_bash(self) -> SequenceSample:
