@@ -1,3 +1,5 @@
+from classy.scripts.cli.utils import DRY_MODEL
+
 HELP_MODEL_PATH = """
     The model you want to use for the demo. Can be
     1) the experiment name: "my_experiment" and classy will automatically
@@ -31,4 +33,12 @@ HELP_PREDICTION_PARAMS = """
 
 HELP_TASKS = """
     One of the tasks that classy supports [sequence, sentence-pair, token, qa, generation].
+"""
+
+HELP_DRY_MODEL_CONFIGURATION = f"""
+    [EXPERIMENTAL] Required if model_path = "{DRY_MODEL}". Together with model_path = "{DRY_MODEL}", this parameter
+    allows to dirctly use classy with models that have already been fine-tuned on the desired task. It is a string,
+    wrapped between double quotes, symmetrical to the one provided to "classy train" and specifying the desired model,
+    prediction dataset, task, .... For instance, if we want to use "Helsinki-NLP/opus-mt-en-it" right away, we can run:
+    "classy <command> dry-model [...] --dry-mode-configuration "generation none --profile bart-large --transformer-model Helsinki-NLP/opus-mt-en-it"
 """

@@ -1,3 +1,4 @@
+import functools
 from argparse import ArgumentParser
 
 from classy.scripts.cli.utils import (
@@ -5,16 +6,20 @@ from classy.scripts.cli.utils import (
     checkpoint_path_from_user_input,
     get_device,
 )
-from classy.utils.help_cli import HELP_MODEL_PATH, HELP_PREDICTION_PARAMS
+from classy.utils.help_cli import (
+    HELP_DRY_MODEL_CONFIGURATION,
+    HELP_MODEL_PATH,
+    HELP_PREDICTION_PARAMS,
+)
 from classy.utils.optional_deps import requires
 
 
 def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "model_path",
-        type=checkpoint_path_from_user_input,
+        type=functools.partial(checkpoint_path_from_user_input, include_dry_model=True),
         help=HELP_MODEL_PATH,
-    ).completer = autocomplete_model_path
+    ).completer = functools.partial(autocomplete_model_path, include_dry_model=True)
     parser.add_argument(
         "-p",
         "--port",
@@ -31,16 +36,24 @@ def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "--prediction-params", type=str, default=None, help=HELP_PREDICTION_PARAMS
     )
+    parser.add_argument(
+        "--dry-model-configuration",
+        type=str,
+        default=None,
+        help=HELP_DRY_MODEL_CONFIGURATION,
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(
-        name="demo",
-        description="expose a demo of a classy model with Streamlit",
-        help="Expose a demo of a classy model with Streamlit.",
-    )
+    parser_kwargs = dict(description="expose a demo of a classy model with Streamlit")
+    if subparser is not None:
+        parser_kwargs["name"] = "demo"
+        parser_kwargs["help"] = "Expose a demo of a classy model with Streamlit."
+    else:
+        parser_kwargs["prog"] = "demo"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )
@@ -59,7 +72,7 @@ def main(args):
     # import here to avoid importing before needed
     import sys
 
-    from streamlit.cli import main as st_main
+    from streamlit.web.cli import main as st_main
 
     device = get_device(args.device)
 
@@ -70,6 +83,8 @@ def main(args):
         script_params += ["cuda_device", str(device)]
     if args.prediction_params is not None:
         script_params += ["prediction_params", args.prediction_params]
+    if args.dry_model_configuration is not None:
+        script_params += ["dry_model_configuration", args.dry_model_configuration]
 
     sys.argv = [
         "streamlit",

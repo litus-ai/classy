@@ -7,10 +7,9 @@ import torch
 from omegaconf import OmegaConf
 
 from classy.data.data_drivers import ClassySample, DataDriver, get_data_driver
-from classy.utils.lightning import (
-    load_classy_module_from_checkpoint,
-    load_prediction_dataset_conf_from_checkpoint,
-    load_training_conf_from_checkpoint,
+from classy.utils.io import (
+    load_classy_module_and_prediction_dataset_conf,
+    load_training_conf,
 )
 
 
@@ -23,6 +22,7 @@ def evaluate(
     output_path: Optional[str] = None,
     evaluate_config_path: Optional[str] = None,
     prediction_params: Optional[str] = None,
+    dry_model_configuration: Optional[str] = None,
     metrics_fn: Optional[
         Callable[
             [str, List[ClassySample]],
@@ -30,17 +30,18 @@ def evaluate(
         ]
     ] = None,
 ):
-    # load model
-    model = load_classy_module_from_checkpoint(model_checkpoint_path)
+    # load model and dataset conf
+    model, dataset_conf = load_classy_module_and_prediction_dataset_conf(
+        checkpoint_path=model_checkpoint_path,
+        dry_model_configuration=dry_model_configuration,
+    )
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
 
     if prediction_params is not None:
         model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
-    # load dataset conf and driver
-    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
-
+    # load driver
     if isinstance(input_path, str):
         input_extension = input_path.split(".")[-1]
         data_driver = get_data_driver(model.task, input_extension)
@@ -59,8 +60,9 @@ def evaluate(
     elif evaluate_config_path is not None:
         metrics_fn = hydra.utils.instantiate(OmegaConf.load(evaluate_config_path))
     else:
-        evaluation_conf = load_training_conf_from_checkpoint(
-            model_checkpoint_path
+        evaluation_conf = load_training_conf(
+            checkpoint_path=model_checkpoint_path,
+            dry_model_configuration=dry_model_configuration,
         ).evaluation
         metrics_fn = hydra.utils.instantiate(evaluation_conf)
 

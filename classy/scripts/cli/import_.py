@@ -14,10 +14,16 @@ def populate_parser(parser: ArgumentParser):
 
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
-        name="import",
-        description="import a previously exported trained model from a zip file",
-        help="import a previously exported trained model from a zip file",
+        description="import a previously exported trained model from a zip file"
     )
+    if subparser is not None:
+        parser_kwargs["name"] = "import"
+        parser_kwargs[
+            "help"
+        ] = "Import a previously exported trained model from a zip file."
+    else:
+        parser_kwargs["prog"] = "import"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )

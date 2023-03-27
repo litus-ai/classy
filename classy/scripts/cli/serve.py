@@ -40,11 +40,13 @@ def populate_parser(parser: ArgumentParser):
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(
-        name="serve",
-        description="Expose a model trained with classy on a REST API",
-        help="Expose a model trained with classy on a REST API.",
-    )
+    parser_kwargs = dict(description="expose a model trained with classy on a REST API")
+    if subparser is not None:
+        parser_kwargs["name"] = "serve"
+        parser_kwargs["help"] = "Expose a model trained with classy on a REST API."
+    else:
+        parser_kwargs["prog"] = "serve"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )

@@ -1,3 +1,4 @@
+import functools
 from argparse import ArgumentParser
 
 from argcomplete import FilesCompleter
@@ -8,6 +9,7 @@ from classy.scripts.cli.utils import (
     get_device,
 )
 from classy.utils.help_cli import (
+    HELP_DRY_MODEL_CONFIGURATION,
     HELP_MODEL_PATH,
     HELP_PREDICTION_PARAMS,
     HELP_TOKEN_BATCH_SIZE,
@@ -25,8 +27,10 @@ def populate_parser(parser: ArgumentParser):
     )
     interactive_parser = subcmd.add_parser("interactive")
     interactive_parser.add_argument(
-        "model_path", type=checkpoint_path_from_user_input, help=HELP_MODEL_PATH
-    ).completer = autocomplete_model_path
+        "model_path",
+        type=functools.partial(checkpoint_path_from_user_input, include_dry_model=True),
+        help=HELP_MODEL_PATH,
+    ).completer = functools.partial(autocomplete_model_path, include_dry_model=True)
     interactive_parser.add_argument(
         "-d",
         "--device",
@@ -36,11 +40,19 @@ def populate_parser(parser: ArgumentParser):
     interactive_parser.add_argument(
         "--prediction-params", type=str, default=None, help="Path to prediction params."
     )
+    interactive_parser.add_argument(
+        "--dry-model-configuration",
+        type=str,
+        default=None,
+        help=HELP_DRY_MODEL_CONFIGURATION,
+    )
 
     file_parser = subcmd.add_parser("file")
     file_parser.add_argument(
-        "model_path", type=checkpoint_path_from_user_input, help=HELP_MODEL_PATH
-    ).completer = autocomplete_model_path
+        "model_path",
+        type=functools.partial(checkpoint_path_from_user_input, include_dry_model=True),
+        help=HELP_MODEL_PATH,
+    ).completer = functools.partial(autocomplete_model_path, include_dry_model=True)
     file_parser.add_argument(
         "file_path", help="The file containing the instances that you want to process."
     ).completer = FilesCompleter()
@@ -62,16 +74,23 @@ def populate_parser(parser: ArgumentParser):
     file_parser.add_argument(
         "--token-batch-size", type=int, default=1024, help=HELP_TOKEN_BATCH_SIZE
     )
+    file_parser.add_argument(
+        "--dry-model-configuration",
+        type=str,
+        default=None,
+        help=HELP_DRY_MODEL_CONFIGURATION,
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
+    parser_kwargs = dict(description="predict with a model trained using classy")
+    if subparser is not None:
+        parser_kwargs["name"] = "predict"
+        parser_kwargs["help"] = "Predict with a model trained using classy."
+    else:
+        parser_kwargs["prog"] = "predict"
 
-    parser_kwargs = dict(
-        name="predict",
-        description="predict with a model trained using classy",
-        help="Predict with a model trained using classy.",
-    )
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )
@@ -107,9 +126,15 @@ def main(args):
             args.prediction_params,
             device,
             args.token_batch_size,
+            args.dry_model_configuration,
         )
     elif subcmd == "interactive":
-        interactive_main(args.model_path, args.prediction_params, device)
+        interactive_main(
+            args.model_path,
+            args.prediction_params,
+            device,
+            args.dry_model_configuration,
+        )
     else:
         raise NotImplementedError
 

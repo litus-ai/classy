@@ -1,28 +1,27 @@
 import argparse
+from typing import Optional
 
 import torch
 from omegaconf import OmegaConf
 
 from classy.data.data_drivers import get_data_driver
-from classy.utils.lightning import (
-    load_classy_module_from_checkpoint,
-    load_prediction_dataset_conf_from_checkpoint,
-)
+from classy.utils.io import load_classy_module_and_prediction_dataset_conf
 
 
 def interactive_main(
     model_checkpoint_path: str,
     prediction_params: str,
     cuda_device: int,
+    dry_model_configuration: Optional[str] = None,
 ):
-    model = load_classy_module_from_checkpoint(model_checkpoint_path)
+    model, dataset_conf = load_classy_module_and_prediction_dataset_conf(
+        model_checkpoint_path, dry_model_configuration
+    )
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
 
     if prediction_params is not None:
         model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
-
-    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
 
     # mock call to load resources
     next(model.predict(samples=[], dataset_conf=dataset_conf), None)
@@ -41,18 +40,20 @@ def file_main(
     model_checkpoint_path: str,
     input_path: str,
     output_path: str,
-    prediction_params: str,  # todo: u sure?
+    prediction_params: str,
     cuda_device: int,
     token_batch_size: int,
+    dry_model_configuration: Optional[str] = None,
 ):
-    model = load_classy_module_from_checkpoint(model_checkpoint_path)
+    model, dataset_conf = load_classy_module_and_prediction_dataset_conf(
+        model_checkpoint_path, dry_model_configuration
+    )
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
 
     if prediction_params is not None:
         model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
-    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
     input_extension, output_extension = (
         input_path.split(".")[-1],
         output_path.split(".")[-1],

@@ -16,10 +16,16 @@ def populate_parser(parser: ArgumentParser):
 
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
-        name="download",
-        description="download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub",
-        help="Download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub.",
+        description="download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub"
     )
+    if subparser is not None:
+        parser_kwargs["name"] = "download"
+        parser_kwargs[
+            "help"
+        ] = "Download a pretrained model from sunglasses-ai's (or a user's) HuggingFace Hub."
+    else:
+        parser_kwargs["prog"] = "download"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )

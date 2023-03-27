@@ -15,10 +15,9 @@ import torch
 from omegaconf import OmegaConf
 
 from classy.data.data_drivers import ClassySample, get_data_driver
-from classy.utils.lightning import (
-    load_classy_module_from_checkpoint,
-    load_prediction_dataset_conf_from_checkpoint,
-    load_training_conf_from_checkpoint,
+from classy.utils.io import (
+    load_classy_module_and_prediction_dataset_conf,
+    load_training_conf,
 )
 
 
@@ -104,6 +103,7 @@ def demo(
     model_checkpoint_path: str,
     cuda_device: int,
     prediction_params: Optional[str] = None,
+    dry_model_configuration: Optional[str] = None,
 ):
     st.set_page_config(
         page_title="Classy demo",
@@ -113,19 +113,21 @@ def demo(
 
     @st.cache(allow_output_mutation=True)
     def load_resources():
-        config = load_training_conf_from_checkpoint(
-            model_checkpoint_path, post_trainer_init=False
+        training_conf = load_training_conf(
+            checkpoint_path=model_checkpoint_path,
+            dry_model_configuration=dry_model_configuration,
         )
-        model = load_classy_module_from_checkpoint(model_checkpoint_path)
+
+        model, dataset_conf = load_classy_module_and_prediction_dataset_conf(
+            checkpoint_path=model_checkpoint_path,
+            dry_model_configuration=dry_model_configuration,
+        )
         model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
         model.freeze()
 
         if prediction_params is not None:
             model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
 
-        dataset_conf = load_prediction_dataset_conf_from_checkpoint(
-            model_checkpoint_path
-        )
         inference_message, inferred_examples = auto_infer_examples(
             model.task, model_checkpoint_path
         )
@@ -136,10 +138,15 @@ def demo(
             None,
         )
 
-        return config, model, dataset_conf, (inference_message, inferred_examples)
+        return (
+            training_conf,
+            model,
+            dataset_conf,
+            (inference_message, inferred_examples),
+        )
 
     (
-        config,
+        training_conf,
         model,
         dataset_conf,
         (inference_message, inferred_examples),
@@ -170,7 +177,7 @@ def demo(
     def render_config():
         from classy.utils.rich_config import get_rich_tree_config, rich_to_html
 
-        cfg_tree = get_rich_tree_config(config)
+        cfg_tree = get_rich_tree_config(training_conf)
         st.write(rich_to_html(cfg_tree), unsafe_allow_html=True)
 
     def render_model_demo():

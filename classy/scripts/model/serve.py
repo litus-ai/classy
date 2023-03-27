@@ -14,10 +14,7 @@ except ImportError:
     FastAPI = None
 
 from classy.utils.commons import get_local_ip_address
-from classy.utils.lightning import (
-    load_classy_module_from_checkpoint,
-    load_prediction_dataset_conf_from_checkpoint,
-)
+from classy.utils.io import load_classy_module_and_prediction_dataset_conf
 from classy.utils.log import get_project_logger
 
 logger = get_project_logger(__name__)
@@ -33,15 +30,14 @@ def serve(
     prediction_params: Optional[str] = None,
 ):
     # load model
-    model = load_classy_module_from_checkpoint(model_checkpoint_path)
+    model, dataset_conf = load_classy_module_and_prediction_dataset_conf(
+        model_checkpoint_path
+    )
     model.to(torch.device(cuda_device if cuda_device != -1 else "cpu"))
     model.freeze()
 
     if prediction_params is not None:
         model.load_prediction_params(dict(OmegaConf.load(prediction_params)))
-
-    # load dataset conf
-    dataset_conf = load_prediction_dataset_conf_from_checkpoint(model_checkpoint_path)
 
     # mock call to load resources
     next(model.predict(samples=[], dataset_conf=dataset_conf), None)

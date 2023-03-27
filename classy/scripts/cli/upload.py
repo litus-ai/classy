@@ -18,10 +18,16 @@ def populate_parser(parser: ArgumentParser):
 
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
-        name="upload",
-        description="upload a pretrained model to your (or an organization's) HuggingFace Hub",
-        help="Upload a pretrained model to your (or an organization's) HuggingFace Hub.",
+        description="upload a pretrained model to your (or an organization's) HuggingFace Hub"
     )
+    if subparser is not None:
+        parser_kwargs["name"] = "upload"
+        parser_kwargs[
+            "help"
+        ] = "Upload a pretrained model to your (or an organization's) HuggingFace Hub."
+    else:
+        parser_kwargs["prog"] = "upload"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )

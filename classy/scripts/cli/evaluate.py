@@ -1,17 +1,20 @@
+import functools
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from argcomplete import FilesCompleter
 from omegaconf import OmegaConf
 
 from classy.data.data_drivers import DataDriver
 from classy.scripts.cli.utils import (
+    DRY_MODEL,
     autocomplete_model_path,
     checkpoint_path_from_user_input,
     get_device,
 )
 from classy.utils.help_cli import (
+    HELP_DRY_MODEL_CONFIGURATION,
     HELP_EVALUATE,
     HELP_FILE_PATH,
     HELP_MODEL_PATH,
@@ -24,9 +27,9 @@ from classy.utils.train_coordinates import load_bundle
 def populate_parser(parser: ArgumentParser):
     parser.add_argument(
         "model_path",
-        type=checkpoint_path_from_user_input,
+        type=functools.partial(checkpoint_path_from_user_input, include_dry_model=True),
         help=HELP_MODEL_PATH,
-    ).completer = autocomplete_model_path
+    ).completer = functools.partial(autocomplete_model_path, include_dry_model=True)
     parser.add_argument(
         "file_path",
         nargs="?",
@@ -65,16 +68,24 @@ def populate_parser(parser: ArgumentParser):
         default="tree",
         choices=("tree", "json", "list"),
     )
+    parser.add_argument(
+        "--dry-model-configuration",
+        type=str,
+        default=None,
+        help=HELP_DRY_MODEL_CONFIGURATION,
+    )
 
 
 def get_parser(subparser=None) -> ArgumentParser:
     # subparser: Optional[argparse._SubParsersAction]
 
-    parser_kwargs = dict(
-        name="evaluate",
-        description="evaluate a model trained using classy",
-        help="Evaluate a model trained using classy.",
-    )
+    parser_kwargs = dict(description="evaluate a model trained using classy")
+    if subparser is not None:
+        parser_kwargs["name"] = "evaluate"
+        parser_kwargs["help"] = "Evaluate a model trained using classy."
+    else:
+        parser_kwargs["prog"] = "evaluate"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )
@@ -88,22 +99,25 @@ def parse_args():
     return get_parser().parse_args()
 
 
-def automatically_infer_test_path(model_path: str) -> Union[str, Dict[str, DataDriver]]:
-    from classy.utils.lightning import load_training_conf_from_checkpoint
+def automatically_infer_test_path(
+    checkpoint_path: str, dry_model_configuration: Optional[str] = None
+) -> Union[str, Dict[str, DataDriver]]:
+    from classy.utils.io import load_training_conf
 
-    checkpoint_path = Path(model_path)
-    exp_split_data_folder = checkpoint_path.parent.parent.joinpath("data")
+    if checkpoint_path != DRY_MODEL:
+        checkpoint_path = Path(checkpoint_path)
+        exp_split_data_folder = checkpoint_path.parent.parent.joinpath("data")
 
-    # search if it was created via split at training time
-    if exp_split_data_folder.exists():
-        possible_test_files = [
-            fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"
-        ]
-        if len(possible_test_files) == 1:
-            return str(possible_test_files[0])
+        # search if it was created via split at training time
+        if exp_split_data_folder.exists():
+            possible_test_files = [
+                fp for fp in exp_split_data_folder.iterdir() if fp.stem == "test"
+            ]
+            if len(possible_test_files) == 1:
+                return str(possible_test_files[0])
 
-    # check if dataset_path provided at training time was a folder that contained a test set
-    training_conf = load_training_conf_from_checkpoint(model_path)
+    # load training conf and check if dataset_path provided at training time was a folder that contained a test set
+    training_conf = load_training_conf(checkpoint_path, dry_model_configuration)
     dataset_path = Path(training_conf.data.datamodule.dataset_path)
     if dataset_path.exists():
         if dataset_path.is_file():
@@ -164,6 +178,7 @@ def main(args):
         output_path=args.output_path,
         evaluate_config_path=args.evaluation_config,
         prediction_params=args.prediction_params,
+        dry_model_configuration=args.dry_model_configuration,
         metrics_fn=None,
     )
 

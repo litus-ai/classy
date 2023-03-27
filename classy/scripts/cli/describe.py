@@ -34,10 +34,16 @@ def populate_parser(parser: ArgumentParser):
 
 def get_parser(subparser=None) -> ArgumentParser:
     parser_kwargs = dict(
-        name="describe",
-        description="run several statistics on the input dataset and expose them on a streamlit page",
-        help="Run several statistics on the input dataset and expose them on a streamlit page.",
+        description="run several statistics on the input dataset and expose them on a streamlit page"
     )
+    if subparser is not None:
+        parser_kwargs["name"] = "describe"
+        parser_kwargs[
+            "help"
+        ] = "Run several statistics on the input dataset and expose them on a streamlit page."
+    else:
+        parser_kwargs["prog"] = "describe"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )
@@ -56,7 +62,7 @@ def main(args):
     # import here to avoid importing before needed
     import sys
 
-    from streamlit.cli import main as st_main
+    from streamlit.web.cli import main as st_main
 
     # script params
     script_params = [args.task, args.dataset]

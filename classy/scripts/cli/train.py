@@ -146,11 +146,32 @@ def populate_parser(parser: ArgumentParser):
 
 
 def get_parser(subparser=None) -> ArgumentParser:
-    parser_kwargs = dict(
-        name="train",
-        description="train a model with classy",
-        help="Train a model with classy.",
+    parser_kwargs = dict(description="train a model with classy")
+    if subparser is not None:
+        parser_kwargs["name"] = "train"
+        parser_kwargs["help"] = "Train a model with classy."
+    else:
+        parser_kwargs["prog"] = "train"
+
+    parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
+        **parser_kwargs
     )
+
+    populate_parser(parser)
+
+    return parser
+
+
+def get_parser(subparser=None) -> ArgumentParser:
+    # subparser: Optional[argparse._SubParsersAction]
+
+    parser_kwargs = dict(description="train a model with classy")
+    if subparser is not None:
+        parser_kwargs["name"] = "train"
+        parser_kwargs["help"] = "Train a model with classy."
+    else:
+        parser_kwargs["prog"] = "train"
+
     parser = (subparser.add_parser if subparser is not None else ArgumentParser)(
         **parser_kwargs
     )
@@ -395,7 +416,9 @@ def apply_profiles_and_cli(
         return o
 
     # load initial configuration from folder
-    with hydra.initialize_config_dir(config_dir=config_dir, job_name="train"):
+    with hydra.initialize_config_dir(
+        config_dir=config_dir, job_name="train", version_base=None
+    ):
         base_cfg = hydra.compose(config_name=config_name, return_hydra_config=True)
         blames = base_cfg.__dict__["_blame"]
 
@@ -507,152 +530,164 @@ def handle_device(
             pass
 
 
-def main(args):
+def training_args_to_cfg_in_folder(
+    train_args, output_cfg_directory: str
+) -> List[Tuple[List[str], ClassyBlame]]:
     import classy
 
+    # hydra config name and config dir
+    config_name = train_args.config_name or train_args.task
+    config_dir = train_args.config_dir or maybe_find_directory(
+        [
+            "configuration",
+            "configurations",
+            "config",
+            "configs",
+            "conf",
+            "confs",
+        ]
+    )
+
+    # copy config dir and installed classy configurations into tmp_dir
+    classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
+    shutil.copytree(classy_dir, output_cfg_directory, dirs_exist_ok=True)
+    if config_dir is not None:
+        shutil.copytree(config_dir, output_cfg_directory, dirs_exist_ok=True)
+    assert (
+        Path(output_cfg_directory) / (config_name + ".yaml")
+    ).exists(), f"No config name file {config_name} found in temporary config dir"
+
+    # read user-provided configuration overrides from cli
+    cli_overrides = {}
+
+    # read args.config
+    for override in train_args.config:
+        if "~" in override:
+            raise NotImplementedError('Usage of "~" is currently not supported')
+        cli_overrides[ClassyBlame(f"-c {override}")] = [override]
+
+    # add dataset path
+    cli_overrides[ClassyBlame(f"{train_args.dataset}")] = [
+        f"data.datamodule.dataset_path={train_args.dataset}"
+    ]
+
+    # turn off shuffling if requested
+    if train_args.no_shuffle:
+        cli_overrides[ClassyBlame("--no-shuffle")] = [
+            "data.datamodule.shuffle_dataset=False"
+        ]
+
+    # set number of epochs
+    if train_args.epochs:
+        cli_overrides[ClassyBlame(f"--epochs {train_args.epochs}")] = [
+            f"training.pl_trainer.max_epochs={train_args.epochs}"
+        ]
+
+    # setup wandb logging
+    if train_args.wandb is not None:
+        wandb_overrides = []
+        wandb_overrides.append(f"logging.wandb.use_wandb=True")
+
+        if train_args.wandb == "anonymous":
+            wandb_overrides.append(f"logging.wandb.anonymous=allow")
+            wandb_blame = ClassyBlame("--wandb anonymous")
+        else:
+            if "@" not in train_args.wandb:
+                print(
+                    "If you specify a value for '--wandb' it must contain both the name of the "
+                    "project and the name of the specific experiment in the following format: "
+                    "'<project-name>@<experiment-name>'"
+                )
+                exit(1)
+
+            project, experiment = train_args.wandb.split("@")
+            wandb_overrides.append(f"logging.wandb.project_name={project}")
+            wandb_overrides.append(f"logging.wandb.experiment_name={experiment}")
+            wandb_blame = ClassyBlame(f"--wandb {train_args.wandb}")
+
+        cli_overrides[wandb_blame] = wandb_overrides
+
+    # change the underlying transformer model
+    if train_args.transformer_model is not None:
+        cli_overrides[
+            ClassyBlame(f"--transformer-model {train_args.transformer_model}")
+        ] = [f"transformer_model={train_args.transformer_model}"]
+
+    # check if the user provided a pre-computed vocabulary
+    if train_args.vocabulary_dir is not None:
+        cli_overrides[ClassyBlame(f"--vocabulary-dir {train_args.vocabulary_dir}")] = [
+            f"data.vocabulary_dir={train_args.vocabulary_dir}"
+        ]
+
+    # bid-dataset option
+    if train_args.big_dataset:
+        logger.info(
+            "The --big-dataset option has been selected. "
+            "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
+            "2) evaluate the model performance every 2 thousand steps"
+            "3) If the dataset provided is a file path when splitting the whole dataset in train, validation and test"
+            "we will partition with the following ratio: 0.90 / 0.05 / 0.05"
+        )
+        cli_overrides[ClassyBlame("--big-dataset")] = [
+            "data.datamodule.shuffle_dataset=False",
+            "training.pl_trainer.val_check_interval=2000",  # TODO: 2K steps seems quite arbitrary
+            "data.datamodule.validation_split_size=0.05",
+            "data.datamodule.test_split_size=0.05",
+        ]
+
+    # read profile
+    profile, profile_path, is_profile_path = train_args.profile, None, False
+    if profile is not None:
+        if profile.endswith(".yaml") or profile.endswith(".yml"):
+            logger.info(f"Passed profile {profile} was detected to be a path")
+            profile_path = Path(profile)
+            is_profile_path = True
+            assert (
+                profile_path.exists()
+            ), f"Passed profile {profile} does not seem to exist"
+        else:
+            for extension in ["yaml", "yml"]:
+                profile_path = (
+                    Path(output_cfg_directory)
+                    / "profiles"
+                    / (profile + f".{extension}")
+                )
+                if profile_path.exists():
+                    break
+            assert (
+                profile_path.exists()
+            ), f"Passed profile {profile} does not seem to exist"
+
+    # handle device
+    handle_device(train_args, profile_path=profile_path, cli_overrides=cli_overrides)
+
+    # set experiment name
+    cli_overrides[ClassyBlame(f"-n {train_args.exp_name}")] = [
+        f"exp_name={train_args.exp_name}"
+    ]
+
+    # apply profile and cli overrides
+    blames = apply_profiles_and_cli(
+        config_name=config_name,
+        config_dir=output_cfg_directory,
+        profile_path=profile_path,
+        is_profile_path=is_profile_path,
+        cli=cli_overrides,
+        output_config_name="run",
+    )
+
+    # return blames
+    return blames
+
+
+def main(args):
     if args.resume_from is not None:
         _main_resume(args.resume_from)
         return
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        # hydra config name and config dir
-        config_name = args.config_name or args.task
-        config_dir = args.config_dir or maybe_find_directory(
-            [
-                "configuration",
-                "configurations",
-                "config",
-                "configs",
-                "conf",
-                "confs",
-            ]
-        )
-
-        # copy config dir and installed classy configurations into tmp_dir
-        classy_dir = str(Path(classy.__file__).parent.parent / "configurations")
-        shutil.copytree(classy_dir, tmp_dir, dirs_exist_ok=True)
-        if config_dir is not None:
-            shutil.copytree(config_dir, tmp_dir, dirs_exist_ok=True)
-        assert (
-            Path(tmp_dir) / (config_name + ".yaml")
-        ).exists(), f"No config name file {config_name} found in temporary config dir"
-
-        # read user-provided configuration overrides from cli
-        cli_overrides = {}
-
-        # read args.config
-        for override in args.config:
-            if "~" in override:
-                raise NotImplementedError('Usage of "~" is currently not supported')
-            cli_overrides[ClassyBlame(f"-c {override}")] = [override]
-
-        # add dataset path
-        cli_overrides[ClassyBlame(f"{args.dataset}")] = [
-            f"data.datamodule.dataset_path={args.dataset}"
-        ]
-
-        # turn off shuffling if requested
-        if args.no_shuffle:
-            cli_overrides[ClassyBlame("--no-shuffle")] = [
-                "data.datamodule.shuffle_dataset=False"
-            ]
-
-        # set number of epochs
-        if args.epochs:
-            cli_overrides[ClassyBlame(f"--epochs {args.epochs}")] = [
-                f"training.pl_trainer.max_epochs={args.epochs}"
-            ]
-
-        # setup wandb logging
-        if args.wandb is not None:
-            wandb_overrides = []
-            wandb_overrides.append(f"logging.wandb.use_wandb=True")
-
-            if args.wandb == "anonymous":
-                wandb_overrides.append(f"logging.wandb.anonymous=allow")
-                wandb_blame = ClassyBlame("--wandb anonymous")
-            else:
-                if "@" not in args.wandb:
-                    print(
-                        "If you specify a value for '--wandb' it must contain both the name of the "
-                        "project and the name of the specific experiment in the following format: "
-                        "'<project-name>@<experiment-name>'"
-                    )
-                    exit(1)
-
-                project, experiment = args.wandb.split("@")
-                wandb_overrides.append(f"logging.wandb.project_name={project}")
-                wandb_overrides.append(f"logging.wandb.experiment_name={experiment}")
-                wandb_blame = ClassyBlame(f"--wandb {args.wandb}")
-
-            cli_overrides[wandb_blame] = wandb_overrides
-
-        # change the underlying transformer model
-        if args.transformer_model is not None:
-            cli_overrides[
-                ClassyBlame(f"--transformer-model {args.transformer_model}")
-            ] = [f"transformer_model={args.transformer_model}"]
-
-        # check if the user provided a pre-computed vocabulary
-        if args.vocabulary_dir is not None:
-            cli_overrides[ClassyBlame(f"--vocabulary-dir {args.vocabulary_dir}")] = [
-                f"data.vocabulary_dir={args.vocabulary_dir}"
-            ]
-
-        # bid-dataset option
-        if args.big_dataset:
-            logger.info(
-                "The --big-dataset option has been selected. "
-                "Hence we will: 1) assume the training dataset is ALREADY SHUFFLED "
-                "2) evaluate the model performance every 2 thousand steps"
-                "3) If the dataset provided is a file path when splitting the whole dataset in train, validation and test"
-                "we will partition with the following ratio: 0.90 / 0.05 / 0.05"
-            )
-            cli_overrides[ClassyBlame("--big-dataset")] = [
-                "data.datamodule.shuffle_dataset=False",
-                "training.pl_trainer.val_check_interval=2000",  # TODO: 2K steps seems quite arbitrary
-                "data.datamodule.validation_split_size=0.05",
-                "data.datamodule.test_split_size=0.05",
-            ]
-
-        # read profile
-        profile, profile_path, is_profile_path = args.profile, None, False
-        if profile is not None:
-            if profile.endswith(".yaml") or profile.endswith(".yml"):
-                logger.info(f"Passed profile {profile} was detected to be a path")
-                profile_path = Path(profile)
-                is_profile_path = True
-                assert (
-                    profile_path.exists()
-                ), f"Passed profile {profile} does not seem to exist"
-            else:
-                for extension in ["yaml", "yml"]:
-                    profile_path = (
-                        Path(tmp_dir) / "profiles" / (profile + f".{extension}")
-                    )
-                    if profile_path.exists():
-                        break
-                assert (
-                    profile_path.exists()
-                ), f"Passed profile {profile} does not seem to exist"
-
-        # handle device
-        handle_device(args, profile_path=profile_path, cli_overrides=cli_overrides)
-
-        # set experiment name
-        cli_overrides[ClassyBlame(f"-n {args.exp_name}")] = [
-            f"exp_name={args.exp_name}"
-        ]
-
-        # apply profile and cli overrides
-        blames = apply_profiles_and_cli(
-            config_name=config_name,
-            config_dir=tmp_dir,
-            profile_path=profile_path,
-            is_profile_path=is_profile_path,
-            cli=cli_overrides,
-            output_config_name="run",
-        )
+        # args => folder
+        blames = training_args_to_cfg_in_folder(args, tmp_dir)
 
         # setup cmd
         cmd = ["classy-train", "-cn", "run", "-cd", tmp_dir]
