@@ -20,7 +20,7 @@ repos:
 #    hooks:
 #      - id: pydocstyle
 #        name: Check docs
-#        files: ^classy/
+#        files: ^src/
 #        language_version: python3.8
 #        args: ["--convention=google"]
   - repo: https://github.com/PyCQA/isort
@@ -28,14 +28,14 @@ repos:
     hooks:
       - id: isort
         name: Format imports
-        files: ^classy/
+        files: ^src/
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
         name: Format code
-        files: ^classy/
+        files: ^src/
   - repo: https://github.com/adamchainz/blacken-docs
     rev: v1.12.1
     hooks:

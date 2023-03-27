@@ -21,7 +21,7 @@ from setuptools import setup, find_packages, find_namespace_packages
 # We use exec here so we don't import classy whilst setting up.
 
 VERSION = {}  # type: ignore
-with open("classy/version.py", "r") as version_file:
+with open("src/classy/version.py", "r") as version_file:
     exec(version_file.read(), VERSION)
 
 
@@ -72,6 +72,7 @@ setup(
     author_email="classy@sunglasses.ai",
     license="Apache",
     packages=find_packages(),
+    package_dir={"": "src", "configurations": "configurations"},
     package_data={"configurations": ["*.yaml", "*/*.yaml"]},
     install_requires=requirements,
     extras_require=extra_requirements,
