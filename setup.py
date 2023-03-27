@@ -71,7 +71,7 @@ setup(
     author="Classy Team @ Sunglasses AI",
     author_email="classy@sunglasses.ai",
     license="Apache",
-    packages=find_packages(),
+    packages=find_packages("src"),
     package_dir={"": "src", "configurations": "configurations"},
     package_data={"configurations": ["*.yaml", "*/*.yaml"]},
     install_requires=requirements,
