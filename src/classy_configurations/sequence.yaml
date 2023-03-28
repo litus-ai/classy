@@ -1,4 +1,4 @@
-task: sentence-pair
+task: sequence
 project_name: classy
 exp_name: null
 exp_folder: ./experiments/${exp_name}
@@ -12,6 +12,8 @@ hydra:
   # customize working dir
   run:
     dir: ./experiments/${exp_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: True
   job_logging:
     formatters:
       simple:
@@ -22,9 +24,9 @@ hydra:
 # defaults
 defaults:
   - callbacks: empty
-  - data: sentence-pair
-  - evaluation: sentence-pair
-  - model: sentence-pair
+  - data: sequence
+  - evaluation: sequence
+  - model: sequence
   - prediction: default
   - training: default
   - logging: default

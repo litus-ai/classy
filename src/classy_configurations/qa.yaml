@@ -1,17 +1,19 @@
-task: generation
+task: qa
 project_name: classy
 exp_name: null
 exp_folder: ./experiments/${exp_name}
 
-transformer_model: "facebook/bart-base"
+transformer_model: "bert-base-cased"
 
-callbacks_monitor: 'val_loss'
-callbacks_mode: 'min'
+callbacks_monitor: 'val_accuracy'
+callbacks_mode: 'max'
 
 hydra:
   # customize working dir
   run:
     dir: ./experiments/${exp_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: True
   job_logging:
     formatters:
       simple:
@@ -22,9 +24,9 @@ hydra:
 # defaults
 defaults:
   - callbacks: empty
-  - data: generation
-  - evaluation: generation
-  - model: generation
+  - data: qa
+  - evaluation: qa
+  - model: qa
   - prediction: default
   - training: default
   - logging: default

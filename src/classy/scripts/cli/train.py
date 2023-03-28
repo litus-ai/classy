@@ -546,8 +546,9 @@ def training_args_to_cfg_in_folder(
     )
 
     # copy config dir and installed classy configurations into tmp_dir
+    # src/classy/scripts/cli/train.py => src/configurations/
     classy_configurations_dir = str(
-        Path(__file__).parent.parent.parent.parent.parent / "configurations"
+        Path(__file__).parent.parent.parent.parent / "classy_configurations"
     )
     shutil.copytree(classy_configurations_dir, output_cfg_directory, dirs_exist_ok=True)
     if config_dir is not None:
