@@ -6,13 +6,13 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 (module.exports = {
   title: 'Classy',
   tagline: 'The NLP toolkit that does not require you to be a programmer! (Kinda 😅)',
-  url: 'https://sunglasses-ai.github.io',
+  url: 'https://litus.ai',
   baseUrl: '/classy/',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: '/img/classy_logo-short_transparent.png',
-  organizationName: 'sunglasses-ai', // Usually your GitHub org/user name.
+  organizationName: 'litus-ai', // Usually your GitHub org/user name.
   projectName: 'classy', // Usually your repo name.
   presets: [
     [
@@ -22,8 +22,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: ({docPath}) => docPath.startsWith('api/') ? undefined : `https://github.com/sunglasses-ai/classy/edit/main/docs/docs/${docPath}`,
-          // editUrl: 'https://github.com/sunglasses-ai/classy/edit/main/docs/',
+          editUrl: ({docPath}) => docPath.startsWith('api/') ? undefined : `https://github.com/litus-ai/classy/edit/main/docs/docs/${docPath}`,
+          // editUrl: 'https://github.com/litus-ai/classy/edit/main/docs/',
           include: [
             "/glossary/*.md",
             "**/*.md"
@@ -53,14 +53,14 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
           // Public API key: it is safe to commit it
           apiKey: '2e4d4570c14c4dfe5050a9b90d3cff22',
 
-          indexName: 'sunglasses-ai-classy',
+          indexName: 'litus-ai-classy',
 
           // Optional: see doc section below
           contextualSearch: true,
         },
         announcementBar: {
           id: 'announcementBar-2', // Increment on change
-          content: 'Classy is still in its early stages, help us shape its future by <a href="https://github.com/sunglasses-ai/classy#contributions">contributing</a>!'
+          content: 'Classy is still in its early stages, help us shape its future by <a href="https://github.com/litus-ai/classy#contributions">contributing</a>!'
         },
         navbar: {
           title: 'Classy',
@@ -82,17 +82,17 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
               label: 'Reference API',
             },
             {
-              href: 'https://github.com/sunglasses-ai/classy',
+              href: 'https://github.com/litus-ai/classy',
               label: 'Classy@GitHub',
               position: 'left',
             },
             {
-              href: 'https://github.com/sunglasses-ai/classy-template',
+              href: 'https://github.com/litus-ai/classy-template',
               label: 'Template@GitHub',
               position: 'left',
             },
             {
-              href: 'https://github.com/sunglasses-ai/classy-examples',
+              href: 'https://github.com/litus-ai/classy-examples',
               label: 'Examples@GitHub',
               position: 'left',
             },
@@ -131,20 +131,20 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
                 // },
                 {
                   label: 'GitHub',
-                  href: 'https://github.com/sunglasses-ai/classy',
+                  href: 'https://github.com/litus-ai/classy',
                 },
                 {
                   label: 'Template',
-                  href: 'https://github.com/sunglasses-ai/classy-template',
+                  href: 'https://github.com/litus-ai/classy-template',
                 },
                 {
                   label: 'Examples',
-                  href: 'https://github.com/sunglasses-ai/classy-examples',
+                  href: 'https://github.com/litus-ai/classy-examples',
                 },
               ],
             },
           ],
-          copyright: `Copyright © ${new Date().getFullYear()} sunglasses.ai.`,
+          copyright: `Copyright © ${new Date().getFullYear()} litus.ai.`,
         },
         prism: {
           theme: lightCodeTheme,
