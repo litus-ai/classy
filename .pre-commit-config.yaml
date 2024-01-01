@@ -8,7 +8,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       - id: check-case-conflict
@@ -24,20 +24,20 @@ repos:
 #        language_version: python3.8
 #        args: ["--convention=google"]
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.13.2
     hooks:
       - id: isort
         name: Format imports
         files: ^classy/
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 23.12.1
     hooks:
       - id: black
         name: Format code
         files: ^classy/
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.1
+    rev: 1.16.0
     hooks:
       - id: blacken-docs
         name: Format code in docs
